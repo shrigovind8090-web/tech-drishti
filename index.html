@@ -320,10 +320,11 @@
       <div class="row" style="justify-content:space-between">
         <div>
           <div class="h2">AI Assistant</div>
-          <div class="small mut">Free &amp; open — <b>no API key needed</b>. Powered by a public open AI endpoint.</div>
+          <div class="small mut">Free &amp; open — <b>no API key needed</b>. It remembers your conversation on this device.</div>
         </div>
-        <button class="btn ghost sm" onclick="clearChat()">Clear chat</button>
+        <button class="btn ghost sm" onclick="clearChat()">Clear memory</button>
       </div>
+      <div class="small mut" id="memInfo" style="margin-top:8px"></div>
       <div class="chips" style="margin-top:12px">
         <div class="chip" onclick="ask('Explain in simple Hindi: what is artificial intelligence?')">AI in simple Hindi</div>
         <div class="chip" onclick="ask('Give me 5 healthy breakfast ideas for Indian homes')">Breakfast ideas</div>
@@ -549,7 +550,8 @@ var GOOGLE_CLIENT_ID = "";   // optional: paste a Google OAuth client ID to enab
 var state = {
   theme:"dark", lang:"en", cat:"TOP", city:{name:"", lat:null, lon:null},
   profile:{ name:"", signedIn:false, email:"", picture:"" },
-  a11y:{ hc:false, dys:false, nomotion:false, fs:15, rate:1 }
+  a11y:{ hc:false, dys:false, nomotion:false, fs:15, rate:1 },
+  chat:[]
 };
 function load(){ try{ var r=localStorage.getItem(KEY); if(r) state=Object.assign(state, JSON.parse(r)); }catch(e){} }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
@@ -911,30 +913,62 @@ async function wikiShow(term){
 }
 
 /* =================================================================== AI assistant */
-var chatHistory=[];
+var aiCooldownUntil=0;
+function chatSave(){ state.chat=(state.chat||[]).slice(-40); save(); }
+function renderChat(){
+  var box=$("chat"); box.innerHTML="";
+  var n=(state.chat||[]).length;
+  if(!n){
+    box.innerHTML='<div class="msg bot">Namaste! I\'m the Tech Drishti assistant. I remember our conversation on this device, so you can continue where you left off. Ask me anything — English, Hindi or any Indian language.</div>';
+  } else {
+    (state.chat||[]).forEach(function(m){ box.insertAdjacentHTML("beforeend",'<div class="msg '+(m.r==="u"?"user":"bot")+'">'+esc(m.t)+'</div>'); });
+  }
+  var mi=$("memInfo");
+  if(mi) mi.textContent = n ? ("Memory: "+Math.floor(n/2)+" exchange(s) saved on this device.") : "Memory is empty — your chat is saved here automatically.";
+  box.scrollTop=box.scrollHeight;
+}
+function aiContext(){
+  var sys="You are Tech Drishti's friendly assistant. Answer clearly and helpfully in a short, readable way. If the user writes in Hindi or any other Indian language, reply in that same language. Use the conversation history to stay consistent.";
+  var hist=(state.chat||[]).slice(-9).map(function(m){ return (m.r==="u"?"User: ":"Assistant: ")+m.t; }).join("\n");
+  return sys+"\n\nConversation so far (remember all of it):\n"+hist+"\n\nNow reply to the last user message.";
+}
 async function ask(preset){
   var inp=$("aiInput");
   var q = typeof preset==="string" ? preset : inp.value.trim();
   if(!q) return;
+  var now=Date.now();
+  if(now < aiCooldownUntil){ toast("Free AI limit — please wait "+Math.ceil((aiCooldownUntil-now)/1000)+"s"); return; }
   if(typeof preset!=="string") inp.value="";
   var box=$("chat");
+  state.chat=state.chat||[];
+  state.chat.push({r:"u", t:q}); chatSave();
   box.insertAdjacentHTML("beforeend",'<div class="msg user">'+esc(q)+'</div>');
   var think=document.createElement("div"); think.className="msg bot"; think.textContent="…"; box.appendChild(think);
   box.scrollTop=box.scrollHeight;
   try{
-    var prompt = "You are Tech Drishti's friendly assistant. Answer clearly and helpfully. If the user writes in Hindi or any Indian language, reply in that same language. Question: "+q;
-    var url="https://text.pollinations.ai/"+encodeURIComponent(prompt);
-    var ans=await getText(url);
-    ans=stripTags(ans).slice(0,4000) || "Sorry, I could not generate an answer.";
+    var ans=await getText("https://text.pollinations.ai/"+encodeURIComponent(aiContext()));
+    ans=stripTags(ans).trim();
+    if(/free limit reached/i.test(ans)){
+      var m=ans.match(/wait\s+(\d+)\s+second/i);
+      var secs=m?parseInt(m[1],10):30;
+      aiCooldownUntil=Date.now()+secs*1000;
+      think.className="msg err";
+      think.textContent="The free AI service allows one reply every 30 seconds. Please wait about "+secs+" seconds and ask again — your message is saved, so I will still remember it.";
+      setTimeout(function(){ toast("AI is ready again"); }, secs*1000);
+      renderChat(); return;
+    }
+    if(!ans) throw new Error("empty answer");
+    ans=ans.slice(0,4000);
     think.textContent=ans;
-    chatHistory.push({q:q,a:ans});
+    state.chat.push({r:"a", t:ans}); chatSave();
+    renderChat();
   }catch(e){
     think.className="msg err";
-    think.textContent="The assistant is busy right now (the free endpoint limits how often it can be called). Please try again in a few seconds.";
+    think.textContent="The assistant could not be reached right now. Please try again in a moment.";
+    box.scrollTop=box.scrollHeight;
   }
-  box.scrollTop=box.scrollHeight;
 }
-function clearChat(){ $("chat").innerHTML='<div class="msg bot">Chat cleared. Ask me anything!</div>'; chatHistory=[]; }
+function clearChat(){ state.chat=[]; save(); renderChat(); toast("Memory cleared"); }
 
 /* =================================================================== profile */
 function paintProfile(){
@@ -993,6 +1027,7 @@ buildWikiChips();
 applyAll();
 netStatus();
 initGoogle();
+renderChat();
 (function tickClock(){
   var d=new Date();
   $("clock").textContent=d.toLocaleTimeString(undefined,{hour12:false});
