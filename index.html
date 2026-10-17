@@ -150,7 +150,7 @@
   .linklist a:hover{border-color:var(--pri);}
   .linklist .ic{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--pri),var(--pri2));
     display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0;}
-  .linklist .sub{font-size:12px; color:var(--mut); font-weight:500;}
+  .linklist .sub{display:block; font-size:12px; color:var(--mut); font-weight:500; margin-top:2px;}
   .prose{font-size:14.5px; line-height:1.7;} .prose h3{margin:18px 0 6px; font-size:15.5px;}
   .prose p{margin:0 0 10px; color:var(--mut);}
   details.acc{border:1px solid var(--line); border-radius:14px; margin-bottom:10px; background:var(--card2); overflow:hidden;}
@@ -992,9 +992,9 @@ function decodeJwt(token){
 }
 function renderSignedIn(){
   var p = state.profile||{};
-  var img = p.picture ? '<img src="'+esc(p.picture)+'" alt="" style="width:44px;height:44px;border-radius:50%;flex-shrink:0">' : '';
+  var img = p.picture ? '<img src="'+esc(p.picture)+'" alt="" style="width:34px;height:34px;border-radius:50%;flex-shrink:0">' : '';
   $("googleBox").innerHTML = '<div class="row" style="gap:12px; flex-wrap:nowrap">'+img+
-    '<div style="flex:1; min-width:0"><b>'+esc(p.name||"Signed in")+'</b><div class="small mut">'+esc(p.email||"")+'</div></div>'+
+    '<div style="flex:1; min-width:0"><b>Signed in with Google</b><div class="small mut">You are signed in on this device only.</div></div>'+
     '<button class="btn ghost sm" onclick="signOut()">Sign out</button></div>';
 }
 function signOut(){
