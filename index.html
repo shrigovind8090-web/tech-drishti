@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f1e">
+<title>Tech Drishti — Live News, Weather, AI Assistant &amp; Accessibility</title>
+<meta name="description" content="Tech Drishti is a professional live platform: news in many Indian languages, live weather for your location, a no-key AI assistant, market rates, knowledge search and a dedicated accessibility mode for visually impaired users.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f46e5'/%3E%3Cstop offset='1' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Ctext x='50' y='70' font-size='54' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3ETD%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0a0f1e; --bg2:#0f172c; --card:rgba(22,31,54,.74); --card2:rgba(33,44,74,.62);
+    --line:rgba(125,145,195,.20); --txt:#eef2ff; --mut:#93a0c0;
+    --pri:#4f46e5; --pri2:#06b6d4; --saf:#f59e0b; --ok:#34d399; --warn:#fbbf24; --danger:#fb7185;
+    --r:18px; --shadow:0 18px 50px rgba(0,0,0,.45); --fs:15px; --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans","Helvetica Neue",Arial,sans-serif;
+  }
+  html[data-theme="light"]{
+    --bg:#eef1f8; --bg2:#f8fafe; --card:rgba(255,255,255,.85); --card2:rgba(240,243,250,.92);
+    --line:rgba(20,30,60,.11); --txt:#0c1322; --mut:#5c6785; --shadow:0 18px 40px rgba(30,40,80,.13);
+  }
+  html.hc{ --bg:#000; --bg2:#000; --card:#000; --card2:#0a0a0a; --line:#ffffff; --txt:#ffffff; --mut:#ffe680; --pri:#ffe680; --pri2:#00ffff; }
+  html.hc[data-theme="light"]{ --bg:#fff; --bg2:#fff; --card:#fff; --card2:#f2f2f2; --line:#000; --txt:#000; --mut:#5a3d00; --pri:#0043a8; --pri2:#005f6b; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1100px 620px at 10% -10%, rgba(79,70,229,.26), transparent 60%),
+      radial-gradient(900px 520px at 95% -5%, rgba(6,182,212,.18), transparent 55%),
+      var(--bg);
+    background-attachment:fixed; color:var(--txt); min-height:100vh; font-size:var(--fs); line-height:1.5;
+    font-family:var(--font);
+  }
+  html.dys{ --font:"Comic Sans MS","Trebuchet MS",Verdana,sans-serif; letter-spacing:.4px; word-spacing:.12em; }
+  html.nomotion *{animation:none !important; transition:none !important;}
+  .wrap{max-width:1180px; margin:0 auto; padding:18px 16px 70px;}
+  a{color:var(--pri2);}
+
+  /* skip link */
+  .skip{position:absolute; left:-9999px; top:0; background:var(--pri); color:#fff; padding:12px 18px; z-index:999; border-radius:0 0 12px 0; font-weight:700;}
+  .skip:focus{left:0;}
+  :focus-visible{outline:3px solid var(--saf); outline-offset:2px; border-radius:6px;}
+
+  header.top{display:flex; align-items:center; gap:13px; margin-bottom:18px; flex-wrap:wrap;}
+  .logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--pri),var(--pri2));
+    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;color:#fff;flex-shrink:0;
+    box-shadow:0 10px 26px rgba(79,70,229,.42); letter-spacing:.5px;}
+  .brand h1{margin:0; font-size:21px; font-weight:900; letter-spacing:.2px;}
+  .brand h1 span{background:linear-gradient(90deg,var(--pri2),var(--saf)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .brand p{margin:1px 0 0; font-size:12.5px; color:var(--mut);}
+  .spacer{flex:1;}
+  .pill{display:inline-flex; align-items:center; gap:7px; background:var(--card); border:1px solid var(--line);
+    padding:8px 13px; border-radius:30px; font-size:12.5px; font-weight:700;}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--ok);}
+  .dot.off{background:var(--danger);}
+  .iconbtn{background:var(--card); border:1px solid var(--line); color:var(--txt); min-width:44px; height:44px;
+    border-radius:13px; font-size:16px; font-weight:700; display:flex;align-items:center;justify-content:center; padding:0 12px;}
+  .iconbtn:active{transform:scale(.95);}
+  .iconbtn.spin{animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--saf),var(--pri));
+    display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:16px;flex-shrink:0;}
+
+  nav.tabs{display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; padding:2px 2px 6px; scrollbar-width:none;}
+  nav.tabs::-webkit-scrollbar{display:none;}
+  nav.tabs button{white-space:nowrap; background:var(--card); border:1px solid var(--line); color:var(--mut);
+    padding:11px 17px; border-radius:30px; font-size:13.5px; font-weight:800;}
+  nav.tabs button.on{background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff; border-color:transparent;
+    box-shadow:0 8px 22px rgba(79,70,229,.35);}
+  nav.tabs button:active{transform:scale(.96);}
+
+  .screen{display:none;} .screen.on{display:block; animation:rise .3s ease;}
+  @keyframes rise{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:none}}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:19px;
+    box-shadow:var(--shadow); margin-bottom:16px;}
+  .grid{display:grid; gap:16px;} .g2{grid-template-columns:repeat(2,1fr);} .g3{grid-template-columns:repeat(3,1fr);}
+  @media(max-width:820px){ .g2,.g3{grid-template-columns:1fr;} }
+  .lbl{font-size:11.5px; text-transform:uppercase; letter-spacing:1.1px; color:var(--mut); font-weight:800; margin-bottom:10px;}
+  .mut{color:var(--mut);} .small{font-size:12.5px;}
+  .h2{font-size:19px; font-weight:900; margin:0 0 6px;}
+  .clock{font-size:52px; font-weight:900; letter-spacing:1px; font-variant-numeric:tabular-nums; line-height:1;}
+  .temp{font-size:44px; font-weight:900; line-height:1;}
+  .wxicon{font-size:50px; line-height:1;}
+
+  input,select,textarea{width:100%; background:var(--card2); color:var(--txt); border:1px solid var(--line);
+    border-radius:13px; padding:12px 14px; font-size:15px; font-family:inherit; outline:none;}
+  input:focus,textarea:focus,select:focus{border-color:var(--pri);}
+  .btn{background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff; font-weight:800; border:none;
+    padding:12px 20px; border-radius:13px; font-size:14.5px; box-shadow:0 8px 22px rgba(79,70,229,.28);}
+  .btn:active{transform:scale(.97);}
+  .btn.ghost{background:transparent; color:var(--txt); border:1px solid var(--line); box-shadow:none;}
+  .btn.sm{padding:9px 15px; font-size:13px;}
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;} .row input{flex:1; min-width:140px;}
+  .row select{flex:1; min-width:120px;}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .chip{background:var(--card2); border:1px solid var(--line); color:var(--mut); padding:8px 15px; border-radius:20px;
+    font-size:12.5px; font-weight:700;}
+  .chip.on{background:var(--pri); border-color:var(--pri); color:#fff;}
+
+  /* news */
+  .newslist{display:grid; gap:12px;}
+  .nitem{display:flex; gap:14px; background:var(--card2); border:1px solid var(--line); border-radius:15px; padding:14px; align-items:flex-start;}
+  .nitem img{width:104px; height:74px; object-fit:cover; border-radius:11px; flex-shrink:0; background:var(--card);}
+  .nitem .nb{flex:1; min-width:0;}
+  .nitem .nt{font-weight:800; font-size:15px; line-height:1.35; margin-bottom:5px;}
+  .nitem .nt a{color:var(--txt); text-decoration:none;}
+  .nitem .nt a:hover{color:var(--pri2);}
+  .nitem .nm{font-size:12px; color:var(--mut); display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .tag{background:var(--card); border:1px solid var(--line); padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700;}
+  @media(max-width:560px){ .nitem img{width:76px;height:58px;} }
+
+  /* assistant */
+  .chat{display:flex; flex-direction:column; gap:12px; max-height:56vh; overflow-y:auto; padding:4px; margin-bottom:14px;}
+  .msg{padding:12px 15px; border-radius:15px; font-size:14.5px; max-width:88%; white-space:pre-wrap; word-break:break-word;}
+  .msg.user{align-self:flex-end; background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff;}
+  .msg.bot{align-self:flex-start; background:var(--card2); border:1px solid var(--line);}
+  .msg.err{align-self:flex-start; background:rgba(251,113,133,.13); border:1px solid rgba(251,113,133,.4); color:var(--danger); font-weight:700;}
+
+  ul.list{list-style:none; margin:0; padding:0;}
+  .item{display:flex; align-items:center; gap:12px; background:var(--card2); border:1px solid var(--line);
+    border-radius:14px; padding:13px 14px; margin-bottom:10px;}
+  .item .g{flex:1; min-width:0; word-break:break-word;}
+  .x{background:transparent;color:var(--mut);font-size:20px;line-height:1;padding:2px 8px;border:none;border-radius:8px;}
+  .empty{text-align:center;color:var(--mut);padding:24px 10px;font-size:14px;}
+  .err{background:rgba(251,113,133,.12); border:1px solid rgba(251,113,133,.35); color:var(--danger);
+    padding:12px 14px; border-radius:13px; font-size:13.5px; font-weight:700;}
+  .skeleton{background:linear-gradient(90deg,var(--card2) 25%,rgba(125,145,195,.16) 37%,var(--card2) 63%);
+    background-size:400% 100%; animation:sk 1.4s ease infinite; border-radius:10px; height:15px;}
+  @keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}
+  .bar{height:7px;border-radius:7px;background:var(--card2);overflow:hidden;margin-top:12px;}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pri),var(--pri2));width:0;transition:width .5s;}
+  .kv{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:14px;}
+  .kv:last-child{border-bottom:none;}
+  table.coin{width:100%; border-collapse:collapse;}
+  table.coin td{padding:12px 4px; border-bottom:1px solid var(--line); font-size:14.5px;}
+  table.coin tr:last-child td{border-bottom:none;}
+  .up{color:var(--ok); font-weight:800;} .down{color:var(--danger); font-weight:800;}
+  .fc{display:grid; grid-template-columns:repeat(5,1fr); gap:10px;}
+  .fday{background:var(--card2); border:1px solid var(--line); border-radius:14px; padding:12px 6px; text-align:center;}
+  .fday .d{font-size:11.5px; color:var(--mut); font-weight:800;} .fday .e{font-size:24px; margin:6px 0;}
+  .fday .h{font-weight:900; font-size:14px;} .fday .l{font-size:12px; color:var(--mut);}
+  .switch{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);}
+  .switch:last-child{border-bottom:none;}
+  .toggle{width:54px;height:31px;border-radius:20px;background:var(--card2);border:1px solid var(--line);position:relative;transition:.2s;flex-shrink:0;}
+  .toggle.on{background:var(--pri);border-color:var(--pri);}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:25px;height:25px;border-radius:50%;background:#fff;transition:.2s;}
+  .toggle.on::after{left:27px;}
+  .linklist a{display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--line); border-radius:14px;
+    margin-bottom:10px; text-decoration:none; color:var(--txt); background:var(--card2); font-weight:700;}
+  .linklist a:hover{border-color:var(--pri);}
+  .linklist .ic{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--pri),var(--pri2));
+    display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0;}
+  .linklist .sub{font-size:12px; color:var(--mut); font-weight:500;}
+  .prose{font-size:14.5px; line-height:1.7;} .prose h3{margin:18px 0 6px; font-size:15.5px;}
+  .prose p{margin:0 0 10px; color:var(--mut);}
+  details.acc{border:1px solid var(--line); border-radius:14px; margin-bottom:10px; background:var(--card2); overflow:hidden;}
+  details.acc summary{padding:14px 16px; font-weight:800; cursor:pointer; list-style:none;}
+  details.acc summary::-webkit-details-marker{display:none;}
+  details.acc summary::after{content:"＋"; float:right; color:var(--mut);}
+  details.acc[open] summary::after{content:"−";}
+  details.acc .body{padding:0 16px 16px;}
+  footer{text-align:center; color:var(--mut); font-size:12.5px; margin-top:28px; line-height:1.7;}
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+    background:var(--card2); border:1px solid var(--line); padding:11px 20px; border-radius:26px; font-size:13.5px;
+    font-weight:700; opacity:0; pointer-events:none; transition:.25s; z-index:60; box-shadow:var(--shadow);}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;}
+  .warnbox{background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.4); color:var(--warn);
+    padding:12px 14px; border-radius:13px; font-size:13px; font-weight:600;}
+  .kbd{background:var(--card2); border:1px solid var(--line); border-bottom-width:2px; border-radius:7px; padding:1px 7px; font-size:12px; font-weight:800;}
+  .badge{display:inline-block; background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff; font-size:10.5px;
+    font-weight:900; padding:3px 9px; border-radius:20px; letter-spacing:.6px;}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<div class="wrap">
+
+  <header class="top">
+    <div class="logo">TD</div>
+    <div class="brand">
+      <h1>Tech <span>Drishti</span></h1>
+      <p>Live news · weather · AI assistant · accessibility — all online</p>
+    </div>
+    <div class="spacer"></div>
+    <div class="pill" role="status"><span class="dot" id="netdot"></span><span id="nettxt">Online</span></div>
+    <button class="iconbtn" id="a11yQuick" title="Accessibility mode" aria-label="Toggle accessibility mode" onclick="go('access', document.querySelector('nav.tabs button[data-s=access]'))">♿</button>
+    <button class="iconbtn" id="refreshBtn" title="Refresh live data" aria-label="Refresh live data" onclick="refreshAll()">⟳</button>
+    <button class="iconbtn" id="themeBtn" title="Switch light or dark theme" aria-label="Switch theme" onclick="toggleTheme()">◐</button>
+    <button class="avatar" id="avatarBtn" title="Profile" aria-label="Open profile" onclick="go('profile', document.querySelector('nav.tabs button[data-s=profile]'))">?</button>
+  </header>
+
+  <nav class="tabs" aria-label="Main sections">
+    <button class="on" data-s="home" onclick="go('home',this)">Home</button>
+    <button data-s="news" onclick="go('news',this)">Live News</button>
+    <button data-s="weather" onclick="go('weather',this)">Weather</button>
+    <button data-s="ai" onclick="go('ai',this)">AI Assistant</button>
+    <button data-s="tools" onclick="go('tools',this)">Tools</button>
+    <button data-s="access" onclick="go('access',this)">Accessibility</button>
+    <button data-s="profile" onclick="go('profile',this)">Profile</button>
+  </nav>
+
+  <main id="main">
+
+  <!-- ============ HOME ============ -->
+  <section class="screen on" id="s-home" aria-label="Home dashboard">
+    <div class="grid g2">
+      <div class="card">
+        <div class="lbl">Right now</div>
+        <div class="clock" id="clock">--:--:--</div>
+        <div class="mut" id="dateline">—</div>
+        <div class="bar"><i id="daybar"></i></div>
+        <div class="small mut" id="daypct" style="margin-top:8px">—</div>
+      </div>
+      <div class="card">
+        <div class="lbl">Weather · <span id="hwCity">Detecting…</span></div>
+        <div class="row" style="gap:16px; flex-wrap:nowrap">
+          <div class="wxicon" id="hwIcon">⏳</div>
+          <div><div class="temp" id="hwTemp">—</div><div class="small mut" id="hwDesc">getting your location…</div></div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="kv"><span class="mut">Feels like</span><b id="hwFeels">—</b></div>
+          <div class="kv"><span class="mut">Humidity</span><b id="hwHum">—</b></div>
+          <div class="kv"><span class="mut">Wind</span><b id="hwWind">—</b></div>
+        </div>
+        <button class="btn ghost sm" style="margin-top:12px; width:100%" onclick="useMyLocation(true)">Use my current location</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="lbl" style="margin:0">Top headlines · <span id="homeNewsCity">your area</span></div>
+        <button class="btn ghost sm" onclick="go('news', document.querySelector('nav.tabs button[data-s=news]'))">Open news</button>
+      </div>
+      <div class="newslist" id="homeNews" style="margin-top:12px">
+        <div class="skeleton" style="width:70%"></div><div class="skeleton"></div><div class="skeleton" style="width:50%"></div>
+      </div>
+    </div>
+
+    <div class="grid g3">
+      <div class="card">
+        <div class="lbl">Crypto · live</div>
+        <table class="coin" id="homeCoins"><tbody><tr><td class="mut">loading…</td></tr></tbody></table>
+      </div>
+      <div class="card">
+        <div class="lbl">Currency · live</div>
+        <div class="temp" id="cOut" style="font-size:26px">—</div>
+        <div class="small mut" id="cRate" style="margin-top:6px">—</div>
+      </div>
+      <div class="card">
+        <div class="lbl">Ask the assistant</div>
+        <div class="mut small">A free AI assistant that needs no API key. Ask anything — in English or Hindi.</div>
+        <button class="btn" style="margin-top:12px; width:100%" onclick="go('ai', document.querySelector('nav.tabs button[data-s=ai]'))">Open AI Assistant</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEWS ============ -->
+  <section class="screen" id="s-news" aria-label="Live news">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="h2">Live News</div>
+        <button class="btn ghost sm" onclick="speakNews()" aria-label="Read headlines aloud">🔊 Read aloud</button>
+      </div>
+      <div class="lbl" style="margin-top:14px">Language</div>
+      <div class="chips" id="langChips"></div>
+      <div class="lbl" style="margin-top:14px">Category</div>
+      <div class="chips" id="catChips"></div>
+      <div class="lbl" style="margin-top:14px">Location news (your city or any city)</div>
+      <div class="row">
+        <input id="newsCity" placeholder="e.g. Delhi, Mumbai, your city…" aria-label="City for local news">
+        <button class="btn" onclick="loadNewsCity()">Get city news</button>
+        <button class="btn ghost" onclick="useMyLocation(false)">My location</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between; margin-bottom:12px">
+        <div class="small mut" id="newsMeta">Loading…</div>
+        <button class="btn ghost sm" onclick="loadNews()" aria-label="Reload news">⟳ Reload</button>
+      </div>
+      <div class="newslist" id="newsList"></div>
+    </div>
+  </section>
+
+  <!-- ============ WEATHER ============ -->
+  <section class="screen" id="s-weather" aria-label="Weather">
+    <div class="card">
+      <div class="lbl">Search a city</div>
+      <div class="row">
+        <input id="cityInput" placeholder="e.g. Bengaluru, London, Tokyo…" aria-label="Search a city" onkeydown="if(event.key==='Enter')searchCity()">
+        <button class="btn" onclick="searchCity()">Go</button>
+        <button class="btn ghost" onclick="useMyLocation(true)">My location</button>
+      </div>
+      <div class="chips" id="cityChips"></div>
+    </div>
+    <div class="card">
+      <div class="lbl">Now in <span id="wCity">—</span></div>
+      <div class="row" style="gap:18px; flex-wrap:nowrap">
+        <div class="wxicon" id="wIcon">⏳</div>
+        <div><div class="temp" id="wTemp">—</div><div class="small mut" id="wDesc">loading…</div></div>
+        <div class="spacer"></div>
+        <div class="small mut" style="text-align:right"><div id="wHi">H: —</div><div id="wLo">L: —</div></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="kv"><span class="mut">Feels like</span><b id="wFeels">—</b></div>
+        <div class="kv"><span class="mut">Humidity</span><b id="wHum">—</b></div>
+        <div class="kv"><span class="mut">Wind speed</span><b id="wWind">—</b></div>
+      </div>
+      <button class="btn ghost sm" style="margin-top:12px" onclick="speakWeather()" aria-label="Read the weather aloud">🔊 Read weather aloud</button>
+    </div>
+    <div class="card">
+      <div class="lbl">5-day forecast</div>
+      <div class="fc" id="forecast"></div>
+    </div>
+  </section>
+
+  <!-- ============ AI ============ -->
+  <section class="screen" id="s-ai" aria-label="AI assistant">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="h2">AI Assistant</div>
+          <div class="small mut">Free &amp; open — <b>no API key needed</b>. Powered by a public open AI endpoint.</div>
+        </div>
+        <button class="btn ghost sm" onclick="clearChat()">Clear chat</button>
+      </div>
+      <div class="chips" style="margin-top:12px">
+        <div class="chip" onclick="ask('Explain in simple Hindi: what is artificial intelligence?')">AI in simple Hindi</div>
+        <div class="chip" onclick="ask('Give me 5 healthy breakfast ideas for Indian homes')">Breakfast ideas</div>
+        <div class="chip" onclick="ask('Write a short motivational quote about never giving up')">Motivation</div>
+        <div class="chip" onclick="ask('Explain photosynthesis to a 10 year old')">Explain to a child</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chat" id="chat" role="log" aria-live="polite" aria-label="Conversation">
+        <div class="msg bot">Namaste! I'm the Tech Drishti assistant. Ask me anything — I can answer in English, Hindi or any Indian language. No sign-in, no API key.</div>
+      </div>
+      <div class="row" style="flex-wrap:nowrap">
+        <button class="iconbtn" id="micBtn" style="width:auto;padding:0 16px" title="Speak your question" aria-label="Voice input" onclick="voiceAsk()">🎤 Speak</button>
+        <input id="aiInput" placeholder="Ask anything…" aria-label="Your question" onkeydown="if(event.key==='Enter')ask()">
+        <button class="btn" onclick="ask()">Send</button>
+      </div>
+      <div class="small mut" style="margin-top:10px">Tip: the Speak button uses your browser's speech recognition — great for accessibility.</div>
+    </div>
+  </section>
+
+  <!-- ============ TOOLS ============ -->
+  <section class="screen" id="s-tools" aria-label="Tools">
+    <div class="card">
+      <div class="h2">Currency converter</div>
+      <div class="small mut" style="margin-bottom:12px">Live exchange rates.</div>
+      <div class="row" style="flex-wrap:nowrap">
+        <input id="mAmt" type="number" value="1000" min="0" step="any" oninput="conv()" aria-label="Amount" style="flex:0 0 100px">
+        <select id="mFrom" onchange="conv()" aria-label="From currency"></select>
+        <span class="mut" style="font-weight:800">→</span>
+        <select id="mTo" onchange="conv()" aria-label="To currency"></select>
+      </div>
+      <div class="temp" id="mOut" style="font-size:30px; margin-top:12px">—</div>
+      <div class="small mut" id="mRate" style="margin-top:6px">—</div>
+    </div>
+    <div class="card">
+      <div class="h2">Crypto prices</div>
+      <div class="small mut" style="margin-bottom:8px">Live, in USD and INR.</div>
+      <table class="coin" id="coinTable"><tbody><tr><td class="mut">loading…</td></tr></tbody></table>
+      <div class="small mut" style="margin-top:10px" id="coinStamp">—</div>
+    </div>
+    <div class="card">
+      <div class="h2">Knowledge search</div>
+      <div class="small mut" style="margin-bottom:12px">Instant summaries from Wikipedia, in many languages.</div>
+      <div class="row">
+        <input id="wikiInput" placeholder="Search any topic…" aria-label="Search Wikipedia" onkeydown="if(event.key==='Enter')wikiGo()">
+        <button class="btn" onclick="wikiGo()">Search</button>
+      </div>
+      <div class="chips" id="wikiChips"></div>
+      <div id="wikiOut" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <!-- ============ ACCESSIBILITY ============ -->
+  <section class="screen" id="s-access" aria-label="Accessibility for visually impaired users">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="h2">♿ Accessibility</div>
+          <div class="small mut">Built for visually impaired users, screen-reader users (TalkBack / NVDA / Jieshuo) and anyone who needs a friendlier screen.</div>
+        </div>
+        <span class="badge">दृष्टि</span>
+      </div>
+      <button class="btn" style="margin-top:14px; width:100%" onclick="readPage()" aria-label="Read this page aloud">🔊 Read this page aloud</button>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Display</div>
+      <div class="switch">
+        <div><b>High contrast mode</b><div class="small mut">Maximum contrast for low vision</div></div>
+        <div class="toggle" id="tHc" role="switch" tabindex="0" aria-label="High contrast mode" onclick="toggleSetting('hc', this)"></div>
+      </div>
+      <div class="switch">
+        <div><b>Dyslexia-friendly font</b><div class="small mut">Wider, easier letter shapes</div></div>
+        <div class="toggle" id="tDys" role="switch" tabindex="0" aria-label="Dyslexia friendly font" onclick="toggleSetting('dys', this)"></div>
+      </div>
+      <div class="switch">
+        <div><b>Reduce motion</b><div class="small mut">Turn off animations</div></div>
+        <div class="toggle" id="tMotion" role="switch" tabindex="0" aria-label="Reduce motion" onclick="toggleSetting('nomotion', this)"></div>
+      </div>
+      <div class="switch">
+        <div><b>Text size</b><div class="small mut">Make everything bigger</div></div>
+        <div class="row" style="flex-wrap:nowrap; gap:6px">
+          <button class="iconbtn" aria-label="Decrease text size" onclick="setFont(-1)">A−</button>
+          <button class="iconbtn" aria-label="Reset text size" onclick="setFont(0)">A</button>
+          <button class="iconbtn" aria-label="Increase text size" onclick="setFont(1)">A+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Speech &amp; voice</div>
+      <div class="switch">
+        <div><b>Read aloud speed</b><div class="small mut">How fast the voice speaks</div></div>
+        <div class="row" style="flex-wrap:nowrap; gap:6px">
+          <button class="iconbtn" aria-label="Slower" onclick="setRate(-0.1)">−</button>
+          <span id="rateVal" style="font-weight:800; min-width:44px; text-align:center">1.0×</span>
+          <button class="iconbtn" aria-label="Faster" onclick="setRate(0.1)">+</button>
+        </div>
+      </div>
+      <div class="switch">
+        <div><b>Test the voice</b><div class="small mut">Speaks a sample sentence</div></div>
+        <button class="btn ghost" onclick="speak('Tech Drishti is ready. I can read the screen for you.')">▶ Test</button>
+      </div>
+      <div class="switch">
+        <div><b>Voice search</b><div class="small mut">Use the 🎤 in the AI tab or here to search by voice</div></div>
+        <button class="btn ghost" onclick="voiceSearch()">🎤 Speak</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Keyboard shortcuts</div>
+      <div class="kv"><span class="mut">Go to Home / News / Weather</span><span><span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span></span></div>
+      <div class="kv"><span class="mut">AI Assistant / Tools</span><span><span class="kbd">4</span> <span class="kbd">5</span></span></div>
+      <div class="kv"><span class="mut">Accessibility / Profile</span><span><span class="kbd">6</span> <span class="kbd">7</span></span></div>
+      <div class="kv"><span class="mut">Read the current page aloud</span><span class="kbd">R</span></div>
+      <div class="kv"><span class="mut">Stop speaking</span><span class="kbd">Esc</span></div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">What makes Tech Drishti accessible</div>
+      <div class="prose">
+        <p>Every screen uses proper landmarks, headings and ARIA labels so screen readers announce it correctly. Interactive controls are reachable and operable by keyboard, focus outlines are always visible, and there is a skip-to-content link at the top.</p>
+        <p>The whole page can be read aloud, headlines and weather included. Text size, contrast, spacing and motion can all be adjusted from this screen — your choices are remembered on your device.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROFILE ============ -->
+  <section class="screen" id="s-profile" aria-label="Profile, about and support">
+    <div class="card">
+      <div class="row" style="gap:16px; flex-wrap:nowrap">
+        <div class="avatar" id="bigAvatar" style="width:64px;height:64px;font-size:24px">?</div>
+        <div style="flex:1; min-width:0">
+          <div class="h2" id="pName" style="margin:0">Guest</div>
+          <div class="small mut" id="pSub">Not signed in</div>
+        </div>
+      </div>
+      <div id="googleBox" style="margin-top:14px"></div>
+      <div class="row" style="margin-top:12px">
+        <input id="pNameInput" placeholder="Your name" aria-label="Your display name">
+        <button class="btn" onclick="saveName()">Save name</button>
+      </div>
+      <div class="warnbox" style="margin-top:12px">
+        Google sign-in needs a Google OAuth Client ID (free, created once in Google Cloud Console). Until one is added, Tech Drishti keeps a private profile on this device only — nothing is sent anywhere.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">About Tech Drishti</div>
+      <div class="prose">
+        <p>Tech Drishti is the main platform of the Tech Drishti family, built by <b>Shri Govind</b>. It brings live news in many Indian languages, weather for wherever you are, a free AI assistant, market rates and instant knowledge together in one professional, accessible place.</p>
+        <p>It is fully online — everything is fetched fresh from public, key-free sources — and it needs no installation, no login and no payment. The accessibility mode is a first-class part of the platform, designed so visually impaired users can use every feature comfortably.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">About &amp; Support</div>
+      <div class="linklist">
+        <a href="https://github.com/shrigovind8090-web" target="_blank" rel="noopener"><span class="ic">⌥</span><span>Developer on GitHub<span class="sub">github.com/shrigovind8090-web</span></span></a>
+        <a href="https://t.me/techdrishtibot" target="_blank" rel="noopener"><span class="ic">✉</span><span>Send Feedback to Developer<span class="sub">Telegram bot</span></span></a>
+        <a href="https://www.youtube.com/@TechDrishti-o6c" target="_blank" rel="noopener"><span class="ic">▶</span><span>Main YouTube Channel<span class="sub">Tech Drishti</span></span></a>
+        <a href="https://www.youtube.com/@DrishtiTalesOfficial" target="_blank" rel="noopener"><span class="ic">▶</span><span>Second YouTube Channel<span class="sub">Drishti Tales Official</span></span></a>
+        <a href="https://chat.whatsapp.com/IJGG6AhSudzD1NSwfQuCpX" target="_blank" rel="noopener"><span class="ic">✆</span><span>WhatsApp Community<span class="sub">Join the group</span></span></a>
+        <a href="https://whatsapp.com/channel/0029VbDEYaH6rsQyXMCcGo1S" target="_blank" rel="noopener"><span class="ic">✆</span><span>WhatsApp Channel<span class="sub">Follow updates</span></span></a>
+        <a href="https://t.me/Techdrishti" target="_blank" rel="noopener"><span class="ic">➤</span><span>Telegram Group<span class="sub">t.me/Techdrishti</span></span></a>
+        <a href="https://t.me/tech_drishti" target="_blank" rel="noopener"><span class="ic">➤</span><span>Telegram Channel<span class="sub">t.me/tech_drishti</span></span></a>
+        <a href="mailto:shrigovind8090@gmail.com"><span class="ic">@</span><span>Send Email to Shri Govind<span class="sub">shrigovind8090@gmail.com</span></span></a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Legal</div>
+      <details class="acc"><summary>Privacy Policy</summary><div class="body prose">
+        <p><b>Effective date: September 2026</b></p>
+        <p>Tech Drishti, developed by Shri Govind, is committed to protecting your privacy.</p>
+        <h3>1. No personal data collection</h3>
+        <p>Tech Drishti does not collect, store, transmit or sell any personal information. There is no account requirement and no tracking.</p>
+        <h3>2. Local storage only</h3>
+        <p>Your name, preferences and settings are stored locally on your own device. They never leave it.</p>
+        <h3>3. Live data requests</h3>
+        <p>To show live news, weather and market rates, your browser requests public data directly from third-party services (listed below). Those services may see your IP address, as with any website you visit. Tech Drishti itself runs no server and keeps no logs.</p>
+        <h3>4. Location</h3>
+        <p>Location is used only when you press a "My location" button, only to fetch your local weather and news, and only inside your browser. You can always type a city name instead.</p>
+        <h3>5. Safe for all</h3>
+        <p>No ads, no trackers, no third-party cookies. Any future change to this policy will be reflected on this page.</p>
+      </div></details>
+      <details class="acc"><summary>Terms of Service</summary><div class="body prose">
+        <p><b>Effective date: September 2026</b></p>
+        <h3>1. Nature of the service</h3>
+        <p>Tech Drishti is a free, online information platform offering news, weather, market data, knowledge search and an AI assistant.</p>
+        <h3>2. Accuracy disclaimer</h3>
+        <p>Live information comes from third-party sources. We do not guarantee that it is complete, timely or error-free, and it must not be relied on for critical decisions. Always verify important news and financial figures from an official source.</p>
+        <h3>3. AI assistant</h3>
+        <p>The assistant is an automated system. It can be wrong or out of date. Do not treat its output as professional, medical, legal or financial advice.</p>
+        <h3>4. Fair use</h3>
+        <p>Personal, non-exclusive use. Do not misuse, overload or attempt to disrupt the service.</p>
+        <h3>5. Limitation of liability</h3>
+        <p>The service is provided "as is", without warranties of any kind. By using Tech Drishti you accept these terms.</p>
+      </div></details>
+      <details class="acc"><summary>Data sources &amp; credits</summary><div class="body prose">
+        <p>Weather by Open-Meteo · news headlines via Google News · summaries by Wikipedia · exchange rates by the European Central Bank (Frankfurter) and the fawcett-ahmed currency API · crypto by CoinGecko · AI answers by a public open text endpoint.</p>
+        <p>All of these are free, public and used without any API key. We are grateful to each of them.</p>
+      </div></details>
+    </div>
+  </section>
+
+  </main>
+
+  <footer>
+    <div><b>Tech Drishti</b> — a platform by Shri Govind</div>
+    <div style="margin-top:6px">Live data is fetched fresh every visit. News, weather and rates belong to their respective sources.</div>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* =================================================================== state */
+var KEY = "techdrishti.v1";
+var GOOGLE_CLIENT_ID = "";   // optional: paste a Google OAuth client ID to enable Google sign-in
+
+var state = {
+  theme:"dark", lang:"en", cat:"TOP", city:{name:"", lat:null, lon:null},
+  profile:{ name:"", signedIn:false, email:"", picture:"" },
+  a11y:{ hc:false, dys:false, nomotion:false, fs:15, rate:1 }
+};
+function load(){ try{ var r=localStorage.getItem(KEY); if(r) state=Object.assign(state, JSON.parse(r)); }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+load();
+
+/* =================================================================== utils */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function stripTags(s){ return String(s||"").replace(/<[^>]*>/g,"").replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/&#39;/g,"'").replace(/&quot;/g,'"').trim(); }
+function toast(m){ var t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(function(){t.classList.remove("show");},2200); }
+function netStatus(){ var on=navigator.onLine; $("netdot").classList.toggle("off",!on); $("nettxt").textContent = on?"Online":"Offline"; }
+window.addEventListener("online", function(){ netStatus(); toast("Back online"); });
+window.addEventListener("offline", netStatus);
+
+async function getText(url, opts){ var r=await fetch(url, opts||{}); if(!r.ok) throw new Error("HTTP "+r.status); return r.text(); }
+async function getJSON(url, opts){ var r=await fetch(url, opts||{}); if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }
+
+/* =================================================================== nav */
+function go(name, el){
+  var s=document.querySelectorAll(".screen"); for(var i=0;i<s.length;i++) s[i].classList.remove("on");
+  var t=$("s-"+name); if(t) t.classList.add("on");
+  var b=document.querySelectorAll("nav.tabs button"); for(var j=0;j<b.length;j++) b[j].classList.remove("on");
+  if(el) el.classList.add("on");
+  window.scrollTo({top:0, behavior: state.a11y.nomotion ? "auto" : "smooth"});
+  if(name==="news" && !$("newsList").dataset.loaded) loadNews();
+}
+
+/* =================================================================== theme & a11y */
+function applyAll(){
+  document.documentElement.setAttribute("data-theme", state.theme);
+  document.documentElement.classList.toggle("hc", !!state.a11y.hc);
+  document.documentElement.classList.toggle("dys", !!state.a11y.dys);
+  document.documentElement.classList.toggle("nomotion", !!state.a11y.nomotion);
+  document.documentElement.style.setProperty("--fs", state.a11y.fs+"px");
+  ["tHc:hc","tDys:dys","tMotion:nomotion"].forEach(function(p){
+    var a=p.split(":"), el=$(a[0]); if(el) el.classList.toggle("on", !!state.a11y[a[1]]);
+  });
+  $("rateVal").textContent = Number(state.a11y.rate).toFixed(1)+"×";
+  paintProfile();
+}
+function toggleTheme(){ state.theme = state.theme==="light"?"dark":"light"; save(); applyAll(); }
+function toggleSetting(k, el){ state.a11y[k]=!state.a11y[k]; if(el) el.classList.toggle("on", state.a11y[k]); save(); applyAll();
+  toast((k==="hc"?"High contrast":k==="dys"?"Dyslexia font":"Reduce motion")+" "+(state.a11y[k]?"on":"off")); }
+function setFont(d){ if(d===0) state.a11y.fs=15; else state.a11y.fs=Math.min(24,Math.max(13,state.a11y.fs+d)); save(); applyAll(); toast("Text size "+state.a11y.fs+"px"); }
+function setRate(d){ state.a11y.rate=Math.min(2,Math.max(0.5, Number(state.a11y.rate)+d)); save(); applyAll(); }
+
+/* =================================================================== speech */
+function speak(text){
+  try{
+    if(!("speechSynthesis" in window)){ toast("Speech not supported in this browser"); return; }
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text);
+    u.rate = Number(state.a11y.rate)||1;
+    u.lang = state.lang==="hi"?"hi-IN":"en-IN";
+    window.speechSynthesis.speak(u);
+  }catch(e){ toast("Could not speak"); }
+}
+function readPage(){
+  var sec=document.querySelector(".screen.on");
+  if(!sec){ return; }
+  var txt = (sec.getAttribute("aria-label")||"Section") + ". " + (sec.innerText||"").replace(/\s+/g," ").slice(0,1400);
+  speak(txt);
+}
+function speakNews(){
+  var items=document.querySelectorAll("#newsList .nt");
+  if(!items.length){ toast("Load some news first"); return; }
+  var out=[]; for(var i=0;i<Math.min(8,items.length);i++) out.push((i+1)+". "+items[i].innerText);
+  speak("Top headlines. "+out.join(". "));
+}
+function speakWeather(){
+  var c=$("hwCity").textContent;
+  speak("Weather for "+$("wCity").textContent+". "+$("wTemp").textContent+", "+$("wDesc").textContent+". Feels like "+$("wFeels").textContent+". Humidity "+$("wHum").textContent+". Wind "+$("wWind").textContent+".");
+}
+function voiceAsk(){ voiceTo($("aiInput"), function(){ ask(); }); }
+function voiceSearch(){ voiceTo(null, function(t){ $("wikiInput").value=t; go("tools", document.querySelector('nav.tabs button[data-s=tools]')); wikiGo(); }); }
+function voiceTo(input, cb){
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ toast("Voice input not supported — try Chrome on Android"); return; }
+  var r=new SR(); r.lang = state.lang==="hi"?"hi-IN":"en-IN"; r.interimResults=false; r.maxAlternatives=1;
+  toast("Listening… speak now");
+  r.onresult=function(e){ var t=e.results[0][0].transcript; if(input) input.value=t; if(cb) cb(t); };
+  r.onerror=function(){ toast("Could not hear you"); };
+  r.start();
+}
+
+/* =================================================================== weather */
+var CITIES=[["Delhi",28.6139,77.2090],["Mumbai",19.0760,72.8777],["Bengaluru",12.9716,77.5946],["Chennai",13.0827,80.2707],
+["Kolkata",22.5726,88.3639],["Hyderabad",17.3850,78.4867],["Pune",18.5204,73.8567],["Ahmedabad",23.0225,72.5714],
+["Jaipur",26.9124,75.7873],["Lucknow",26.8467,80.9462],["Patna",25.5941,85.1376],["Bhopal",23.2599,77.4126],
+["New York",40.7128,-74.0060],["London",51.5074,-0.1278],["Dubai",25.2048,55.2708],["Singapore",1.3521,103.8198],
+["Tokyo",35.6762,139.6503],["Sydney",-33.8688,151.2093]];
+var WMO={0:["☀️","Clear sky"],1:["🌤️","Mainly clear"],2:["⛅","Partly cloudy"],3:["☁️","Overcast"],45:["🌫️","Fog"],48:["🌫️","Rime fog"],
+51:["🌦️","Light drizzle"],53:["🌦️","Drizzle"],55:["🌧️","Dense drizzle"],61:["🌦️","Light rain"],63:["🌧️","Rain"],65:["🌧️","Heavy rain"],
+66:["🌧️","Freezing rain"],67:["🌧️","Freezing rain"],71:["🌨️","Light snow"],73:["🌨️","Snow"],75:["❄️","Heavy snow"],77:["🌨️","Snow grains"],
+80:["🌦️","Rain showers"],81:["🌧️","Rain showers"],82:["⛈️","Violent showers"],85:["🌨️","Snow showers"],86:["🌨️","Snow showers"],
+95:["⛈️","Thunderstorm"],96:["⛈️","Thunderstorm + hail"],99:["⛈️","Thunderstorm + hail"]};
+function wmo(c){ return WMO[c]||["🌡️","—"]; }
+function dayName(iso,i){ if(i===0) return "Today"; return new Date(iso+"T12:00:00").toLocaleDateString(undefined,{weekday:"short"}); }
+
+async function loadWeather(){
+  var c=state.city;
+  if(c.lat==null){ $("hwDesc").textContent="set a location"; $("wDesc").textContent="set a location"; return; }
+  var url="https://api.open-meteo.com/v1/forecast?latitude="+c.lat+"&longitude="+c.lon+
+    "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m"+
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5";
+  try{
+    var j=await getJSON(url), cu=j.current, d=j.daily, w=wmo(cu.weather_code);
+    var nm=c.name||"Your location";
+    $("hwCity").textContent=nm; $("wCity").textContent=nm; $("homeNewsCity").textContent=nm;
+    $("hwIcon").textContent=w[0]; $("wIcon").textContent=w[0];
+    $("hwTemp").textContent=Math.round(cu.temperature_2m)+"°"; $("wTemp").textContent=Math.round(cu.temperature_2m)+"°";
+    $("hwDesc").textContent=w[1]; $("wDesc").textContent=w[1];
+    $("hwFeels").textContent=Math.round(cu.apparent_temperature)+"°C"; $("wFeels").textContent=Math.round(cu.apparent_temperature)+"°C";
+    $("hwHum").textContent=cu.relative_humidity_2m+"%"; $("wHum").textContent=cu.relative_humidity_2m+"%";
+    $("hwWind").textContent=Math.round(cu.wind_speed_10m)+" km/h"; $("wWind").textContent=Math.round(cu.wind_speed_10m)+" km/h";
+    $("wHi").textContent="H: "+Math.round(d.temperature_2m_max[0])+"°"; $("wLo").textContent="L: "+Math.round(d.temperature_2m_min[0])+"°";
+    var html="";
+    for(var i=0;i<d.time.length;i++){ var dw=wmo(d.weather_code[i]);
+      html+='<div class="fday"><div class="d">'+dayName(d.time[i],i)+'</div><div class="e">'+dw[0]+'</div><div class="h">'+Math.round(d.temperature_2m_max[i])+'°</div><div class="l">'+Math.round(d.temperature_2m_min[i])+'°</div></div>'; }
+    $("forecast").innerHTML=html;
+  }catch(e){
+    $("hwDesc").textContent="could not load"; $("wDesc").textContent="could not load";
+    $("forecast").innerHTML='<div class="err" style="grid-column:1/-1">Live weather could not be fetched. Check your connection and tap ⟳.</div>';
+  }
+}
+function setCity(name, lat, lon, quiet){
+  state.city={name:name, lat:lat, lon:lon}; save(); loadWeather();
+  if(!quiet) toast("Weather set to "+name);
+}
+function searchCity(){
+  var q=$("cityInput").value.trim(); if(!q) return;
+  getJSON("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(q)+"&count=1&language=en&format=json")
+    .then(function(j){
+      if(j.results&&j.results.length){ var r=j.results[0]; setCity(r.name+(r.country_code?", "+r.country_code:""), r.latitude, r.longitude); }
+      else toast("City not found");
+    })
+    .catch(function(){
+      var f=CITIES.filter(function(c){ return c[0].toLowerCase().indexOf(q.toLowerCase())===0; });
+      if(f.length) setCity(f[0][0],f[0][1],f[0][2]); else toast("Could not search right now");
+    });
+}
+function defaultCity(){ if(state.city.lat==null) setCity("Delhi",28.6139,77.2090,true); }
+function useMyLocation(forWeather){
+  if(!navigator.geolocation){ defaultCity(); toast("Location not supported — showing Delhi"); return; }
+  toast("Getting your location…");
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat=pos.coords.latitude, lon=pos.coords.longitude;
+    setCity("Your location", lat, lon, true);
+    // best-effort friendly place name (works in most browsers)
+    getJSON("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude="+lat+"&longitude="+lon+"&localityLanguage=en")
+      .then(function(g){ var nm=g.city||g.locality||g.principalSubdivision||"Your location"; state.city.name=nm; save(); loadWeather(); $("newsCity").value=nm; if(!forWeather) loadNewsCity(); })
+      .catch(function(){ $("newsCity").value="Your location"; if(!forWeather) toast("Located — type your city name for local news"); });
+    toast("Location found");
+    if(!forWeather) loadNewsCity();
+  }, function(){ defaultCity(); toast("Location not allowed — showing Delhi. Use the location button or type your city."); }, {timeout:12000, maximumAge:600000});
+}
+function buildCityChips(){
+  $("cityChips").innerHTML=CITIES.map(function(c){ return '<button class="chip" onclick="setCity(\''+c[0]+'\','+c[1]+','+c[2]+')">'+c[0]+'</button>'; }).join("");
+}
+
+/* =================================================================== news */
+var LANGS=[
+  ["en","English","en-IN","IN:en"], ["hi","हिन्दी","hi-IN","IN:hi"], ["ta","தமிழ்","ta-IN","IN:ta"],
+  ["te","తెలుగు","te-IN","IN:te"], ["bn","বাংলা","bn-IN","IN:bn"], ["mr","मराठी","mr-IN","IN:mr"],
+  ["gu","ગુજરાતી","gu-IN","IN:gu"], ["kn","ಕನ್ನಡ","kn-IN","IN:kn"], ["ml","മലയാളം","ml-IN","IN:ml"],
+  ["pa","ਪੰਜਾਬੀ","pa-IN","IN:pa"], ["ur","اردو","ur-IN","IN:ur"]
+];
+var CATS=[["TOP","Top stories",""],["NATION","India","headlines/section/topic/NATION"],["WORLD","World","headlines/section/topic/WORLD"],
+["BUSINESS","Business","headlines/section/topic/BUSINESS"],["TECHNOLOGY","Technology","headlines/section/topic/TECHNOLOGY"],
+["SPORTS","Sports","headlines/section/topic/SPORTS"],["ENTERTAINMENT","Entertainment","headlines/section/topic/ENTERTAINMENT"],
+["HEALTH","Health","headlines/section/topic/HEALTH"],["SCIENCE","Science","headlines/section/topic/SCIENCE"]];
+
+function langInfo(code){ for(var i=0;i<LANGS.length;i++) if(LANGS[i][0]===code) return LANGS[i]; return LANGS[0]; }
+function catInfo(code){ for(var i=0;i<CATS.length;i++) if(CATS[i][0]===code) return CATS[i]; return CATS[0]; }
+
+function buildNewsChips(){
+  $("langChips").innerHTML=LANGS.map(function(l){ return '<button class="chip '+(state.lang===l[0]?"on":"")+'" onclick="setLang(\''+l[0]+'\')">'+l[1]+'</button>'; }).join("");
+  $("catChips").innerHTML=CATS.map(function(c){ return '<button class="chip '+(state.cat===c[0]?"on":"")+'" onclick="setCat(\''+c[0]+'\')">'+c[1]+'</button>'; }).join("");
+}
+function setLang(c){ state.lang=c; save(); buildNewsChips(); loadNews(); }
+function setCat(c){ state.cat=c; save(); buildNewsChips(); loadNews(); }
+
+function googleNewsUrl(city){
+  var l=langInfo(state.lang);
+  if(city) return "https://news.google.com/rss/search?q="+encodeURIComponent(city)+"&hl="+l[2]+"&gl=IN&ceid="+l[3];
+  var c=catInfo(state.cat);
+  if(!c[2]) return "https://news.google.com/rss?hl="+l[2]+"&gl=IN&ceid="+l[3];
+  return "https://news.google.com/rss/"+c[2]+"?hl="+l[2]+"&gl=IN&ceid="+l[3];
+}
+/* Public CORS relays — tried in order, since a plain browser cannot read
+   Google's RSS directly. If one is down the next is used. */
+var PROXIES=[
+  function(u){ return "https://api.allorigins.win/raw?url="+encodeURIComponent(u); },
+  function(u){ return "https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(u); },
+  function(u){ return "https://corsproxy.io/?"+encodeURIComponent(u); },
+  function(u){ return "https://api.cors.lol/?url="+encodeURIComponent(u); },
+  function(u){ return u; }
+];
+function parseRss(xmlText){
+  var doc=new DOMParser().parseFromString(xmlText,"text/xml");
+  if(doc.querySelector("parsererror")) throw new Error("bad xml");
+  var items=doc.querySelectorAll("item"), out=[];
+  for(var i=0;i<items.length && i<30;i++){
+    var it=items[i];
+    var title=(it.querySelector("title")?it.querySelector("title").textContent:"").trim();
+    var link=(it.querySelector("link")?it.querySelector("link").textContent:"").trim();
+    var pub=(it.querySelector("pubDate")?it.querySelector("pubDate").textContent:"").trim();
+    var srcEl=it.querySelector("source"); var src=srcEl?srcEl.textContent.trim():"";
+    var imgEl=it.querySelector("content, thumbnail") || it.getElementsByTagName("media:content")[0];
+    var img=imgEl?(imgEl.getAttribute("url")||""):"";
+    if(title) out.push({title:title, link:link, src:src, date:pub, img:img});
+  }
+  return out;
+}
+async function fetchNews(url){
+  var lastErr=null;
+  for(var i=0;i<PROXIES.length;i++){
+    try{
+      var txt=await getText(PROXIES[i](url));
+      var items=parseRss(txt);
+      if(items.length) return {items:items, via:(i===PROXIES.length-1?"direct":"relay "+(i+1))};
+    }catch(e){ lastErr=e; }
+  }
+  // verified fallback: Wikipedia's curated world news (works without any relay)
+  try{
+    var out=[], seen={};
+    var itn=await getJSON("https://en.wikipedia.org/w/api.php?action=parse&page=Template:In_the_news&prop=text&format=json&origin=*");
+    var l1=new DOMParser().parseFromString(itn.parse.text["*"],"text/html").querySelectorAll("li");
+    for(var i=0;i<l1.length;i++){ var t=(l1[i].textContent||"").replace(/\s+/g," ").trim();
+      if(t.length>30 && !seen[t]){ seen[t]=1; out.push({title:t, link:"https://en.wikipedia.org/wiki/Portal:Current_events", src:"Wikipedia", date:"", img:""}); } }
+    if(out.length<8){
+      var pe=await getJSON("https://en.wikipedia.org/w/api.php?action=parse&page=Portal:Current_events&prop=text&format=json&origin=*");
+      var l2=new DOMParser().parseFromString(pe.parse.text["*"],"text/html").querySelectorAll("li");
+      for(var k=0;k<l2.length && out.length<20;k++){
+        var t2=(l2[k].textContent||"").replace(/\s+/g," ").trim();
+        var dots=(t2.match(/ · /g)||[]).length;
+        if(t2.length>70 && t2.length<300 && dots<2 && !/portal|subpage|editor|wikipedia|checked|needed|nomination|criteria|discussion|recent deaths|ongoing|error report|main page|template|wikidata|talk|history/i.test(t2) && !seen[t2]){
+          seen[t2]=1; out.push({title:t2, link:"https://en.wikipedia.org/wiki/Portal:Current_events", src:"Wikipedia", date:"", img:""}); }
+      }
+    }
+    if(out.length) return {items:out, via:"Wikipedia world news (fallback)"};
+  }catch(e2){}
+  throw lastErr||new Error("news unavailable");
+}
+function newsCard(n){
+  var meta=[];
+  if(n.src) meta.push('<span class="tag">'+esc(n.src)+'</span>');
+  if(n.date){ var d=new Date(n.date); if(!isNaN(d)) meta.push('<span>'+d.toLocaleString()+'</span>'); }
+  return '<article class="nitem">'+(n.img?'<img src="'+esc(n.img)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'')+
+    '<div class="nb"><div class="nt"><a href="'+esc(n.link)+'" target="_blank" rel="noopener">'+esc(n.title)+'</a></div>'+
+    '<div class="nm">'+meta.join("")+'</div></div></article>';
+}
+function skeletonNews(n){ var h=""; for(var i=0;i<(n||5);i++) h+='<div class="skeleton" style="height:74px; border-radius:15px"></div>'; return h; }
+
+async function loadNews(){
+  var box=$("newsList"); box.innerHTML=skeletonNews(5);
+  $("newsMeta").textContent="Fetching live headlines…";
+  var c=catInfo(state.cat);
+  try{
+    var r=await fetchNews(googleNewsUrl());
+    box.innerHTML=r.items.map(newsCard).join("");
+    box.dataset.loaded="1";
+    $("newsMeta").textContent=r.items.length+" headlines · "+c[1]+" · "+langInfo(state.lang)[1]+" · via "+r.via;
+    var hn=await fetchNews(googleNewsUrl(state.city.name||"India")).catch(function(){return null;});
+    if(hn) $("homeNews").innerHTML=hn.items.slice(0,4).map(newsCard).join("");
+  }catch(e){
+    box.innerHTML='<div class="err">Live news could not be loaded right now. This feed uses a public relay to reach Google News; if it is busy, tap ⟳ Reload in a moment.</div>';
+    $("newsMeta").textContent="Unavailable";
+  }
+}
+function loadNewsCity(){
+  var c=$("newsCity").value.trim();
+  if(!c){ toast("Type a city name first"); return; }
+  go("news", document.querySelector('nav.tabs button[data-s=news]'));
+  var box=$("newsList"); box.innerHTML=skeletonNews(5); $("newsMeta").textContent="Fetching news for "+c+"…";
+  fetchNews(googleNewsUrl(c)).then(function(r){
+    box.innerHTML=r.items.map(newsCard).join(""); box.dataset.loaded="1";
+    $("newsMeta").textContent=r.items.length+' headlines for "'+c+'" · via '+r.via;
+  }).catch(function(){
+    box.innerHTML='<div class="err">Could not load city news right now. Tap ⟳ Reload to retry.</div>';
+  });
+}
+
+/* =================================================================== currency + crypto */
+var CUR=["USD","EUR","GBP","INR","JPY","AUD","CAD","CHF","CNY","SGD","AED","HKD","NZD","ZAR","SEK","NOK","KRW","THB","MYR","BRL","MXN"];
+var rates=null, rateSource="";
+async function loadRates(){
+  rates=null; rateSource="";
+  try{ var j=await getJSON("https://api.frankfurter.app/latest?from=USD&to="+CUR.join(",")); rates=Object.assign({USD:1},j.rates); rateSource="ECB"; }catch(e){}
+  if(!rates){
+    try{
+      var k=await getJSON("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json");
+      var u=k.usd, o={USD:1}; CUR.forEach(function(c){ var v=u[c.toLowerCase()]; if(v) o[c]=v; });
+      rates=o; rateSource="live rates";
+    }catch(e2){}
+  }
+  conv();
+}
+function fillSelects(){
+  var o=CUR.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join("");
+  $("mFrom").innerHTML=o; $("mTo").innerHTML=o; $("mFrom").value="USD"; $("mTo").value="INR";
+}
+function inrRate(){ return (rates&&rates.INR)?rates.INR:83; }
+function convert(a,f,t){ if(!rates||!rates[f]||!rates[t]) return null; return a/rates[f]*rates[t]; }
+function conv(){
+  var a=parseFloat($("mAmt").value)||0, f=$("mFrom").value, t=$("mTo").value, v=convert(a,f,t);
+  $("mOut").textContent = v==null?"—":v.toLocaleString(undefined,{maximumFractionDigits:2})+" "+t;
+  $("cOut").textContent = v==null?"—":(convert(1,"USD","INR")||0).toFixed(2)+" INR";
+  $("mRate").textContent = v==null?"Rates unavailable — tap ⟳":("1 "+f+" = "+convert(1,f,t).toLocaleString(undefined,{maximumFractionDigits:4})+" "+t+" · "+rateSource);
+  $("cRate").textContent = rates ? ("1 USD = "+(rates.INR?rates.INR.toFixed(2):"—")+" INR · "+rateSource) : "Rates unavailable";
+}
+var COINS=[["bitcoin","Bitcoin","BTC","btc"],["ethereum","Ethereum","ETH","eth"],["solana","Solana","SOL","sol"],["ripple","XRP","XRP","xrp"]];
+function fmtNum(n){ if(n==null) return "—"; if(n>=1000) return n.toLocaleString(undefined,{maximumFractionDigits:0}); if(n>=1) return n.toLocaleString(undefined,{maximumFractionDigits:2}); return n.toLocaleString(undefined,{maximumFractionDigits:6}); }
+function coinRow(r){
+  var ch=r.hasCh?('<span class="'+(r.ch>=0?"up":"down")+'">'+(r.ch>=0?"+":"")+r.ch.toFixed(2)+'%</span>'):'<span class="mut">—</span>';
+  return '<tr><td><b>'+r.sym+'</b> <span class="mut small">'+r.name+'</span></td>'+
+    '<td style="text-align:right"><b>$'+fmtNum(r.usd)+'</b><div class="small mut">₹'+fmtNum(r.usd*inrRate())+'</div></td>'+
+    '<td style="text-align:right">'+ch+'</td></tr>';
+}
+async function loadCrypto(){
+  var rows=[], src="";
+  try{
+    var j=await getJSON("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids="+COINS.map(function(c){return c[0];}).join(",")+"&order=market_cap_desc&price_change_percentage=24h");
+    if(Array.isArray(j)&&j.length){ var b={}; j.forEach(function(c){b[c.id]=c;});
+      COINS.forEach(function(c){ var d=b[c[0]]; if(d) rows.push({sym:c[2],name:d.name,usd:d.current_price,ch:d.price_change_percentage_24h||0,hasCh:true}); });
+      src="CoinGecko"; }
+  }catch(e){}
+  if(!rows.length){
+    try{ var k=await getJSON("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json"); var u=k.usd;
+      COINS.forEach(function(c){ var v=u[c[3]]; if(v) rows.push({sym:c[2],name:c[1],usd:1/v,ch:0,hasCh:false}); }); src="currency-api";
+    }catch(e2){}
+  }
+  var tbl = rows.length ? "<tbody>"+rows.map(coinRow).join("")+"</tbody>" : '<tbody><tr><td class="mut">Crypto feed unavailable</td></tr></tbody>';
+  $("coinTable").innerHTML=tbl;
+  $("homeCoins").innerHTML = rows.length ? "<tbody>"+rows.slice(0,3).map(coinRow).join("")+"</tbody>" : '<tbody><tr><td class="mut">unavailable</td></tr></tbody>';
+  $("coinStamp").textContent = rows.length ? ("Updated "+new Date().toLocaleTimeString()+" · "+src) : "—";
+}
+
+/* =================================================================== wiki */
+var WIKI_CHIPS=["Chandrayaan-3","Indian Ocean","Quantum computing","Kathak","Monsoon","Yoga","Blockchain","Artificial intelligence"];
+function buildWikiChips(){ $("wikiChips").innerHTML=WIKI_CHIPS.map(function(w){ return '<button class="chip" onclick="wikiShow(\''+w+'\')">'+w+'</button>'; }).join(""); }
+function wikiGo(){ var q=$("wikiInput").value.trim(); if(q) wikiShow(q); }
+async function wikiShow(term){
+  var lang = state.lang==="hi"?"hi":"en";
+  $("wikiOut").innerHTML='<div class="skeleton" style="width:40%"></div><div class="skeleton" style="margin-top:10px"></div><div class="skeleton" style="margin-top:8px;width:70%"></div>';
+  try{
+    var j=await getJSON("https://"+lang+".wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(term));
+    if(!j.extract){
+      var s=await getJSON("https://"+lang+".wikipedia.org/w/api.php?action=opensearch&search="+encodeURIComponent(term)+"&limit=1&format=json&origin=*");
+      if(s&&s[1]&&s[1].length) return wikiShow(s[1][0]);
+      $("wikiOut").innerHTML='<div class="empty">No article found for “'+esc(term)+'”.</div>'; return;
+    }
+    var img=j.thumbnail?'<img src="'+j.thumbnail.source+'" alt="" style="width:96px;height:96px;border-radius:14px;object-fit:cover;float:left;margin:0 14px 8px 0">':'';
+    var url=(j.content_urls&&j.content_urls.desktop)?j.content_urls.desktop.page:"https://"+lang+".wikipedia.org/wiki/"+encodeURIComponent(term);
+    $("wikiOut").innerHTML='<div class="prose">'+img+'<h3 style="margin-top:0">'+esc(j.title)+'</h3><p>'+esc(j.extract)+'</p>'+
+      '<p><a href="'+url+'" target="_blank" rel="noopener">Read on Wikipedia →</a></p>'+
+      '<button class="btn ghost sm" onclick="speak(this.parentNode.innerText.slice(0,900))">🔊 Read aloud</button></div>';
+  }catch(e){ $("wikiOut").innerHTML='<div class="err">Could not reach Wikipedia. Check your connection.</div>'; }
+}
+
+/* =================================================================== AI assistant */
+var chatHistory=[];
+async function ask(preset){
+  var inp=$("aiInput");
+  var q = typeof preset==="string" ? preset : inp.value.trim();
+  if(!q) return;
+  if(typeof preset!=="string") inp.value="";
+  var box=$("chat");
+  box.insertAdjacentHTML("beforeend",'<div class="msg user">'+esc(q)+'</div>');
+  var think=document.createElement("div"); think.className="msg bot"; think.textContent="…"; box.appendChild(think);
+  box.scrollTop=box.scrollHeight;
+  try{
+    var prompt = "You are Tech Drishti's friendly assistant. Answer clearly and helpfully. If the user writes in Hindi or any Indian language, reply in that same language. Question: "+q;
+    var url="https://text.pollinations.ai/"+encodeURIComponent(prompt);
+    var ans=await getText(url);
+    ans=stripTags(ans).slice(0,4000) || "Sorry, I could not generate an answer.";
+    think.textContent=ans;
+    chatHistory.push({q:q,a:ans});
+  }catch(e){
+    think.className="msg err";
+    think.textContent="The assistant is busy right now (the free endpoint limits how often it can be called). Please try again in a few seconds.";
+  }
+  box.scrollTop=box.scrollHeight;
+}
+function clearChat(){ $("chat").innerHTML='<div class="msg bot">Chat cleared. Ask me anything!</div>'; chatHistory=[]; }
+
+/* =================================================================== profile */
+function paintProfile(){
+  var n = state.profile.name || "Guest";
+  var initials = n==="Guest" ? "?" : n.trim().split(/\s+/).map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();
+  $("avatarBtn").textContent=initials; $("bigAvatar").textContent=initials;
+  $("pName").textContent=n;
+  $("pSub").textContent = state.profile.signedIn ? (state.profile.email||"Signed in with Google") : "Private profile on this device — not signed in";
+  $("pNameInput").value = state.profile.name||"";
+}
+function saveName(){
+  var v=$("pNameInput").value.trim();
+  state.profile.name=v; state.profile.signedIn=state.profile.signedIn||false; save(); paintProfile(); toast("Saved");
+}
+function initGoogle(){
+  if(!GOOGLE_CLIENT_ID){
+    $("googleBox").innerHTML='<button class="btn ghost" style="width:100%" disabled>Sign in with Google (needs a Client ID)</button>';
+    return;
+  }
+  var s=document.createElement("script"); s.src="https://accounts.google.com/gsi/client"; s.async=true;
+  s.onload=function(){
+    try{
+      google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID, callback:function(resp){
+        var p=JSON.parse(atob(resp.credential.split(".")[1]));
+        state.profile={name:p.name, email:p.email, picture:p.picture, signedIn:true}; save(); paintProfile(); toast("Signed in as "+p.name);
+      }});
+      google.accounts.id.renderButton($("googleBox"), {theme:"outline", size:"large", width:280});
+    }catch(e){ $("googleBox").innerHTML='<div class="warnbox">Google sign-in could not start.</div>'; }
+  };
+  document.head.appendChild(s);
+}
+
+/* =================================================================== refresh */
+async function refreshAll(){
+  var b=$("refreshBtn"); b.classList.add("spin");
+  await loadRates();
+  await Promise.all([ loadWeather(), loadCrypto() ]);
+  b.classList.remove("spin");
+  toast("Live data refreshed");
+}
+
+/* =================================================================== keyboard */
+document.addEventListener("keydown", function(e){
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+  var map={"1":"home","2":"news","3":"weather","4":"ai","5":"tools","6":"access","7":"profile"};
+  if(map[e.key]){ var n=map[e.key]; go(n, document.querySelector('nav.tabs button[data-s='+n+']')); }
+  else if(e.key==="r"||e.key==="R"){ readPage(); }
+  else if(e.key==="Escape"){ try{ window.speechSynthesis.cancel(); }catch(x){} }
+});
+
+/* =================================================================== boot */
+fillSelects();
+buildCityChips();
+buildNewsChips();
+buildWikiChips();
+applyAll();
+netStatus();
+initGoogle();
+(function tickClock(){
+  var d=new Date();
+  $("clock").textContent=d.toLocaleTimeString(undefined,{hour12:false});
+  $("dateline").textContent=d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  var pct=Math.round((d.getHours()*60+d.getMinutes())/1440*100);
+  $("daybar").style.width=pct+"%"; $("daypct").textContent=pct+"% of the day has passed";
+  setTimeout(tickClock,1000);
+})();
+refreshAll();
+if(state.city.lat==null){ useMyLocation(true); } else { loadWeather(); }
+setTimeout(function(){ loadNews(); }, 600);
+setInterval(function(){ loadCrypto(); }, 120000);
+setInterval(function(){ loadWeather(); }, 600000);
+</script>
+</body>
+</html>
