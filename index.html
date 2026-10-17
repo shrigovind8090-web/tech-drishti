@@ -467,8 +467,8 @@
         <input id="pNameInput" placeholder="Your name" aria-label="Your display name">
         <button class="btn" onclick="saveName()">Save name</button>
       </div>
-      <div class="warnbox" style="margin-top:12px">
-        Google sign-in needs a Google OAuth Client ID (free, created once in Google Cloud Console). Until one is added, Tech Drishti keeps a private profile on this device only — nothing is sent anywhere.
+      <div class="small mut" style="margin-top:12px">
+        Signing in with Google only shares your name, email and photo with your own browser — Tech Drishti runs no server and stores nothing. You can also simply type a name below and use the whole site without signing in.
       </div>
     </div>
 
@@ -545,7 +545,7 @@
 
 /* =================================================================== state */
 var KEY = "techdrishti.v1";
-var GOOGLE_CLIENT_ID = "";   // optional: paste a Google OAuth client ID to enable Google sign-in
+var GOOGLE_CLIENT_ID = "447024040002-4np0b45rab8f8gpa8p5u4eta109qpmi0.apps.googleusercontent.com";
 
 var state = {
   theme:"dark", lang:"en", cat:"TOP", city:{name:"", lat:null, lon:null},
@@ -983,20 +983,49 @@ function saveName(){
   var v=$("pNameInput").value.trim();
   state.profile.name=v; state.profile.signedIn=state.profile.signedIn||false; save(); paintProfile(); toast("Saved");
 }
+function decodeJwt(token){
+  try{
+    var b64 = token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");
+    var json = decodeURIComponent(atob(b64).split("").map(function(c){ return "%"+("00"+c.charCodeAt(0).toString(16)).slice(-2); }).join(""));
+    return JSON.parse(json);
+  }catch(e){ return null; }
+}
+function renderSignedIn(){
+  var p = state.profile||{};
+  var img = p.picture ? '<img src="'+esc(p.picture)+'" alt="" style="width:44px;height:44px;border-radius:50%;flex-shrink:0">' : '';
+  $("googleBox").innerHTML = '<div class="row" style="gap:12px; flex-wrap:nowrap">'+img+
+    '<div style="flex:1; min-width:0"><b>'+esc(p.name||"Signed in")+'</b><div class="small mut">'+esc(p.email||"")+'</div></div>'+
+    '<button class="btn ghost sm" onclick="signOut()">Sign out</button></div>';
+}
+function signOut(){
+  try{ if(window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect(); }catch(e){}
+  state.profile={name:"", email:"", picture:"", signedIn:false, sub:""};
+  save(); paintProfile(); initGoogle(); toast("Signed out");
+}
 function initGoogle(){
   if(!GOOGLE_CLIENT_ID){
-    $("googleBox").innerHTML='<button class="btn ghost" style="width:100%" disabled>Sign in with Google (needs a Client ID)</button>';
+    $("googleBox").innerHTML='<div class="warnbox">Google sign-in is not configured yet.</div>';
     return;
   }
-  var s=document.createElement("script"); s.src="https://accounts.google.com/gsi/client"; s.async=true;
+  if(state.profile && state.profile.signedIn){ renderSignedIn(); return; }
+  $("googleBox").innerHTML='<div class="mut small">Loading Google sign-in…</div>';
+  var s=document.createElement("script");
+  s.src="https://accounts.google.com/gsi/client"; s.async=true; s.defer=true;
   s.onload=function(){
     try{
-      google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID, callback:function(resp){
-        var p=JSON.parse(atob(resp.credential.split(".")[1]));
-        state.profile={name:p.name, email:p.email, picture:p.picture, signedIn:true}; save(); paintProfile(); toast("Signed in as "+p.name);
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: function(resp){
+        var p = decodeJwt(resp.credential);
+        if(!p){ toast("Sign-in failed"); return; }
+        state.profile = { name:p.name||"", email:p.email||"", picture:p.picture||"", signedIn:true, sub:p.sub||"" };
+        save(); paintProfile(); renderSignedIn(); toast("Signed in as "+(p.name||p.email));
       }});
-      google.accounts.id.renderButton($("googleBox"), {theme:"outline", size:"large", width:280});
-    }catch(e){ $("googleBox").innerHTML='<div class="warnbox">Google sign-in could not start.</div>'; }
+      google.accounts.id.renderButton($("googleBox"), { theme:(state.theme==="light"?"outline":"filled_black"), size:"large", shape:"pill", text:"signin_with", width:300 });
+    }catch(e){
+      $("googleBox").innerHTML='<div class="warnbox">Google sign-in could not start: '+esc(e.message||"unknown error")+'</div>';
+    }
+  };
+  s.onerror=function(){
+    $("googleBox").innerHTML='<div class="warnbox">Google sign-in could not load. Please check your internet, and make sure this site\'s address is added under “Authorized JavaScript origins” in your Google client.</div>';
   };
   document.head.appendChild(s);
 }
