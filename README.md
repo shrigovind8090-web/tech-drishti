@@ -51,3 +51,10 @@ already set to publish the root folder).
 - GitHub: <https://github.com/shrigovind8090-web>
 - Email: <mailto:shrigovind8090@gmail.com>
 - Telegram: <https://t.me/Techdrishti>
+
+## Live sites
+
+- **Netlify (main):** <https://techdrishti.netlify.app>
+- **GitHub Pages (backup):** <https://shrigovind8090-web.github.io/tech-drishti/>
+
+Every push to this repository is published automatically to both.
