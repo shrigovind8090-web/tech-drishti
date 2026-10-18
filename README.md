@@ -1,6 +1,6 @@
 # Tech Drishti
 
-A professional, fully online platform by **Shri Govind** — live news, weather,
+A professional, fully online platform — live news, weather,
 a free AI assistant, market rates, knowledge search and a first-class
 accessibility mode, all in one place.
 
