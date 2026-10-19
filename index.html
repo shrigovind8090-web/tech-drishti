@@ -591,6 +591,8 @@
     <div class="gateor">or</div>
     <button class="btn ghost" style="width:100%" onclick="continueGuest()">Continue as Guest</button>
 
+    <div id="gateMsg" class="err" role="alert" style="margin-top:14px; text-align:left" hidden></div>
+
     <p class="gatelegal">
       By continuing you agree to our <a href="#" onclick="openLegal('terms');return false;">Terms of Service</a>
       and <a href="#" onclick="openLegal('privacy');return false;">Privacy Policy</a>.<br>
@@ -1191,6 +1193,7 @@ function startAuth(){
   fbLoad(function(err){
     if(err){ AUTH.failed = true; setGateNote(); return; }
     AUTH.ready = true; setGateNote();
+    try{ firebase.auth().getRedirectResult().catch(function(e){ if(e && e.code) gateErr(friendlyAuthError(e)); }); }catch(e){}
     try{
       firebase.auth().onAuthStateChanged(function(u){
         if(u){
@@ -1202,17 +1205,29 @@ function startAuth(){
     }catch(e){}
   });
 }
+function gateErr(msg){
+  var el = $("gateMsg"); if(!el) return;
+  if(!msg){ el.hidden = true; el.textContent = ""; return; }
+  el.hidden = false; el.textContent = msg;
+}
 function signInGoogle(){
   if(!authReadyOrTell()) return;
+  gateErr("");
   try{
     var provider = new firebase.auth.GoogleAuthProvider();
     var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    if(mobile){ firebase.auth().signInWithRedirect(provider); return; }
-    firebase.auth().signInWithPopup(provider).catch(function(e){
-      if(e && (e.code==="auth/popup-blocked" || e.code==="auth/operation-not-supported-in-this-environment")) firebase.auth().signInWithRedirect(provider);
-      else toast(e && e.message ? e.message : "Sign-in failed");
+    var attempt = mobile ? firebase.auth().signInWithRedirect(provider)
+                         : firebase.auth().signInWithPopup(provider);
+    attempt.catch(function(e){
+      var c = (e && e.code) ? e.code : "";
+      if(c === "auth/popup-closed-by-user" || c === "auth/cancelled-popup-request") return;
+      if(c === "auth/popup-blocked" || c === "auth/operation-not-supported-in-this-environment"){
+        firebase.auth().signInWithRedirect(provider).catch(function(e2){ gateErr(friendlyAuthError(e2)); });
+        return;
+      }
+      gateErr(friendlyAuthError(e));
     });
-  }catch(e){ toast("Sign-in failed"); }
+  }catch(e){ gateErr("Sign-in could not start: " + ((e && e.message) || "unknown error")); }
 }
 function friendlyAuthError(e){
   var c = e && e.code ? e.code : "";
@@ -1224,7 +1239,9 @@ function friendlyAuthError(e){
   if(c==="auth/weak-password") return "Password must be at least 6 characters.";
   if(c==="auth/too-many-requests") return "Too many attempts. Please wait a minute and try again.";
   if(c==="auth/network-request-failed") return "Network problem. Please check your internet.";
-  if(c==="auth/operation-not-allowed") return "This sign-in method is not enabled yet in your Firebase project.";
+  if(c==="auth/operation-not-allowed") return "This sign-in method is not enabled in your Firebase project yet. Enable it under Authentication \u2192 Sign-in method.";
+  if(c==="auth/unauthorized-domain") return "This website's address is not authorised in Firebase yet. Add it under Authentication \u2192 Settings \u2192 Authorized domains.";
+  if(c==="auth/configuration-not-found") return "Firebase Authentication is not set up in this project yet. Open Authentication in the Firebase console and press Get started.";
   return (e && e.message) ? e.message : "Something went wrong. Please try again.";
 }
 function emailSignIn(){
