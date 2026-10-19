@@ -204,7 +204,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to main content</a>
-<div class="wrap">
+<div class="wrap" id="appRoot">
 
   <header class="top">
     <div class="logo">TD</div>
@@ -567,10 +567,10 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- ============ SIGN-IN GATE ============ -->
-<div class="gate" id="gate" hidden role="dialog" aria-modal="true" aria-label="Sign in to Tech Drishti">
+<div class="gate" id="gate" hidden role="dialog" aria-modal="true" aria-labelledby="gateTitle">
   <div class="gatebox">
     <div class="logo" style="margin:0 auto 14px">TD</div>
-    <h2 class="gateh">Welcome to Tech Drishti</h2>
+    <h2 class="gateh" id="gateTitle" tabindex="-1">Welcome to Tech Drishti</h2>
     <p class="gatetag">Live news, weather, a free AI assistant and full accessibility — all in one place.</p>
 
     <div id="gateNote" class="small mut" style="margin-bottom:14px" hidden></div>
@@ -603,7 +603,7 @@
 <div class="modal" id="legalModal" hidden role="dialog" aria-modal="true" aria-labelledby="legalTitle">
   <div class="modalbox">
     <div class="row" style="justify-content:space-between; margin-bottom:14px; flex-wrap:nowrap">
-      <b id="legalTitle" style="font-size:17px">Privacy Policy</b>
+      <b id="legalTitle" tabindex="-1" style="font-size:17px">Privacy Policy</b>
       <button class="iconbtn" onclick="closeLegal()" aria-label="Close">✕</button>
     </div>
     <div class="modalbody prose" id="legalBody"></div>
@@ -1076,18 +1076,80 @@ function renderAuthBox(){
   }
 }
 
-function openGate(){ var g=$("gate"); if(g) g.hidden=false; }
-function closeGate(){ var g=$("gate"); if(g) g.hidden=true; }
+/* ------------------------------------------------ gate: accessibility
+   The gate is a real modal dialog: while it is open the rest of the page is
+   made inert and hidden from screen readers, focus is moved into the dialog,
+   and Tab is trapped inside it. This stops the "wandering focus" problem. */
+var _gateReturnFocus = null, _legalReturnFocus = null;
 
+function setBackgroundInert(on){
+  var root = $("appRoot"); if(!root) return;
+  try{ root.inert = !!on; }catch(e){}
+  if(on) root.setAttribute("aria-hidden","true"); else root.removeAttribute("aria-hidden");
+}
+function focusableIn(container){
+  var sel = 'button, a[href], input:not([type=hidden]), select, textarea, [tabindex]:not([tabindex="-1"])';
+  var all = container.querySelectorAll(sel), out = [];
+  for(var i=0;i<all.length;i++){
+    var el = all[i];
+    if(el.disabled || el.hidden) continue;
+    if(el.closest('[hidden]')) continue;
+    out.push(el);
+  }
+  return out;
+}
+function trapFocus(container, e){
+  var f = focusableIn(container);
+  if(!f.length) return;
+  var first = f[0], last = f[f.length-1];
+  var a = document.activeElement;
+  if(e.shiftKey && (a === first || !container.contains(a))){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && (a === last || !container.contains(a))){ e.preventDefault(); first.focus(); }
+}
+function setGateNote(){
+  var n = $("gateNote"); if(!n) return;
+  if(FIREBASE_CONFIG){ n.hidden = true; n.textContent = ""; return; }
+  n.hidden = false;
+  n.textContent = "Sign-in is being set up and will be available shortly. You can continue as a guest right now.";
+}
+function openGate(){
+  var g = $("gate"); if(!g) return;
+  _gateReturnFocus = document.activeElement;
+  setGateNote();
+  g.hidden = false;
+  setBackgroundInert(true);
+  setTimeout(function(){ var t=$("gateTitle"); if(t){ try{ t.focus(); }catch(e){} } }, 80);
+}
+function closeGate(){
+  var g = $("gate"); if(!g) return;
+  var wasOpen = !g.hidden;
+  g.hidden = true;
+  setBackgroundInert(false);
+  if(wasOpen && _gateReturnFocus && _gateReturnFocus.focus){ try{ _gateReturnFocus.focus(); }catch(e){} }
+}
 function openLegal(which){
   var map = { privacy:["Privacy Policy","legalPrivacy"], terms:["Terms of Service","legalTerms"], credits:["Data Sources & Credits","legalCredits"] };
   var m = map[which] || map.privacy;
   $("legalTitle").textContent = m[0];
   var src = $(m[1]);
   $("legalBody").innerHTML = src ? src.innerHTML : "";
+  _legalReturnFocus = document.activeElement;
+  var g = $("gate"); if(g && !g.hidden) g.setAttribute("aria-hidden","true");
   $("legalModal").hidden = false;
+  setTimeout(function(){ var t=$("legalTitle"); if(t){ try{ t.focus(); }catch(e){} } }, 80);
 }
-function closeLegal(){ $("legalModal").hidden = true; }
+function closeLegal(){
+  $("legalModal").hidden = true;
+  var g = $("gate"); if(g && !g.hidden) g.removeAttribute("aria-hidden");
+  if(_legalReturnFocus && _legalReturnFocus.focus){ try{ _legalReturnFocus.focus(); }catch(e){} }
+}
+document.addEventListener("keydown", function(e){
+  if(e.key !== "Tab") return;
+  var lm = $("legalModal");
+  if(lm && !lm.hidden){ trapFocus(lm, e); return; }
+  var g = $("gate");
+  if(g && !g.hidden){ trapFocus(g, e); }
+});
 
 function emMsg(t){ var el=$("emMsg"); if(el) el.textContent = t||""; }
 function toggleEmailForm(){
@@ -1112,7 +1174,7 @@ function startAuth(){
   if(!FIREBASE_CONFIG) return;
   fbLoad(function(err){
     if(err) return;
-    AUTH.ready = true;
+    AUTH.ready = true; setGateNote();
     try{
       firebase.auth().onAuthStateChanged(function(u){
         if(u){
