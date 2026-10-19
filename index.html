@@ -170,6 +170,36 @@
   .kbd{background:var(--card2); border:1px solid var(--line); border-bottom-width:2px; border-radius:7px; padding:1px 7px; font-size:12px; font-weight:800;}
   .badge{display:inline-block; background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff; font-size:10.5px;
     font-weight:900; padding:3px 9px; border-radius:20px; letter-spacing:.6px;}
+
+  /* ---- sign-in gate ---- */
+  .gate{position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:20px;
+    background:radial-gradient(900px 520px at 20% 0%, rgba(79,70,229,.35), transparent 60%),
+               radial-gradient(700px 460px at 90% 10%, rgba(6,182,212,.25), transparent 55%), var(--bg);
+    overflow-y:auto;}
+  .gate[hidden]{display:none;}
+  .gatebox{width:100%; max-width:430px; background:var(--card); border:1px solid var(--line); border-radius:22px;
+    padding:28px 24px; box-shadow:var(--shadow); text-align:center;}
+  .gateh{font-size:22px; font-weight:900; margin:0 0 6px;}
+  .gatetag{font-size:13.5px; color:var(--mut); margin:0 0 22px; line-height:1.6;}
+  .authbtn{width:100%; display:flex; align-items:center; justify-content:center; gap:10px; padding:14px 16px;
+    border-radius:14px; font-size:15px; font-weight:800; border:1px solid var(--line); background:var(--card2);
+    color:var(--txt); margin-bottom:10px; cursor:pointer; font-family:inherit;}
+  .authbtn:active{transform:scale(.98);}
+  .authbtn.google{background:#fff; color:#1f1f1f; border-color:#dadce0;}
+  .gicon{width:20px;height:20px;border-radius:50%;background:conic-gradient(from -45deg,#ea4335,#fbbc05,#34a853,#4285f4,#ea4335);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;}
+  .gateor{display:flex; align-items:center; gap:10px; color:var(--mut); font-size:12px; margin:14px 0; font-weight:700;}
+  .gateor::before,.gateor::after{content:""; flex:1; height:1px; background:var(--line);}
+  .emailform{text-align:left; margin-top:4px;}
+  .emailform input{margin-bottom:8px;}
+  .gatelegal{font-size:12px; color:var(--mut); margin:18px 0 0; line-height:1.8;}
+  .gatelegal a{color:var(--pri2); font-weight:700; text-decoration:none;}
+  .modal{position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center; padding:18px;
+    background:rgba(3,6,15,.82);}
+  .modal[hidden]{display:none;}
+  .modalbox{width:100%; max-width:620px; background:var(--bg2); border:1px solid var(--line); border-radius:20px;
+    padding:22px; box-shadow:var(--shadow);}
+  .modalbody{max-height:62vh; overflow-y:auto; padding-right:6px;}
 </style>
 </head>
 <body>
@@ -462,13 +492,9 @@
           <div class="small mut" id="pSub">Not signed in</div>
         </div>
       </div>
-      <div id="googleBox" style="margin-top:14px"></div>
-      <div class="row" style="margin-top:12px">
-        <input id="pNameInput" placeholder="Your name" aria-label="Your display name">
-        <button class="btn" onclick="saveName()">Save name</button>
-      </div>
+      <div id="authBox" style="margin-top:14px"></div>
       <div class="small mut" style="margin-top:12px">
-        Signing in with Google only shares your name, email and photo with your own browser — Tech Drishti runs no server and stores nothing. You can also simply type a name below and use the whole site without signing in.
+        Sign-in is handled securely by Firebase Authentication. Tech Drishti never sees or stores your password.
       </div>
     </div>
 
@@ -497,7 +523,7 @@
 
     <div class="card">
       <div class="lbl">Legal</div>
-      <details class="acc"><summary>Privacy Policy</summary><div class="body prose">
+      <details class="acc"><summary>Privacy Policy</summary><div class="body prose" id="legalPrivacy">
         <p><b>Effective date: September 2026</b></p>
         <p>Tech Drishti is committed to protecting your privacy.</p>
         <h3>1. No personal data collection</h3>
@@ -511,7 +537,7 @@
         <h3>5. Safe for all</h3>
         <p>No ads, no trackers, no third-party cookies. Any future change to this policy will be reflected on this page.</p>
       </div></details>
-      <details class="acc"><summary>Terms of Service</summary><div class="body prose">
+      <details class="acc"><summary>Terms of Service</summary><div class="body prose" id="legalTerms">
         <p><b>Effective date: September 2026</b></p>
         <h3>1. Nature of the service</h3>
         <p>Tech Drishti is a free, online information platform offering news, weather, market data, knowledge search and an AI assistant.</p>
@@ -524,7 +550,7 @@
         <h3>5. Limitation of liability</h3>
         <p>The service is provided "as is", without warranties of any kind. By using Tech Drishti you accept these terms.</p>
       </div></details>
-      <details class="acc"><summary>Data sources &amp; credits</summary><div class="body prose">
+      <details class="acc"><summary>Data sources &amp; credits</summary><div class="body prose" id="legalCredits">
         <p>Weather by Open-Meteo · news headlines via Google News · summaries by Wikipedia · exchange rates by the European Central Bank (Frankfurter) and the fawcett-ahmed currency API · crypto by CoinGecko · AI answers by a public open text endpoint.</p>
         <p>All of these are free, public and used without any API key. We are grateful to each of them.</p>
       </div></details>
@@ -540,6 +566,50 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- ============ SIGN-IN GATE ============ -->
+<div class="gate" id="gate" hidden role="dialog" aria-modal="true" aria-label="Sign in to Tech Drishti">
+  <div class="gatebox">
+    <div class="logo" style="margin:0 auto 14px">TD</div>
+    <h2 class="gateh">Welcome to Tech Drishti</h2>
+    <p class="gatetag">Live news, weather, a free AI assistant and full accessibility — all in one place.</p>
+
+    <div id="gateNote" class="small mut" style="margin-bottom:14px" hidden></div>
+
+    <button class="authbtn google" onclick="signInGoogle()"><span class="gicon">G</span> Continue with Google</button>
+    <button class="authbtn" onclick="toggleEmailForm()">✉ Continue with Email</button>
+
+    <div class="emailform" id="emailForm" hidden>
+      <input id="emEmail" type="email" placeholder="Email address" autocomplete="email" aria-label="Email address">
+      <input id="emPass" type="password" placeholder="Password (at least 6 characters)" autocomplete="current-password" aria-label="Password">
+      <div class="row" style="gap:8px; margin-top:10px; flex-wrap:nowrap">
+        <button class="btn" style="flex:1" onclick="emailSignIn()">Sign in</button>
+        <button class="btn ghost" style="flex:1" onclick="emailSignUp()">Create account</button>
+      </div>
+      <div class="small mut" id="emMsg" style="margin-top:8px" role="status"></div>
+    </div>
+
+    <div class="gateor">or</div>
+    <button class="btn ghost" style="width:100%" onclick="continueGuest()">Continue as Guest</button>
+
+    <p class="gatelegal">
+      By continuing you agree to our <a href="#" onclick="openLegal('terms');return false;">Terms of Service</a>
+      and <a href="#" onclick="openLegal('privacy');return false;">Privacy Policy</a>.<br>
+      <a href="#" onclick="openLegal('credits');return false;">Data sources &amp; credits</a>
+    </p>
+  </div>
+</div>
+
+<!-- ============ LEGAL MODAL ============ -->
+<div class="modal" id="legalModal" hidden role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+  <div class="modalbox">
+    <div class="row" style="justify-content:space-between; margin-bottom:14px; flex-wrap:nowrap">
+      <b id="legalTitle" style="font-size:17px">Privacy Policy</b>
+      <button class="iconbtn" onclick="closeLegal()" aria-label="Close">✕</button>
+    </div>
+    <div class="modalbody prose" id="legalBody"></div>
+  </div>
+</div>
+
 <script>
 "use strict";
 
@@ -547,9 +617,13 @@
 var KEY = "techdrishti.v1";
 var GOOGLE_CLIENT_ID = "447024040002-4np0b45rab8f8gpa8p5u4eta109qpmi0.apps.googleusercontent.com";
 
+/* Paste your Firebase web config here to switch the sign-in system on.
+   While it is null, the sign-in gate stays off and the site works as before. */
+var FIREBASE_CONFIG = null;
+
 var state = {
   theme:"dark", lang:"en", cat:"TOP", city:{name:"", lat:null, lon:null},
-  profile:{ name:"", signedIn:false, email:"", picture:"" },
+  auth:{ mode:"" },
   a11y:{ hc:false, dys:false, nomotion:false, fs:15, rate:1 },
   chat:[]
 };
@@ -972,62 +1046,134 @@ function clearChat(){ state.chat=[]; save(); renderChat(); toast("Memory cleared
 
 /* =================================================================== profile */
 function paintProfile(){
-  var n = state.profile.name || "Guest";
-  var initials = n==="Guest" ? "?" : n.trim().split(/\s+/).map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();
-  $("avatarBtn").textContent=initials; $("bigAvatar").textContent=initials;
-  $("pName").textContent=n;
-  $("pSub").textContent = state.profile.signedIn ? (state.profile.email||"Signed in with Google") : "Private profile on this device — not signed in";
-  $("pNameInput").value = state.profile.name||"";
+  var a = state.auth || {};
+  var isUser = a.mode === "user";
+  var n = isUser ? (a.name || a.email || "Signed in") : (a.mode === "guest" ? "Guest" : "Not signed in");
+  var initials = (n && n !== "Guest" && n !== "Not signed in")
+    ? n.trim().split(/\s+/).map(function(w){return w[0];}).join("").slice(0,2).toUpperCase() : "?";
+  $("avatarBtn").textContent = initials;
+  $("bigAvatar").textContent = initials;
+  $("pName").textContent = n;
+  $("pSub").textContent = isUser ? (a.email || "Signed in")
+    : (a.mode === "guest" ? "Browsing as a guest — you can sign in any time" : "Not signed in");
+  renderAuthBox();
 }
-function saveName(){
-  var v=$("pNameInput").value.trim();
-  state.profile.name=v; state.profile.signedIn=state.profile.signedIn||false; save(); paintProfile(); toast("Saved");
+
+/* ============================================================ authentication */
+var AUTH = { ready:false, mode:"", user:null };
+
+function renderAuthBox(){
+  var box = $("authBox"); if(!box) return;
+  var a = state.auth || {};
+  if(a.mode === "user"){
+    var img = a.picture ? '<img src="'+esc(a.picture)+'" alt="" style="width:40px;height:40px;border-radius:50%;flex-shrink:0">' : '';
+    box.innerHTML = '<div class="row" style="gap:12px; flex-wrap:nowrap">'+img+
+      '<div style="flex:1; min-width:0"><b>'+esc(a.name || "Signed in")+'</b><div class="small mut">'+esc(a.email||"")+'</div></div>'+
+      '<button class="btn ghost sm" onclick="signOut()">Sign out</button></div>';
+  } else {
+    box.innerHTML = '<div class="small mut" style="margin-bottom:10px">You are browsing as a guest. Sign in with Google or email to keep your profile with you.</div>'+
+      '<button class="btn sm" onclick="openGate()">Sign in</button>';
+  }
 }
-function decodeJwt(token){
+
+function openGate(){ var g=$("gate"); if(g) g.hidden=false; }
+function closeGate(){ var g=$("gate"); if(g) g.hidden=true; }
+
+function openLegal(which){
+  var map = { privacy:["Privacy Policy","legalPrivacy"], terms:["Terms of Service","legalTerms"], credits:["Data Sources & Credits","legalCredits"] };
+  var m = map[which] || map.privacy;
+  $("legalTitle").textContent = m[0];
+  var src = $(m[1]);
+  $("legalBody").innerHTML = src ? src.innerHTML : "";
+  $("legalModal").hidden = false;
+}
+function closeLegal(){ $("legalModal").hidden = true; }
+
+function emMsg(t){ var el=$("emMsg"); if(el) el.textContent = t||""; }
+function toggleEmailForm(){
+  if(!AUTH.ready){ toast("Email sign-in switches on with your Firebase config — please continue as guest for now"); return; }
+  var f=$("emailForm"); if(f) f.hidden = !f.hidden;
+}
+
+function fbLoad(cb){
+  var s=document.createElement("script");
+  s.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";
+  s.onload=function(){
+    var t=document.createElement("script");
+    t.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js";
+    t.onload=function(){ try{ firebase.initializeApp(FIREBASE_CONFIG); cb(null); }catch(e){ cb(e); } };
+    t.onerror=function(){ cb(new Error("auth sdk")); };
+    document.head.appendChild(t);
+  };
+  s.onerror=function(){ cb(new Error("app sdk")); };
+  document.head.appendChild(s);
+}
+function startAuth(){
+  if(!FIREBASE_CONFIG) return;
+  fbLoad(function(err){
+    if(err) return;
+    AUTH.ready = true;
+    try{
+      firebase.auth().onAuthStateChanged(function(u){
+        if(u){
+          AUTH.mode="user"; AUTH.user=u;
+          state.auth = { mode:"user", name:u.displayName||"", email:u.email||"", picture:u.photoURL||"", uid:u.uid };
+          save(); closeGate(); paintProfile();
+        }
+      });
+    }catch(e){}
+  });
+}
+function signInGoogle(){
+  if(!AUTH.ready){ toast("Google sign-in switches on with your Firebase config — please continue as guest for now"); return; }
   try{
-    var b64 = token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");
-    var json = decodeURIComponent(atob(b64).split("").map(function(c){ return "%"+("00"+c.charCodeAt(0).toString(16)).slice(-2); }).join(""));
-    return JSON.parse(json);
-  }catch(e){ return null; }
+    var provider = new firebase.auth.GoogleAuthProvider();
+    var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    if(mobile){ firebase.auth().signInWithRedirect(provider); return; }
+    firebase.auth().signInWithPopup(provider).catch(function(e){
+      if(e && (e.code==="auth/popup-blocked" || e.code==="auth/operation-not-supported-in-this-environment")) firebase.auth().signInWithRedirect(provider);
+      else toast(e && e.message ? e.message : "Sign-in failed");
+    });
+  }catch(e){ toast("Sign-in failed"); }
 }
-function renderSignedIn(){
-  var p = state.profile||{};
-  var img = p.picture ? '<img src="'+esc(p.picture)+'" alt="" style="width:34px;height:34px;border-radius:50%;flex-shrink:0">' : '';
-  $("googleBox").innerHTML = '<div class="row" style="gap:12px; flex-wrap:nowrap">'+img+
-    '<div style="flex:1; min-width:0"><b>Signed in with Google</b><div class="small mut">You are signed in on this device only.</div></div>'+
-    '<button class="btn ghost sm" onclick="signOut()">Sign out</button></div>';
+function friendlyAuthError(e){
+  var c = e && e.code ? e.code : "";
+  if(c==="auth/invalid-email") return "That email address does not look right.";
+  if(c==="auth/missing-password") return "Please enter your password.";
+  if(c==="auth/user-not-found") return "No account found with this email. Tap \u201cCreate account\u201d.";
+  if(c==="auth/wrong-password" || c==="auth/invalid-credential") return "Wrong email or password.";
+  if(c==="auth/email-already-in-use") return "This email is already registered. Tap \u201cSign in\u201d.";
+  if(c==="auth/weak-password") return "Password must be at least 6 characters.";
+  if(c==="auth/too-many-requests") return "Too many attempts. Please wait a minute and try again.";
+  if(c==="auth/network-request-failed") return "Network problem. Please check your internet.";
+  if(c==="auth/operation-not-allowed") return "This sign-in method is not enabled yet in your Firebase project.";
+  return (e && e.message) ? e.message : "Something went wrong. Please try again.";
+}
+function emailSignIn(){
+  if(!AUTH.ready){ toast("Email sign-in switches on with your Firebase config — please continue as guest for now"); return; }
+  var e=$("emEmail").value.trim(), p=$("emPass").value;
+  if(!e || !p){ emMsg("Please enter your email and password."); return; }
+  emMsg("Signing in\u2026");
+  firebase.auth().signInWithEmailAndPassword(e,p).catch(function(err){ emMsg(friendlyAuthError(err)); });
+}
+function emailSignUp(){
+  if(!AUTH.ready){ toast("Email sign-in switches on with your Firebase config — please continue as guest for now"); return; }
+  var e=$("emEmail").value.trim(), p=$("emPass").value;
+  if(!e || !p){ emMsg("Please enter your email and password."); return; }
+  if(p.length < 6){ emMsg("Password must be at least 6 characters."); return; }
+  emMsg("Creating your account\u2026");
+  firebase.auth().createUserWithEmailAndPassword(e,p).catch(function(err){ emMsg(friendlyAuthError(err)); });
+}
+function continueGuest(){
+  state.auth = { mode:"guest" };
+  save(); closeGate(); paintProfile();
+  toast("Continuing as a guest");
 }
 function signOut(){
-  try{ if(window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect(); }catch(e){}
-  state.profile={name:"", email:"", picture:"", signedIn:false, sub:""};
-  save(); paintProfile(); initGoogle(); toast("Signed out");
-}
-function initGoogle(){
-  if(!GOOGLE_CLIENT_ID){
-    $("googleBox").innerHTML='<div class="warnbox">Google sign-in is not configured yet.</div>';
-    return;
-  }
-  if(state.profile && state.profile.signedIn){ renderSignedIn(); return; }
-  $("googleBox").innerHTML='<div class="mut small">Loading Google sign-in…</div>';
-  var s=document.createElement("script");
-  s.src="https://accounts.google.com/gsi/client"; s.async=true; s.defer=true;
-  s.onload=function(){
-    try{
-      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: function(resp){
-        var p = decodeJwt(resp.credential);
-        if(!p){ toast("Sign-in failed"); return; }
-        state.profile = { name:p.name||"", email:p.email||"", picture:p.picture||"", signedIn:true, sub:p.sub||"" };
-        save(); paintProfile(); renderSignedIn(); toast("Signed in as "+(p.name||p.email));
-      }});
-      google.accounts.id.renderButton($("googleBox"), { theme:(state.theme==="light"?"outline":"filled_black"), size:"large", shape:"pill", text:"signin_with", width:300 });
-    }catch(e){
-      $("googleBox").innerHTML='<div class="warnbox">Google sign-in could not start: '+esc(e.message||"unknown error")+'</div>';
-    }
-  };
-  s.onerror=function(){
-    $("googleBox").innerHTML='<div class="warnbox">Google sign-in could not load. Please check your internet, and make sure this site\'s address is added under “Authorized JavaScript origins” in your Google client.</div>';
-  };
-  document.head.appendChild(s);
+  try{ if(AUTH.ready) firebase.auth().signOut(); }catch(e){}
+  state.auth = { mode:"" }; AUTH.mode=""; AUTH.user=null;
+  save(); paintProfile(); openGate();
+  toast("Signed out");
 }
 
 /* =================================================================== refresh */
@@ -1055,8 +1201,14 @@ buildNewsChips();
 buildWikiChips();
 applyAll();
 netStatus();
-initGoogle();
 renderChat();
+if(FIREBASE_CONFIG){
+  if(state.auth && state.auth.mode){ closeGate(); } else { openGate(); }
+  startAuth();
+} else {
+  closeGate();
+}
+paintProfile();
 (function tickClock(){
   var d=new Date();
   $("clock").textContent=d.toLocaleTimeString(undefined,{hour12:false});
