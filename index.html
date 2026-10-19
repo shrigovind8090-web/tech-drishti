@@ -619,7 +619,14 @@ var GOOGLE_CLIENT_ID = "447024040002-4np0b45rab8f8gpa8p5u4eta109qpmi0.apps.googl
 
 /* Paste your Firebase web config here to switch the sign-in system on.
    While it is null, the sign-in gate stays off and the site works as before. */
-var FIREBASE_CONFIG = null;
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBES_EgNONBZnaXPKKePH0qRU18kxwIcS4",
+  authDomain: "tech-drishti.firebaseapp.com",
+  projectId: "tech-drishti",
+  storageBucket: "tech-drishti.firebasestorage.app",
+  messagingSenderId: "447024040002",
+  appId: "1:447024040002:web:f90d7f4d0db1c9a8e3c5db"
+};
 
 var state = {
   theme:"dark", lang:"en", cat:"TOP", city:{name:"", lat:null, lon:null},
@@ -1060,7 +1067,14 @@ function paintProfile(){
 }
 
 /* ============================================================ authentication */
-var AUTH = { ready:false, mode:"", user:null };
+var AUTH = { ready:false, failed:false, mode:"", user:null };
+function authReadyOrTell(){
+  if(AUTH.ready) return true;
+  if(!FIREBASE_CONFIG) toast("Sign-in is being set up — please continue as a guest for now");
+  else if(AUTH.failed) toast("Sign-in could not start. Please check your internet and reload the page.");
+  else toast("Sign-in is still starting up — please wait a moment and try again.");
+  return false;
+}
 
 function renderAuthBox(){
   var box = $("authBox"); if(!box) return;
@@ -1108,9 +1122,11 @@ function trapFocus(container, e){
 }
 function setGateNote(){
   var n = $("gateNote"); if(!n) return;
-  if(FIREBASE_CONFIG){ n.hidden = true; n.textContent = ""; return; }
+  if(AUTH.ready){ n.hidden = true; n.textContent = ""; return; }
   n.hidden = false;
-  n.textContent = "Sign-in is being set up and will be available shortly. You can continue as a guest right now.";
+  if(AUTH.failed) n.textContent = "Sign-in could not start. Please check your internet and reload the page. You can continue as a guest right now.";
+  else if(FIREBASE_CONFIG) n.textContent = "Starting the sign-in service…";
+  else n.textContent = "Sign-in is being set up and will be available shortly. You can continue as a guest right now.";
 }
 function openGate(){
   var g = $("gate"); if(!g) return;
@@ -1153,7 +1169,7 @@ document.addEventListener("keydown", function(e){
 
 function emMsg(t){ var el=$("emMsg"); if(el) el.textContent = t||""; }
 function toggleEmailForm(){
-  if(!AUTH.ready){ toast("Email sign-in switches on with your Firebase config — please continue as guest for now"); return; }
+  if(!authReadyOrTell()) return;
   var f=$("emailForm"); if(f) f.hidden = !f.hidden;
 }
 
@@ -1173,7 +1189,7 @@ function fbLoad(cb){
 function startAuth(){
   if(!FIREBASE_CONFIG) return;
   fbLoad(function(err){
-    if(err) return;
+    if(err){ AUTH.failed = true; setGateNote(); return; }
     AUTH.ready = true; setGateNote();
     try{
       firebase.auth().onAuthStateChanged(function(u){
@@ -1187,7 +1203,7 @@ function startAuth(){
   });
 }
 function signInGoogle(){
-  if(!AUTH.ready){ toast("Google sign-in switches on with your Firebase config — please continue as guest for now"); return; }
+  if(!authReadyOrTell()) return;
   try{
     var provider = new firebase.auth.GoogleAuthProvider();
     var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -1212,14 +1228,14 @@ function friendlyAuthError(e){
   return (e && e.message) ? e.message : "Something went wrong. Please try again.";
 }
 function emailSignIn(){
-  if(!AUTH.ready){ toast("Email sign-in switches on with your Firebase config — please continue as guest for now"); return; }
+  if(!authReadyOrTell()) return;
   var e=$("emEmail").value.trim(), p=$("emPass").value;
   if(!e || !p){ emMsg("Please enter your email and password."); return; }
   emMsg("Signing in\u2026");
   firebase.auth().signInWithEmailAndPassword(e,p).catch(function(err){ emMsg(friendlyAuthError(err)); });
 }
 function emailSignUp(){
-  if(!AUTH.ready){ toast("Email sign-in switches on with your Firebase config — please continue as guest for now"); return; }
+  if(!authReadyOrTell()) return;
   var e=$("emEmail").value.trim(), p=$("emPass").value;
   if(!e || !p){ emMsg("Please enter your email and password."); return; }
   if(p.length < 6){ emMsg("Password must be at least 6 characters."); return; }
