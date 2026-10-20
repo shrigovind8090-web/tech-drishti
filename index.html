@@ -630,6 +630,9 @@ var FIREBASE_CONFIG = {
   appId: "1:447024040002:web:f90d7f4d0db1c9a8e3c5db"
 };
 
+/* True while the page is reloading back from a full-page Google sign-in. */
+var RETURNING_FROM_REDIRECT = /[?&](apiKey|oobCode)=/.test(location.search);
+
 var state = {
   theme:"dark", lang:"en", cat:"TOP", city:{name:"", lat:null, lon:null},
   auth:{ mode:"" },
@@ -1193,7 +1196,13 @@ function startAuth(){
   fbLoad(function(err){
     if(err){ AUTH.failed = true; setGateNote(); return; }
     AUTH.ready = true; setGateNote();
-    try{ firebase.auth().getRedirectResult().catch(function(e){ if(e && e.code) gateErr(friendlyAuthError(e)); }); }catch(e){}
+    try{
+      firebase.auth().getRedirectResult().then(function(res){
+        if(RETURNING_FROM_REDIRECT && (!res || !res.user)){
+          var gn=$("gateNote"); if(gn){ gn.hidden=false; gn.textContent="We could not complete the sign-in. Please try again, or continue as a guest."; }
+        }
+      }).catch(function(e){ if(e && e.code) gateErr(friendlyAuthError(e)); });
+    }catch(e){}
     try{
       firebase.auth().onAuthStateChanged(function(u){
         if(u){
@@ -1215,14 +1224,15 @@ function signInGoogle(){
   gateErr("");
   try{
     var provider = new firebase.auth.GoogleAuthProvider();
-    var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    var attempt = mobile ? firebase.auth().signInWithRedirect(provider)
-                         : firebase.auth().signInWithPopup(provider);
-    attempt.catch(function(e){
+    /* Popup first on every device: it survives modern mobile browsers much
+       better than a full-page redirect. Redirect is only the fallback. */
+    firebase.auth().signInWithPopup(provider).catch(function(e){
       var c = (e && e.code) ? e.code : "";
       if(c === "auth/popup-closed-by-user" || c === "auth/cancelled-popup-request") return;
-      if(c === "auth/popup-blocked" || c === "auth/operation-not-supported-in-this-environment"){
-        firebase.auth().signInWithRedirect(provider).catch(function(e2){ gateErr(friendlyAuthError(e2)); });
+      if(c === "auth/popup-blocked" || c === "auth/operation-not-supported-in-this-environment" || c === "auth/web-storage-unsupported"){
+        gateErr("Opening the sign-in page…");
+        try{ firebase.auth().signInWithRedirect(provider).catch(function(e2){ gateErr(friendlyAuthError(e2)); }); }
+        catch(e2){ gateErr(friendlyAuthError(e2)); }
         return;
       }
       gateErr(friendlyAuthError(e));
@@ -1298,7 +1308,11 @@ applyAll();
 netStatus();
 renderChat();
 if(FIREBASE_CONFIG){
-  if(state.auth && state.auth.mode){ closeGate(); } else { openGate(); }
+  if(RETURNING_FROM_REDIRECT){
+    openGate();
+    var _gn = $("gateNote"); if(_gn){ _gn.hidden=false; _gn.textContent="Signing you in, please wait…"; }
+  } else if(state.auth && state.auth.mode){ closeGate(); }
+  else { openGate(); }
   startAuth();
 } else {
   closeGate();
