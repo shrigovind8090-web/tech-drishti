@@ -236,7 +236,7 @@
   <section class="screen on" id="s-home" aria-label="Home dashboard">
     <div class="grid g2">
       <div class="card">
-        <div class="lbl">Right now</div>
+        <div class="lbl" id="greeting">Right now</div>
         <div class="clock" id="clock">--:--:--</div>
         <div class="mut" id="dateline">—</div>
         <div class="bar"><i id="daybar"></i></div>
@@ -364,7 +364,7 @@
     </div>
     <div class="card">
       <div class="chat" id="chat" role="log" aria-live="polite" aria-label="Conversation">
-        <div class="msg bot">Namaste! I'm the Tech Drishti assistant. Ask me anything — I can answer in English, Hindi or any Indian language. No sign-in, no API key.</div>
+        <div class="msg bot">Namaste! I'm the Tech Drishti assistant. Ask me anything — I can answer in English, Hindi or any Indian language. No API key needed.</div>
       </div>
       <div class="row" style="flex-wrap:nowrap">
         <button class="iconbtn" id="micBtn" style="width:auto;padding:0 16px" title="Speak your question" aria-label="Voice input" onclick="voiceAsk()">🎤 Speak</button>
@@ -502,7 +502,7 @@
       <div class="lbl">About Tech Drishti</div>
       <div class="prose">
         <p>Tech Drishti is an independent online platform. It brings live news in many Indian languages, weather for wherever you are, a free AI assistant, market rates and instant knowledge together in one professional, accessible place.</p>
-        <p>It is fully online — everything is fetched fresh from public, key-free sources — and it needs no installation, no login and no payment. The accessibility mode is a first-class part of the platform, designed so visually impaired users can use every feature comfortably.</p>
+        <p>It is fully online — everything is fetched fresh from public sources — and it is free, with nothing to install. You can sign in with Google or an email address to keep your profile with you, or simply continue as a guest. The accessibility mode is a first-class part of the platform, designed so visually impaired users can use every feature comfortably.</p>
       </div>
     </div>
 
@@ -524,35 +524,46 @@
     <div class="card">
       <div class="lbl">Legal</div>
       <details class="acc"><summary>Privacy Policy</summary><div class="body prose" id="legalPrivacy">
-        <p><b>Effective date: September 2026</b></p>
-        <p>Tech Drishti is committed to protecting your privacy.</p>
-        <h3>1. No personal data collection</h3>
-        <p>Tech Drishti does not collect, store, transmit or sell any personal information. There is no account requirement and no tracking.</p>
-        <h3>2. Local storage only</h3>
-        <p>Your name, preferences and settings are stored locally on your own device. They never leave it.</p>
-        <h3>3. Live data requests</h3>
-        <p>To show live news, weather and market rates, your browser requests public data directly from third-party services (listed below). Those services may see your IP address, as with any website you visit. Tech Drishti itself runs no server and keeps no logs.</p>
-        <h3>4. Location</h3>
-        <p>Location is used only when you press a "My location" button, only to fetch your local weather and news, and only inside your browser. You can always type a city name instead.</p>
-        <h3>5. Safe for all</h3>
-        <p>No ads, no trackers, no third-party cookies. Any future change to this policy will be reflected on this page.</p>
+        <p><b>Effective date: October 2026</b></p>
+        <p>Tech Drishti is committed to protecting your privacy. This page explains, in plain words, exactly what happens to your information.</p>
+        <h3>1. Using the site without an account</h3>
+        <p>You can use Tech Drishti as a <b>guest</b>, without any account at all. In guest mode we receive nothing about you.</p>
+        <h3>2. If you sign in</h3>
+        <p>If you choose to sign in — with Google, or with an email address and password — we receive your <b>name</b>, your <b>email address</b> and, for Google sign-in, your <b>profile photo</b>. Nothing else.</p>
+        <p>Your account is created and stored by <b>Firebase Authentication</b>, a service of Google. Your password is handled by Firebase: Tech Drishti never sees it and never stores it.</p>
+        <h3>3. What we never do</h3>
+        <p>We do not sell, rent or share your personal information with anyone. There are no advertisements, no trackers and no third-party analytics on this site.</p>
+        <h3>4. What stays on your own device</h3>
+        <p>Your preferences — theme, language, text size, the city you chose, your AI assistant conversation, your tasks and notes — are stored only in your own browser. They never leave your device.</p>
+        <h3>5. Live data requests</h3>
+        <p>To show live news, weather, currency and market prices, your browser requests public data directly from third-party services (listed under Data Sources). As with any website you visit, those services may see your IP address. Tech Drishti keeps no logs of its own.</p>
+        <h3>6. Location</h3>
+        <p>Your location is used only when you press a "My location" button, only to fetch your local weather and news, and only inside your browser. You can always type a city name instead, and you can use the whole site without ever sharing your location.</p>
+        <h3>7. Deleting your account</h3>
+        <p>You can sign out at any time from the Profile tab. To have your account and its data deleted completely, write to us at shrigovind8090@gmail.com and we will remove it.</p>
+        <h3>8. Children</h3>
+        <p>Tech Drishti is suitable for all ages and contains no advertising or adult content.</p>
+        <h3>9. Changes</h3>
+        <p>Any future change to this policy will be published on this page with a new effective date.</p>
       </div></details>
       <details class="acc"><summary>Terms of Service</summary><div class="body prose" id="legalTerms">
-        <p><b>Effective date: September 2026</b></p>
+        <p><b>Effective date: October 2026</b></p>
         <h3>1. Nature of the service</h3>
-        <p>Tech Drishti is a free, online information platform offering news, weather, market data, knowledge search and an AI assistant.</p>
-        <h3>2. Accuracy disclaimer</h3>
+        <p>Tech Drishti is a free, online information platform offering news, weather, market data, knowledge search, an AI assistant and a full accessibility mode.</p>
+        <h3>2. Accounts</h3>
+        <p>You may use Tech Drishti as a guest, or sign in with Google or an email address and password. You are responsible for keeping your password safe and for everything done through your account. Please use accurate details, and do not share your account with others. We may suspend any account that is used to abuse, overload or disrupt the service.</p>
+        <h3>3. Accuracy disclaimer</h3>
         <p>Live information comes from third-party sources. We do not guarantee that it is complete, timely or error-free, and it must not be relied on for critical decisions. Always verify important news and financial figures from an official source.</p>
-        <h3>3. AI assistant</h3>
+        <h3>4. AI assistant</h3>
         <p>The assistant is an automated system. It can be wrong or out of date. Do not treat its output as professional, medical, legal or financial advice.</p>
-        <h3>4. Fair use</h3>
+        <h3>5. Fair use</h3>
         <p>Personal, non-exclusive use. Do not misuse, overload or attempt to disrupt the service.</p>
-        <h3>5. Limitation of liability</h3>
+        <h3>6. Limitation of liability</h3>
         <p>The service is provided "as is", without warranties of any kind. By using Tech Drishti you accept these terms.</p>
       </div></details>
       <details class="acc"><summary>Data sources &amp; credits</summary><div class="body prose" id="legalCredits">
-        <p>Weather by Open-Meteo · news headlines via Google News · summaries by Wikipedia · exchange rates by the European Central Bank (Frankfurter) and the fawcett-ahmed currency API · crypto by CoinGecko · AI answers by a public open text endpoint.</p>
-        <p>All of these are free, public and used without any API key. We are grateful to each of them.</p>
+        <p>Weather by Open-Meteo · news headlines via Google News · summaries by Wikipedia · exchange rates by the European Central Bank (Frankfurter) and the fawcett-ahmed currency API · crypto by CoinGecko · AI answers by a public open text endpoint · accounts by Firebase Authentication (Google).</p>
+        <p>All of these are free and public, and used without any API key of our own. We are grateful to each of them.</p>
       </div></details>
     </div>
   </section>
@@ -1068,6 +1079,14 @@ function paintProfile(){
   $("pName").textContent = n;
   $("pSub").textContent = isUser ? (a.email || "Signed in")
     : (a.mode === "guest" ? "Browsing as a guest — you can sign in any time" : "Not signed in");
+  var g = $("greeting");
+  if(g){
+    var h = new Date().getHours();
+    var part = h < 12 ? "Good morning" : (h < 17 ? "Good afternoon" : "Good evening");
+    if(isUser) g.textContent = part + ", " + (a.name || a.email || "friend");
+    else if(a.mode === "guest") g.textContent = part + " — browsing as a guest";
+    else g.textContent = part;
+  }
   renderAuthBox();
 }
 
