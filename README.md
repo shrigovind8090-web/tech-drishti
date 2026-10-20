@@ -4,7 +4,8 @@ A professional, fully online platform — live news, weather,
 a free AI assistant, market rates, knowledge search and a first-class
 accessibility mode, all in one place.
 
-No installation. No sign-in. No API keys. Everything runs in the browser.
+No installation. No API keys. Everything runs in the browser. You can sign in
+with Google or an email address to keep your profile, or continue as a guest.
 
 ## Sections
 
@@ -31,10 +32,14 @@ Every feed has a fallback, and the interface says plainly which source answered.
 
 ## Privacy
 
-Tech Drishti collects nothing. There is no server, no analytics and no tracking.
-Your name and preferences stay in your own browser's local storage. Location is
-used only when you press a location button, only to fetch your local weather and
-news.
+You can use Tech Drishti as a guest — in guest mode we receive nothing about you.
+If you sign in, we receive only your name, email address and (for Google) your
+profile photo; the account is created and stored by Firebase Authentication, and
+we never see or store your password. There are no ads, no trackers and no
+analytics. Your preferences and your AI conversation stay in your own browser's
+local storage. Location is used only when you press a location button, only to
+fetch your local weather and news. To delete your account, email us and we will
+remove it.
 
 ## Deploy it yourself
 
