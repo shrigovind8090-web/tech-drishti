@@ -10,6 +10,12 @@ with Google or an email address to keep your profile, or continue as a guest.
 ## Sections
 
 - **Home** — live clock, weather for your current location, top headlines and market glance.
+- **AI Assistant** — free, no API key. It now also knows **today's live data from this site**
+  (your local weather, the current top headlines and the dollar rate), so it can answer
+  "what's the weather?" or "today's top news?" with real figures, in your own language.
+  One-tap chips for weather, top news and the dollar rate.
+- **Weather** — current conditions plus rain chance, sunrise/sunset, UV index and a 5-day forecast,
+  with a "read the weather aloud" button that speaks every detail.
 - **Live News** — headlines from Google News with a **language selector** (English, हिन्दी, தமிழ், తెలుగు, বাংলা, मराठी, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, اردو) and a **category filter** (Top stories, India, World, Business, Technology, Sports, Entertainment, Health, Science), plus **city news** for your location or any city you type.
 - **Weather** — current conditions and a 5-day forecast for wherever you are, or any city you search.
 - **AI Assistant** — a chat assistant that needs **no API key** and answers in English or any Indian language, with voice input.
