@@ -7,21 +7,24 @@ accessibility mode, all in one place.
 No installation. No API keys. Everything runs in the browser. You can sign in
 with Google or an email address to keep your profile, or continue as a guest.
 
-## Sections
+## Sections — three tabs
 
-- **Home** — live clock, weather for your current location, top headlines and market glance.
-- **AI Assistant** — free, no API key. It now also knows **today's live data from this site**
-  (your local weather, the current top headlines and the dollar rate), so it can answer
-  "what's the weather?" or "today's top news?" with real figures, in your own language.
-  One-tap chips for weather, top news and the dollar rate.
-- **Weather** — current conditions plus rain chance, sunrise/sunset, UV index and a 5-day forecast,
-  with a "read the weather aloud" button that speaks every detail.
-- **Live News** — headlines from Google News with a **language selector** (English, हिन्दी, தமிழ், తెలుగు, বাংলা, मराठी, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, اردو) and a **category filter** (Top stories, India, World, Business, Technology, Sports, Entertainment, Health, Science), plus **city news** for your location or any city you type.
-- **Weather** — current conditions and a 5-day forecast for wherever you are, or any city you search.
-- **AI Assistant** — a chat assistant that needs **no API key** and answers in English or any Indian language, with voice input.
-- **Tools** — live currency converter, live crypto prices (USD and INR), and instant Wikipedia knowledge search.
-- **Accessibility** — a dedicated mode for visually impaired users: read-anything-aloud, voice search, high contrast, dyslexia-friendly font, adjustable text size, reduced motion, and full keyboard shortcuts.
-- **Profile** — your private profile, plus About &amp; Support and the legal pages (Privacy Policy, Terms of Service, data sources).
+The whole platform now lives in **three bottom tabs**, with a **Back button** at the top of every
+inner screen and quick-jump chips inside Tools.
+
+- **Home** — live clock and greeting, weather for your location, top headlines and market glance.
+- **Tools** — one page holding every utility, one after another:
+  - **Live News** — headlines from Google News with a **language selector** (English, हिन्दी, தமிழ், తెలుగు, বাংলা, मराठी, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, اردو) and a **category filter**, plus **city news**.
+  - **Weather** — current conditions plus rain chance, sunrise/sunset, UV index and a 5-day forecast, with a "read the weather aloud" button that speaks every detail.
+  - **Markets & knowledge** — currency converter, crypto prices and a Wikipedia knowledge search.
+  - **My notes** — write or **dictate** a quick note; notes stay on your device and can be read aloud.
+  - **Accessibility** — high contrast, dyslexia-friendly font, reduced motion, text size and voice speed.
+- **Assistant** — free AI, no API key. It knows **today's live data from this site** (your local
+  weather, the current top headlines and the dollar rate), so it answers "what's the weather?" or
+  "today's top news?" with real figures, in your own language. One-tap chips for weather, top news
+  and the dollar rate.
+- **Profile & sign-in** — reachable from the avatar button in the header (not a tab).
+
 
 ## Live data sources
 
