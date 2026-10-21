@@ -92,6 +92,17 @@
   .toolcard .tmain b{display:block; font-size:15.5px; font-weight:800;}
   .toolcard .tmain .small{display:block; margin-top:3px;}
   .toolcard .tarrow{color:var(--mut); font-size:20px; flex-shrink:0;}
+  /* ---- calculator ---- */
+  .calcdisp{font-size:34px; font-weight:900; text-align:right; padding:16px 18px; background:var(--card2);
+    border:1px solid var(--line); border-radius:16px; overflow-x:auto; white-space:nowrap;}
+  .calcgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px;}
+  .calcbtn{padding:17px 0; font-size:20px; font-weight:800; font-family:inherit; border-radius:14px;
+    background:var(--card2); border:1px solid var(--line); color:var(--txt); cursor:pointer;}
+  .calcbtn:active{transform:scale(.97);}
+  .calcbtn.op{background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff; border-color:transparent;}
+  .calcbtn.fn{color:var(--pri2);}
+  .calcbtn.wide{grid-column:span 2;}
+
   .wrap{padding-bottom:112px;}
   .toast{bottom:112px;}
 
@@ -277,6 +288,11 @@
         <button class="toolcard" onclick="go('markets')">
           <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 20h18"/><rect x="5" y="12" width="3.6" height="8" rx="1"/><rect x="10.2" y="7" width="3.6" height="13" rx="1"/><rect x="15.4" y="10" width="3.6" height="10" rx="1"/></svg></span>
           <span class="tmain"><b>Markets &amp; knowledge</b><span class="small mut">Currency converter, crypto prices and knowledge search</span></span>
+          <span class="tarrow" aria-hidden="true">›</span>
+        </button>
+        <button class="toolcard" onclick="go('calc')">
+          <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><rect x="7" y="6" width="10" height="3.5" rx="1"/><circle cx="8.2" cy="13" r="1.1"/><circle cx="12" cy="13" r="1.1"/><circle cx="15.8" cy="13" r="1.1"/><circle cx="8.2" cy="17.2" r="1.1"/><circle cx="12" cy="17.2" r="1.1"/><circle cx="15.8" cy="17.2" r="1.1"/></svg></span>
+          <span class="tmain"><b>Calculator</b><span class="small mut">Big buttons, works offline, reads the answer aloud</span></span>
           <span class="tarrow" aria-hidden="true">›</span>
         </button>
         <button class="toolcard" onclick="go('notes')">
@@ -470,6 +486,35 @@
   </section>
 
   <!-- ============ ACCESSIBILITY ============ -->
+  <!-- ============ CALCULATOR ============ -->
+  <section class="screen" id="s-calc" aria-label="Calculator">
+    <div class="card">
+      <div class="calcdisp" id="calcDisp" role="status" aria-live="polite" aria-label="Calculator display">0</div>
+      <div class="calcgrid">
+        <button class="calcbtn fn" onclick="calcKey('C')" aria-label="Clear">C</button>
+        <button class="calcbtn fn" onclick="calcKey('back')" aria-label="Backspace">⌫</button>
+        <button class="calcbtn fn" onclick="calcKey('%')" aria-label="Percent">%</button>
+        <button class="calcbtn op" onclick="calcKey('/')" aria-label="Divide">÷</button>
+        <button class="calcbtn" onclick="calcKey('7')" aria-label="Seven">7</button>
+        <button class="calcbtn" onclick="calcKey('8')" aria-label="Eight">8</button>
+        <button class="calcbtn" onclick="calcKey('9')" aria-label="Nine">9</button>
+        <button class="calcbtn op" onclick="calcKey('*')" aria-label="Multiply">×</button>
+        <button class="calcbtn" onclick="calcKey('4')" aria-label="Four">4</button>
+        <button class="calcbtn" onclick="calcKey('5')" aria-label="Five">5</button>
+        <button class="calcbtn" onclick="calcKey('6')" aria-label="Six">6</button>
+        <button class="calcbtn op" onclick="calcKey('-')" aria-label="Minus">−</button>
+        <button class="calcbtn" onclick="calcKey('1')" aria-label="One">1</button>
+        <button class="calcbtn" onclick="calcKey('2')" aria-label="Two">2</button>
+        <button class="calcbtn" onclick="calcKey('3')" aria-label="Three">3</button>
+        <button class="calcbtn op" onclick="calcKey('+')" aria-label="Plus">+</button>
+        <button class="calcbtn wide" onclick="calcKey('0')" aria-label="Zero">0</button>
+        <button class="calcbtn" onclick="calcKey('.')" aria-label="Decimal point">.</button>
+        <button class="calcbtn op" onclick="calcKey('=')" aria-label="Equals">=</button>
+      </div>
+      <button class="btn ghost sm" style="margin-top:12px" onclick="speakCalc()">🔊 Read the answer aloud</button>
+    </div>
+  </section>
+
   <!-- ============ NOTES ============ -->
   <section class="screen" id="s-notes" aria-label="My notes">
     <div class="card">
@@ -779,15 +824,16 @@ async function getJSON(url, opts){ var r=await fetch(url, opts||{}); if(!r.ok) t
 /* Three tabs. Tools opens a MENU; each tool is its own page, reached from that menu. */
 var TABS = {
   home:["home"], tools:["toolsmenu"], ai:["ai"], profile:["profile"],
-  news:["news"], weather:["weather"], markets:["tools"], notes:["notes"], access:["access"]
+  news:["news"], weather:["weather"], markets:["tools"], notes:["notes"], access:["access"],
+  calc:["calc"]
 };
 /* which bottom-tab a view belongs to (so Tools stays highlighted inside a tool) */
 var TAB_OF = { home:"home", tools:"tools", ai:"ai", profile:"profile",
-  news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"profile" };
+  news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"profile", calc:"tools" };
 /* where the Back button goes from each inner view */
-var BACK_TO = { news:"tools", weather:"tools", markets:"tools", notes:"tools" };
+var BACK_TO = { news:"tools", weather:"tools", markets:"tools", notes:"tools", calc:"tools" };
 var VIEW_LABEL = { tools:"Tools", news:"Live News", weather:"Weather", markets:"Markets & knowledge",
-  notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile" };
+  notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile", calc:"Calculator" };
 var _navStack = ["home"];
 
 function go(name, el, noPush){
@@ -857,7 +903,9 @@ function speak(text){
     window.speechSynthesis.cancel();
     var u=new SpeechSynthesisUtterance(text);
     u.rate = Number(state.a11y.rate)||1;
-    u.lang = state.lang==="hi"?"hi-IN":"en-IN";
+    /* The reading voice follows the SCRIPT of the text itself — never the news
+       language selector — so changing news language cannot affect the site. */
+    u.lang = /[\u0900-\u097F]/.test(text) ? "hi-IN" : "en-IN";
     window.speechSynthesis.speak(u);
   }catch(e){ toast("Could not speak"); }
 }
@@ -1012,12 +1060,23 @@ function buildNewsChips(){
 function setLang(c){ state.lang=c; save(); buildNewsChips(); loadNews(); }
 function setCat(c){ state.cat=c; save(); buildNewsChips(); loadNews(); }
 
-function googleNewsUrl(city){
-  var l=langInfo(state.lang);
-  if(city) return "https://news.google.com/rss/search?q="+encodeURIComponent(city)+"&hl="+l[2]+"&gl=IN&ceid="+l[3];
-  var c=catInfo(state.cat);
-  if(!c[2]) return "https://news.google.com/rss?hl="+l[2]+"&gl=IN&ceid="+l[3];
-  return "https://news.google.com/rss/"+c[2]+"?hl="+l[2]+"&gl=IN&ceid="+l[3];
+/* Google News is fussy about the language code: some languages only answer
+   "hi", others only "gu-IN", and the topic feeds often answer neither.
+   So instead of guessing, we build a short list of candidate URLs and use the
+   first one that actually returns headlines. */
+function newsUrls(city){
+  var l=langInfo(state.lang), c=catInfo(state.cat), out=[];
+  var codes=[l[2], l[0]];
+  for(var i=0;i<codes.length;i++){
+    var q="hl="+codes[i]+"&gl=IN&ceid="+l[3];
+    if(city){
+      out.push("https://news.google.com/rss/search?q="+encodeURIComponent(city)+"&"+q);
+    }else{
+      if(c[2]) out.push("https://news.google.com/rss/headlines/section/topic/"+c[2]+"?"+q);
+      out.push("https://news.google.com/rss?"+q);
+    }
+  }
+  return out;
 }
 /* Public CORS relays — tried in order, since a plain browser cannot read
    Google's RSS directly. If one is down the next is used. */
@@ -1044,14 +1103,17 @@ function parseRss(xmlText){
   }
   return out;
 }
-async function fetchNews(url){
+async function fetchNews(urls){
+  if(typeof urls === "string") urls = [urls];
   var lastErr=null;
-  for(var i=0;i<PROXIES.length;i++){
-    try{
-      var txt=await getText(PROXIES[i](url));
-      var items=parseRss(txt);
-      if(items.length) return {items:items, via:(i===PROXIES.length-1?"direct":"relay "+(i+1))};
-    }catch(e){ lastErr=e; }
+  for(var u=0; u<urls.length; u++){
+    for(var i=0;i<PROXIES.length;i++){
+      try{
+        var txt=await getText(PROXIES[i](urls[u]));
+        var items=parseRss(txt);
+        if(items.length) return {items:items, via:(i===PROXIES.length-1?"direct":"relay "+(i+1))};
+      }catch(e){ lastErr=e; }
+    }
   }
   // verified fallback: Wikipedia's curated world news (works without any relay)
   try{
@@ -1089,12 +1151,12 @@ async function loadNews(){
   $("newsMeta").textContent="Fetching live headlines…";
   var c=catInfo(state.cat);
   try{
-    var r=await fetchNews(googleNewsUrl());
+    var r=await fetchNews(newsUrls());
     box.innerHTML=r.items.map(newsCard).join("");
     box.dataset.loaded="1";
     LIVE.news=r.items.slice(0,5).map(function(x){ var t=String(x.title||"").replace(/\s+/g," ").trim(); return t.length>110?t.slice(0,110)+"…":t; });
     $("newsMeta").textContent=r.items.length+" headlines · "+c[1]+" · "+langInfo(state.lang)[1]+" · via "+r.via;
-    var hn=await fetchNews(googleNewsUrl(state.city.name||"India")).catch(function(){return null;});
+    var hn=await fetchNews(newsUrls(state.city.name||"India")).catch(function(){return null;});
     if(hn) $("homeNews").innerHTML=hn.items.slice(0,4).map(newsCard).join("");
   }catch(e){
     box.innerHTML='<div class="err">Live news could not be loaded right now. This feed uses a public relay to reach Google News; if it is busy, tap ⟳ Reload in a moment.</div>';
@@ -1106,7 +1168,7 @@ function loadNewsCity(){
   if(!c){ toast("Type a city name first"); return; }
   go("news");
   var box=$("newsList"); box.innerHTML=skeletonNews(5); $("newsMeta").textContent="Fetching news for "+c+"…";
-  fetchNews(googleNewsUrl(c)).then(function(r){
+  fetchNews(newsUrls(c)).then(function(r){
     box.innerHTML=r.items.map(newsCard).join(""); box.dataset.loaded="1";
     $("newsMeta").textContent=r.items.length+' headlines for "'+c+'" · via '+r.via;
   }).catch(function(){
@@ -1565,6 +1627,36 @@ function speakNotes(){
   speak("You have "+n.length+" note"+(n.length>1?"s":"")+". "+n.join(". Next note. "));
 }
 
+/* =================================================================== calculator */
+var calcExpr = "0";
+function calcRender(){ var d=$("calcDisp"); if(d) d.textContent = calcExpr || "0"; }
+function calcKey(k){
+  if(k==="C"){ calcExpr="0"; }
+  else if(k==="back"){ calcExpr = calcExpr.length>1 ? calcExpr.slice(0,-1) : "0"; }
+  else if(k==="="){ calcDo(); return; }
+  else{
+    if(calcExpr==="0" && /[0-9.]/.test(k)) calcExpr=k;
+    else calcExpr+=k;
+  }
+  calcRender();
+}
+function calcDo(){
+  var safe = String(calcExpr).replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-");
+  if(!/^[0-9+\-*/().% ]+$/.test(safe)){ toast("That is not a valid calculation"); return; }
+  try{
+    var val = Function("return ("+safe+")")();
+    if(typeof val!=="number" || !isFinite(val)) throw new Error("bad");
+    var out = String(Math.round(val*1e10)/1e10);
+    calcExpr = out; calcRender();
+    toast("= "+out);
+    speak("The answer is "+out);
+  }catch(e){ toast("That is not a valid calculation"); }
+}
+function speakCalc(){
+  if(state.a11y && state.a11y.voice===false){ toast("Voice feedback is off — turn it on in Settings"); return; }
+  speak("The display shows "+calcExpr);
+}
+
 /* =================================================================== refresh */
 async function refreshAll(){
   var b=$("refreshBtn"); b.classList.add("spin");
@@ -1579,6 +1671,9 @@ document.addEventListener("keydown", function(e){
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
   var map={"1":"home","2":"tools","3":"ai","4":"profile"};
   if(map[e.key]){ go(map[e.key]); }
+  else if($("s-calc") && $("s-calc").classList.contains("on") && /^[0-9.+\-*/%]$/.test(e.key)){ calcKey(e.key); }
+  else if($("s-calc") && $("s-calc").classList.contains("on") && (e.key==="Enter"||e.key==="=")){ calcKey("="); }
+  else if($("s-calc") && $("s-calc").classList.contains("on") && e.key==="Backspace"){ calcKey("back"); }
   else if(e.key==="r"||e.key==="R"){ readPage(); }
   else if(e.key==="Escape"){ try{ window.speechSynthesis.cancel(); }catch(x){} }
 });
@@ -1593,6 +1688,7 @@ applyAll();
 netStatus();
 renderChat();
 renderNotes();
+calcRender();
 if(FIREBASE_CONFIG){
   if(RETURNING_FROM_REDIRECT){
     openGate();
