@@ -284,11 +284,6 @@
           <span class="tmain"><b>My notes</b><span class="small mut">Write or dictate a note; saved on your device</span></span>
           <span class="tarrow" aria-hidden="true">›</span>
         </button>
-        <button class="toolcard" onclick="go('access')">
-          <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v6M8 10h8M12 13l-3 7M12 13l3 7"/></svg></span>
-          <span class="tmain"><b>Accessibility</b><span class="small mut">High contrast, text size, reading speed and more</span></span>
-          <span class="tarrow" aria-hidden="true">›</span>
-        </button>
       </div>
     </div>
   </section>
@@ -493,76 +488,68 @@
     </div>
   </section>
 
-  <section class="screen" id="s-access" aria-label="Accessibility for visually impaired users">
+  <section class="screen" id="s-access" aria-label="Accessibility settings">
     <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <div class="h2">♿ Accessibility</div>
-          <div class="small mut">Built for visually impaired users, screen-reader users (TalkBack / NVDA / Jieshuo) and anyone who needs a friendlier screen.</div>
-        </div>
-        <span class="badge">दृष्टि</span>
-      </div>
-      <button class="btn" style="margin-top:14px; width:100%" onclick="readPage()" aria-label="Read this page aloud">🔊 Read this page aloud</button>
+      <div class="h2">♿ Accessibility</div>
+      <div class="small mut">Display, voice and reading options. Your choices are saved on this device.</div>
+      <button class="btn" style="margin-top:14px; width:100%" onclick="readPage()">🔊 Read this page aloud</button>
+      <button class="btn ghost" style="margin-top:10px; width:100%" onclick="stopSpeak()">■ Stop speaking</button>
     </div>
 
     <div class="card">
       <div class="lbl">Display</div>
       <div class="switch">
-        <div><b>High contrast mode</b><div class="small mut">Maximum contrast for low vision</div></div>
+        <div><b>High contrast</b></div>
         <div class="toggle" id="tHc" role="switch" tabindex="0" aria-label="High contrast mode" onclick="toggleSetting('hc', this)"></div>
       </div>
       <div class="switch">
-        <div><b>Dyslexia-friendly font</b><div class="small mut">Wider, easier letter shapes</div></div>
+        <div><b>Dyslexia-friendly font</b></div>
         <div class="toggle" id="tDys" role="switch" tabindex="0" aria-label="Dyslexia friendly font" onclick="toggleSetting('dys', this)"></div>
       </div>
       <div class="switch">
-        <div><b>Reduce motion</b><div class="small mut">Turn off animations</div></div>
+        <div><b>Reduce motion</b></div>
         <div class="toggle" id="tMotion" role="switch" tabindex="0" aria-label="Reduce motion" onclick="toggleSetting('nomotion', this)"></div>
       </div>
       <div class="switch">
-        <div><b>Text size</b><div class="small mut">Make everything bigger</div></div>
+        <div><b>Text size</b></div>
         <div class="row" style="flex-wrap:nowrap; gap:6px">
           <button class="iconbtn" aria-label="Decrease text size" onclick="setFont(-1)">A−</button>
-          <button class="iconbtn" aria-label="Reset text size" onclick="setFont(0)">A</button>
+          <span id="fsVal" style="font-weight:800; min-width:54px; text-align:center">15px</span>
           <button class="iconbtn" aria-label="Increase text size" onclick="setFont(1)">A+</button>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="lbl">Speech &amp; voice</div>
+      <div class="lbl">Voice</div>
       <div class="switch">
-        <div><b>Read aloud speed</b><div class="small mut">How fast the voice speaks</div></div>
+        <div><b>Voice feedback</b><div class="small mut">Read-aloud buttons and page reading</div></div>
+        <div class="toggle" id="tVoice" role="switch" tabindex="0" aria-label="Voice feedback" onclick="toggleSetting('voice', this)"></div>
+      </div>
+      <div class="switch">
+        <div><b>Reading speed</b></div>
         <div class="row" style="flex-wrap:nowrap; gap:6px">
           <button class="iconbtn" aria-label="Slower" onclick="setRate(-0.1)">−</button>
-          <span id="rateVal" style="font-weight:800; min-width:44px; text-align:center">1.0×</span>
+          <span id="rateVal" style="font-weight:800; min-width:54px; text-align:center">1.0×</span>
           <button class="iconbtn" aria-label="Faster" onclick="setRate(0.1)">+</button>
         </div>
       </div>
       <div class="switch">
-        <div><b>Test the voice</b><div class="small mut">Speaks a sample sentence</div></div>
-        <button class="btn ghost" onclick="speak('Tech Drishti is ready. I can read the screen for you.')">▶ Test</button>
+        <div><b>Test the voice</b></div>
+        <button class="btn ghost" onclick="speakTest()">▶ Test</button>
       </div>
       <div class="switch">
-        <div><b>Voice search</b><div class="small mut">Use the 🎤 in the AI tab or here to search by voice</div></div>
+        <div><b>Search by voice</b></div>
         <button class="btn ghost" onclick="voiceSearch()">🎤 Speak</button>
       </div>
     </div>
 
     <div class="card">
       <div class="lbl">Keyboard shortcuts</div>
-      <div class="kv"><span class="mut">Go to Home / Tools / Assistant</span><span><span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span></span></div>
-      <div class="kv"><span class="mut">Open your profile</span><span class="kbd">4</span></div>
-      <div class="kv"><span class="mut">Read the current page aloud</span><span class="kbd">R</span></div>
+      <div class="kv"><span class="mut">Home / Tools / Assistant</span><span><span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span></span></div>
+      <div class="kv"><span class="mut">Your profile</span><span class="kbd">4</span></div>
+      <div class="kv"><span class="mut">Read the page aloud</span><span class="kbd">R</span></div>
       <div class="kv"><span class="mut">Stop speaking</span><span class="kbd">Esc</span></div>
-    </div>
-
-    <div class="card">
-      <div class="lbl">What makes Tech Drishti accessible</div>
-      <div class="prose">
-        <p>Every screen uses proper landmarks, headings and ARIA labels so screen readers announce it correctly. Interactive controls are reachable and operable by keyboard, focus outlines are always visible, and there is a skip-to-content link at the top.</p>
-        <p>The whole page can be read aloud, headlines and weather included. Text size, contrast, spacing and motion can all be adjusted from this screen — your choices are remembered on your device.</p>
-      </div>
     </div>
   </section>
 
@@ -580,6 +567,15 @@
       <div class="small mut" style="margin-top:12px">
         Sign-in is handled securely by Firebase Authentication. Tech Drishti never sees or stores your password.
       </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Settings</div>
+      <button class="toolcard" style="margin-top:14px" onclick="go('access')">
+        <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v6M8 10h8M12 13l-3 7M12 13l3 7"/></svg></span>
+        <span class="tmain"><b>Accessibility</b><span class="small mut">Display, text size, voice and reading speed</span></span>
+        <span class="tarrow" aria-hidden="true">›</span>
+      </button>
     </div>
 
     <div class="card">
@@ -750,10 +746,15 @@ var RETURNING_FROM_REDIRECT = /[?&](apiKey|oobCode)=/.test(location.search);
 var state = {
   theme:"dark", lang:"en", cat:"TOP", city:{name:"", lat:null, lon:null},
   auth:{ mode:"" },
-  a11y:{ hc:false, dys:false, nomotion:false, fs:15, rate:1 },
+  a11y:{ hc:false, dys:false, nomotion:false, fs:15, rate:1, voice:true },
   chat:[], notes:[]
 };
-function load(){ try{ var r=localStorage.getItem(KEY); if(r) state=Object.assign(state, JSON.parse(r)); }catch(e){} }
+function load(){
+  try{ var r=localStorage.getItem(KEY); if(r) state=Object.assign(state, JSON.parse(r)); }catch(e){}
+  if(!state.a11y) state.a11y = {};
+  if(state.a11y.voice === undefined) state.a11y.voice = true;
+  if(!state.notes) state.notes = [];
+}
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 load();
 
@@ -777,8 +778,9 @@ var TABS = {
 };
 /* which bottom-tab a view belongs to (so Tools stays highlighted inside a tool) */
 var TAB_OF = { home:"home", tools:"tools", ai:"ai", profile:"profile",
-  news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"tools" };
-var TOOL_NAMES = ["news","weather","markets","notes","access"];
+  news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"profile" };
+/* where the Back button goes from each inner view */
+var BACK_TO = { news:"tools", weather:"tools", markets:"tools", notes:"tools" };
 var VIEW_LABEL = { tools:"Tools", news:"Live News", weather:"Weather", markets:"Markets & knowledge",
   notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile" };
 var _navStack = ["home"];
@@ -811,7 +813,7 @@ function go(name, el, noPush){
 function goBack(){
   var cur = _navStack.length ? _navStack[_navStack.length-1] : "home";
   _navStack.pop();
-  if(TOOL_NAMES.indexOf(cur) > -1){ go("tools", null, true); return; }
+  if(BACK_TO[cur]){ go(BACK_TO[cur], null, true); return; }
   go(_navStack.length ? _navStack[_navStack.length-1] : "home", null, true);
 }
 function openAccess(){ go("access"); }
@@ -823,28 +825,43 @@ function applyAll(){
   document.documentElement.classList.toggle("dys", !!state.a11y.dys);
   document.documentElement.classList.toggle("nomotion", !!state.a11y.nomotion);
   document.documentElement.style.setProperty("--fs", state.a11y.fs+"px");
-  ["tHc:hc","tDys:dys","tMotion:nomotion"].forEach(function(p){
+  ["tHc:hc","tDys:dys","tMotion:nomotion","tVoice:voice"].forEach(function(p){
     var a=p.split(":"), el=$(a[0]); if(el) el.classList.toggle("on", !!state.a11y[a[1]]);
   });
-  $("rateVal").textContent = Number(state.a11y.rate).toFixed(1)+"×";
+  var rv=$("rateVal"); if(rv) rv.textContent = Number(state.a11y.rate).toFixed(1)+"×";
+  var fv=$("fsVal"); if(fv) fv.textContent = state.a11y.fs+"px";
   paintProfile();
 }
 function toggleTheme(){ state.theme = state.theme==="light"?"dark":"light"; save(); applyAll(); }
-function toggleSetting(k, el){ state.a11y[k]=!state.a11y[k]; if(el) el.classList.toggle("on", state.a11y[k]); save(); applyAll();
-  toast((k==="hc"?"High contrast":k==="dys"?"Dyslexia font":"Reduce motion")+" "+(state.a11y[k]?"on":"off")); }
+function toggleSetting(k, el){
+  state.a11y[k] = !state.a11y[k];
+  if(el) el.classList.toggle("on", state.a11y[k]);
+  if(k==="voice" && !state.a11y[k]){ try{ window.speechSynthesis.cancel(); }catch(e){} }
+  save(); applyAll();
+  var LBL={ hc:"High contrast", dys:"Dyslexia-friendly font", nomotion:"Reduce motion", voice:"Voice feedback" };
+  toast((LBL[k]||"Setting")+" "+(state.a11y[k]?"on":"off"));
+}
 function setFont(d){ if(d===0) state.a11y.fs=15; else state.a11y.fs=Math.min(24,Math.max(13,state.a11y.fs+d)); save(); applyAll(); toast("Text size "+state.a11y.fs+"px"); }
 function setRate(d){ state.a11y.rate=Math.min(2,Math.max(0.5, Number(state.a11y.rate)+d)); save(); applyAll(); }
 
 /* =================================================================== speech */
 function speak(text){
   try{
-    if(!("speechSynthesis" in window)){ toast("Speech not supported in this browser"); return; }
+    if(state.a11y && state.a11y.voice === false) return;
+    if(!("speechSynthesis" in window)){ toast("Speech is not supported in this browser"); return; }
     window.speechSynthesis.cancel();
     var u=new SpeechSynthesisUtterance(text);
     u.rate = Number(state.a11y.rate)||1;
     u.lang = state.lang==="hi"?"hi-IN":"en-IN";
     window.speechSynthesis.speak(u);
   }catch(e){ toast("Could not speak"); }
+}
+function speakTest(){
+  if(state.a11y && state.a11y.voice === false){ toast("Voice feedback is off — turn it on first"); return; }
+  speak("Tech Drishti is ready. I can read the screen for you.");
+}
+function stopSpeak(){
+  try{ window.speechSynthesis.cancel(); toast("Stopped"); }catch(e){ toast("Nothing to stop"); }
 }
 function readPage(){
   var sec=document.querySelector(".screen.on");
