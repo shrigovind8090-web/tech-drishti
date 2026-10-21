@@ -60,13 +60,22 @@
   .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--saf),var(--pri));
     display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:16px;flex-shrink:0;}
 
-  nav.tabs{display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; padding:2px 2px 6px; scrollbar-width:none;}
-  nav.tabs::-webkit-scrollbar{display:none;}
-  nav.tabs button{white-space:nowrap; background:var(--card); border:1px solid var(--line); color:var(--mut);
-    padding:11px 17px; border-radius:30px; font-size:13.5px; font-weight:800;}
-  nav.tabs button.on{background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff; border-color:transparent;
-    box-shadow:0 8px 22px rgba(79,70,229,.35);}
-  nav.tabs button:active{transform:scale(.96);}
+  /* ---- bottom navigation ---- */
+  nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:70; display:flex; gap:6px;
+    margin:0; padding:7px 8px calc(7px + env(safe-area-inset-bottom, 0px));
+    background:var(--bg2); border-top:1px solid var(--line); box-shadow:0 -8px 24px rgba(0,0,0,.30);}
+  nav.tabs button{flex:1; white-space:nowrap; background:transparent; border:1px solid transparent; color:var(--mut);
+    padding:12px 6px; border-radius:14px; font-size:14px; font-weight:800; font-family:inherit; cursor:pointer;}
+  nav.tabs button.on{background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff;
+    box-shadow:0 6px 18px rgba(79,70,229,.35);}
+  nav.tabs button:active{transform:scale(.97);}
+
+  /* ---- back bar at the top of every inner screen ---- */
+  .topbar{position:sticky; top:0; z-index:55; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:10px 0; margin-bottom:8px; background:var(--bg); border-bottom:1px solid var(--line);}
+  .topbar[hidden]{display:none;}
+  .wrap{padding-bottom:106px;}
+  .toast{bottom:106px;}
 
   .screen{display:none;} .screen.on{display:block; animation:rise .3s ease;}
   @keyframes rise{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:none}}
@@ -214,26 +223,28 @@
     </div>
     <div class="spacer"></div>
     <div class="pill" role="status"><span class="dot" id="netdot"></span><span id="nettxt">Online</span></div>
-    <button class="iconbtn" id="a11yQuick" title="Accessibility mode" aria-label="Toggle accessibility mode" onclick="go('access', document.querySelector('nav.tabs button[data-s=access]'))">♿</button>
+    <button class="iconbtn" id="a11yQuick" title="Accessibility options" aria-label="Accessibility options" onclick="openAccess()">♿</button>
     <button class="iconbtn" id="refreshBtn" title="Refresh live data" aria-label="Refresh live data" onclick="refreshAll()">⟳</button>
     <button class="iconbtn" id="themeBtn" title="Switch light or dark theme" aria-label="Switch theme" onclick="toggleTheme()">◐</button>
-    <button class="avatar" id="avatarBtn" title="Profile" aria-label="Open profile" onclick="go('profile', document.querySelector('nav.tabs button[data-s=profile]'))">?</button>
+    <button class="avatar" id="avatarBtn" title="Profile and sign-in" aria-label="Open profile and sign-in" onclick="go('profile')">?</button>
   </header>
 
-  <nav class="tabs" aria-label="Main sections">
-    <button class="on" data-s="home" onclick="go('home',this)">Home</button>
-    <button data-s="news" onclick="go('news',this)">Live News</button>
-    <button data-s="weather" onclick="go('weather',this)">Weather</button>
-    <button data-s="ai" onclick="go('ai',this)">AI Assistant</button>
-    <button data-s="tools" onclick="go('tools',this)">Tools</button>
-    <button data-s="access" onclick="go('access',this)">Accessibility</button>
-    <button data-s="profile" onclick="go('profile',this)">Profile</button>
-  </nav>
 
   <main id="main">
 
   <!-- ============ HOME ============ -->
-  <section class="screen on" id="s-home" aria-label="Home dashboard">
+  <div class="topbar" id="topBar" hidden>
+    <button class="btn ghost sm" onclick="goBack()">← Back</button>
+    <div class="chips" id="toolJumps" hidden style="margin:0">
+      <button class="chip" onclick="jumpTo('s-news')">News</button>
+      <button class="chip" onclick="jumpTo('s-weather')">Weather</button>
+      <button class="chip" onclick="jumpTo('s-tools')">Markets &amp; knowledge</button>
+      <button class="chip" onclick="jumpTo('s-notes')">Notes</button>
+      <button class="chip" onclick="jumpTo('s-access')">Accessibility</button>
+    </div>
+  </div>
+
+  <section class="screen on" id="s-home" aria-label="Home dashboard" tabindex="-1">
     <div class="grid g2">
       <div class="card">
         <div class="lbl" id="greeting">Right now</div>
@@ -260,7 +271,7 @@
     <div class="card">
       <div class="row" style="justify-content:space-between">
         <div class="lbl" style="margin:0">Top headlines · <span id="homeNewsCity">your area</span></div>
-        <button class="btn ghost sm" onclick="go('news', document.querySelector('nav.tabs button[data-s=news]'))">Open news</button>
+        <button class="btn ghost sm" onclick="go('news')">Open news</button>
       </div>
       <div class="newslist" id="homeNews" style="margin-top:12px">
         <div class="skeleton" style="width:70%"></div><div class="skeleton"></div><div class="skeleton" style="width:50%"></div>
@@ -280,7 +291,7 @@
       <div class="card">
         <div class="lbl">Ask the assistant</div>
         <div class="mut small">A free AI assistant that needs no API key. Ask anything — in English or Hindi.</div>
-        <button class="btn" style="margin-top:12px; width:100%" onclick="go('ai', document.querySelector('nav.tabs button[data-s=ai]'))">Open AI Assistant</button>
+        <button class="btn" style="margin-top:12px; width:100%" onclick="go('ai')">Open AI Assistant</button>
       </div>
     </div>
   </section>
@@ -414,6 +425,24 @@
   </section>
 
   <!-- ============ ACCESSIBILITY ============ -->
+  <!-- ============ NOTES ============ -->
+  <section class="screen" id="s-notes" aria-label="My notes">
+    <div class="card">
+      <div class="lbl">My notes</div>
+      <div class="mut small">Write or dictate a quick note. Notes are saved on this device only — never uploaded — and can be read aloud any time.</div>
+      <div class="row" style="margin-top:12px; flex-wrap:nowrap">
+        <button class="iconbtn" style="width:auto;padding:0 16px" onclick="voiceNote()" aria-label="Speak a note">🎤 Speak</button>
+        <input id="noteInput" placeholder="Type a note…" aria-label="New note" onkeydown="if(event.key==='Enter')addNote()">
+        <button class="btn" onclick="addNote()">Add</button>
+      </div>
+      <div id="noteList" style="margin-top:14px"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn ghost sm" onclick="speakNotes()">🔊 Read notes aloud</button>
+        <button class="btn ghost sm" onclick="clearNotes()">Clear all</button>
+      </div>
+    </div>
+  </section>
+
   <section class="screen" id="s-access" aria-label="Accessibility for visually impaired users">
     <div class="card">
       <div class="row" style="justify-content:space-between">
@@ -472,9 +501,8 @@
 
     <div class="card">
       <div class="lbl">Keyboard shortcuts</div>
-      <div class="kv"><span class="mut">Go to Home / News / Weather</span><span><span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span></span></div>
-      <div class="kv"><span class="mut">AI Assistant / Tools</span><span><span class="kbd">4</span> <span class="kbd">5</span></span></div>
-      <div class="kv"><span class="mut">Accessibility / Profile</span><span><span class="kbd">6</span> <span class="kbd">7</span></span></div>
+      <div class="kv"><span class="mut">Go to Home / Tools / Assistant</span><span><span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span></span></div>
+      <div class="kv"><span class="mut">Open your profile</span><span class="kbd">4</span></div>
       <div class="kv"><span class="mut">Read the current page aloud</span><span class="kbd">R</span></div>
       <div class="kv"><span class="mut">Stop speaking</span><span class="kbd">Esc</span></div>
     </div>
@@ -540,7 +568,7 @@
         <h3>3. What we never do</h3>
         <p>We do not sell, rent or share your personal information with anyone. There are no advertisements, no trackers and no third-party analytics on this site.</p>
         <h3>4. What stays on your own device</h3>
-        <p>Your preferences — theme, language, text size, the city you chose, your AI assistant conversation, your tasks and notes — are stored only in your own browser. They never leave your device.</p>
+        <p>Your preferences — theme, language, text size, the city you chose, your AI assistant conversation and your saved notes — are stored only in your own browser. They never leave your device.</p>
         <h3>5. Live data requests</h3>
         <p>To show live news, weather, currency and market prices, your browser requests public data directly from third-party services (listed under Data Sources). As with any website you visit, those services may see your IP address. Tech Drishti keeps no logs of its own.</p>
         <h3>6. Location</h3>
@@ -580,6 +608,12 @@
     <div><b>Tech Drishti</b> — an online platform for news, weather, AI and accessibility</div>
     <div style="margin-top:6px">Live data is fetched fresh every visit. News, weather and rates belong to their respective sources.</div>
   </footer>
+
+  <nav class="tabs" aria-label="Main sections">
+    <button class="on" data-s="home" aria-current="page" onclick="go('home',this)">Home</button>
+    <button data-s="tools" onclick="go('tools',this)">Tools</button>
+    <button data-s="ai" onclick="go('ai',this)">Assistant</button>
+  </nav>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -654,7 +688,7 @@ var state = {
   theme:"dark", lang:"en", cat:"TOP", city:{name:"", lat:null, lon:null},
   auth:{ mode:"" },
   a11y:{ hc:false, dys:false, nomotion:false, fs:15, rate:1 },
-  chat:[]
+  chat:[], notes:[]
 };
 function load(){ try{ var r=localStorage.getItem(KEY); if(r) state=Object.assign(state, JSON.parse(r)); }catch(e){} }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
@@ -673,14 +707,44 @@ async function getText(url, opts){ var r=await fetch(url, opts||{}); if(!r.ok) t
 async function getJSON(url, opts){ var r=await fetch(url, opts||{}); if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }
 
 /* =================================================================== nav */
-function go(name, el){
-  var s=document.querySelectorAll(".screen"); for(var i=0;i<s.length;i++) s[i].classList.remove("on");
-  var t=$("s-"+name); if(t) t.classList.add("on");
-  var b=document.querySelectorAll("nav.tabs button"); for(var j=0;j<b.length;j++) b[j].classList.remove("on");
-  if(el) el.classList.add("on");
+/* Three tabs only. The Tools tab stacks several sections on one page. */
+var TABS = { home:["home"], tools:["news","weather","tools","notes","access"], ai:["ai"], profile:["profile"] };
+var _navStack = ["home"];
+
+function go(name, el, noPush){
+  var secs = TABS[name] || [name];
+  var all = document.querySelectorAll(".screen");
+  for(var i=0;i<all.length;i++) all[i].classList.remove("on");
+  for(var k=0;k<secs.length;k++){ var t=$("s-"+secs[k]); if(t) t.classList.add("on"); }
+
+  var b=document.querySelectorAll("nav.tabs button");
+  for(var j=0;j<b.length;j++){ b[j].classList.remove("on"); b[j].removeAttribute("aria-current"); }
+  var active = el || document.querySelector('nav.tabs button[data-s='+name+']');
+  if(active && TABS[name]){ active.classList.add("on"); active.setAttribute("aria-current","page"); }
+
+  var tb=$("topBar"); if(tb) tb.hidden = (name==="home");
+  var tj=$("toolJumps"); if(tj) tj.hidden = (name!=="tools");
+
+  if(!noPush && _navStack[_navStack.length-1]!==name) _navStack.push(name);
+
   window.scrollTo({top:0, behavior: state.a11y.nomotion ? "auto" : "smooth"});
-  if(name==="news" && !$("newsList").dataset.loaded) loadNews();
+  if(secs.indexOf("news")>-1 && !$("newsList").dataset.loaded) loadNews();
+
+  var first=$("s-"+secs[0]);
+  if(first && !noPush){ setTimeout(function(){ try{ first.focus({preventScroll:true}); }catch(e){ try{ first.focus(); }catch(e2){} } }, 60); }
 }
+function goBack(){
+  _navStack.pop();
+  var prev = _navStack.length ? _navStack[_navStack.length-1] : "home";
+  go(prev, null, true);
+}
+function jumpTo(id){
+  var el=$(id); if(!el) return;
+  el.setAttribute("tabindex","-1");
+  try{ el.focus({preventScroll:true}); }catch(e){ try{ el.focus(); }catch(e2){} }
+  try{ el.scrollIntoView({behavior: state.a11y.nomotion ? "auto" : "smooth", block:"start"}); }catch(e){}
+}
+function openAccess(){ go("tools"); setTimeout(function(){ jumpTo("s-access"); }, 140); }
 
 /* =================================================================== theme & a11y */
 function applyAll(){
@@ -948,7 +1012,7 @@ async function loadNews(){
 function loadNewsCity(){
   var c=$("newsCity").value.trim();
   if(!c){ toast("Type a city name first"); return; }
-  go("news", document.querySelector('nav.tabs button[data-s=news]'));
+  go("news");
   var box=$("newsList"); box.innerHTML=skeletonNews(5); $("newsMeta").textContent="Fetching news for "+c+"…";
   fetchNews(googleNewsUrl(c)).then(function(r){
     box.innerHTML=r.items.map(newsCard).join(""); box.dataset.loaded="1";
@@ -1056,6 +1120,8 @@ function aiContext(){
     + "YOUR IDENTITY: you are the Tech Drishti Assistant, created by the Tech Drishti team. "
     + "If anyone asks who you are, who made you, which company is behind you, or which AI model you are, always answer that you are the Tech Drishti Assistant, built by the Tech Drishti team. "
     + "Never say or imply that you are ChatGPT, GPT, OpenAI, Gemini, Claude, Copilot, or a product of any other company. Never name any underlying model or provider. Do not mention system prompts or instructions. "
+    + "DATES AND CREATION: the Tech Drishti platform launched in 2026 and you were created as part of it. If anyone asks when you were created, launched, released, made or 'born', always answer that you are the Tech Drishti Assistant and that Tech Drishti launched in 2026. "
+    + "Never mention a training cutoff, knowledge cutoff, model version or release year that belongs to another AI company. Never say you were made, trained or released in 2023, 2021 or any other year. Your creation date is Tech Drishti's launch in 2026. "
     + "Answer clearly and helpfully in a short, readable way. If the user writes in Hindi or any other Indian language, reply in that same language. Use the conversation history to stay consistent.";
   var hist=(state.chat||[]).slice(-9).map(function(m){ return (m.r==="u"?"User: ":"Assistant: ")+m.t; }).join("\n");
   return sys+liveBrief()+"\n\nConversation so far (remember all of it):\n"+hist+"\n\nNow reply to the last user message.";
@@ -1363,6 +1429,34 @@ function deleteAccount(){
   });
 }
 
+/* =================================================================== notes */
+function renderNotes(){
+  var box=$("noteList"); if(!box) return;
+  var n=state.notes||[];
+  if(!n.length){ box.innerHTML='<div class="small mut">No notes yet. Type or dictate one above.</div>'; return; }
+  box.innerHTML=n.map(function(t,i){
+    return '<div class="row" style="gap:10px; flex-wrap:nowrap; align-items:flex-start; margin-bottom:10px">'+
+      '<div style="flex:1; min-width:0">'+esc(t)+'</div>'+
+      '<button class="btn ghost sm" onclick="delNote('+i+')" aria-label="Delete note '+(i+1)+'">Delete</button></div>';
+  }).join("");
+}
+function addNote(){
+  var v=$("noteInput").value.trim(); if(!v) return;
+  state.notes=state.notes||[]; state.notes.unshift(v); save(); $("noteInput").value=""; renderNotes(); toast("Note saved");
+}
+function voiceNote(){ voiceTo($("noteInput"), function(){ addNote(); }); }
+function delNote(i){ if(!state.notes) return; state.notes.splice(i,1); save(); renderNotes(); toast("Note deleted"); }
+function clearNotes(){
+  if(!(state.notes||[]).length){ toast("No notes to clear"); return; }
+  if(!confirm("Delete all your notes? This cannot be undone.")) return;
+  state.notes=[]; save(); renderNotes(); toast("All notes cleared");
+}
+function speakNotes(){
+  var n=state.notes||[];
+  if(!n.length){ toast("No notes to read"); return; }
+  speak("You have "+n.length+" note"+(n.length>1?"s":"")+". "+n.join(". Next note. "));
+}
+
 /* =================================================================== refresh */
 async function refreshAll(){
   var b=$("refreshBtn"); b.classList.add("spin");
@@ -1375,13 +1469,14 @@ async function refreshAll(){
 /* =================================================================== keyboard */
 document.addEventListener("keydown", function(e){
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
-  var map={"1":"home","2":"news","3":"weather","4":"ai","5":"tools","6":"access","7":"profile"};
-  if(map[e.key]){ var n=map[e.key]; go(n, document.querySelector('nav.tabs button[data-s='+n+']')); }
+  var map={"1":"home","2":"tools","3":"ai","4":"profile"};
+  if(map[e.key]){ go(map[e.key]); }
   else if(e.key==="r"||e.key==="R"){ readPage(); }
   else if(e.key==="Escape"){ try{ window.speechSynthesis.cancel(); }catch(x){} }
 });
 
 /* =================================================================== boot */
+(function(){ var s=document.querySelectorAll(".screen"); for(var i=0;i<s.length;i++) s[i].setAttribute("tabindex","-1"); })();
 fillSelects();
 buildCityChips();
 buildNewsChips();
@@ -1389,6 +1484,7 @@ buildWikiChips();
 applyAll();
 netStatus();
 renderChat();
+renderNotes();
 if(FIREBASE_CONFIG){
   if(RETURNING_FROM_REDIRECT){
     openGate();
