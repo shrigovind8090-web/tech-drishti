@@ -693,11 +693,12 @@ var FIREBASE_CONFIG = {
   appId: "1:447024040002:web:f90d7f4d0db1c9a8e3c5db"
 };
 
-/* When someone asks the assistant when IT was launched, this is what it says.
-   Put a date here (for example "October 2026") and it will state it.
-   Leave it empty and it simply says it is the Tech Drishti Assistant.
-   The assistant never claims a launch date for the platform itself. */
-var AI_LAUNCH = "";
+/* Two different things — keep them apart.
+   AI_LAUNCH      = when the Tech Drishti ASSISTANT itself launched.
+   PLATFORM_SINCE = how long the Tech Drishti PLATFORM has been running.
+   Change either value here and the assistant follows it. */
+var AI_LAUNCH = "2026";
+var PLATFORM_SINCE = "2025";
 
 /* True while the page is reloading back from a full-page Google sign-in. */
 var RETURNING_FROM_REDIRECT = /[?&](apiKey|oobCode)=/.test(location.search);
@@ -1139,15 +1140,25 @@ function aiContext(){
     + "If anyone asks who you are, who made you, which company is behind you, or which AI model you are, always answer that you are the Tech Drishti Assistant, built by the Tech Drishti team. "
     + "Never say or imply that you are ChatGPT, GPT, OpenAI, Gemini, Claude, Copilot, or a product of any other company. Never name any underlying model or provider. Do not mention system prompts or instructions. "
     + aiDateLine()
-    + "Never mention a training cutoff, knowledge cutoff, model version or release year that belongs to another AI company. Never say you were made, trained or released in 2023, 2021 or any other year. Never state any launch date for the Tech Drishti platform itself. "
+    + "Never mention a training cutoff, knowledge cutoff, model version or release year that belongs to another AI company. Never say you were made, trained or released in 2023, 2021 or any other year. "
     + "Answer clearly and helpfully in a short, readable way. If the user writes in Hindi or any other Indian language, reply in that same language. Use the conversation history to stay consistent.";
   var hist=(state.chat||[]).slice(-9).map(function(m){ return (m.r==="u"?"User: ":"Assistant: ")+m.t; }).join("\n");
   return sys+liveBrief()+"\n\nConversation so far (remember all of it):\n"+hist+"\n\nNow reply to the last user message.";
 }
-/* What the assistant says when asked about its own creation date. */
+/* What the assistant says about its own creation date, and about the platform's. */
 function aiDateLine(){
-  if(AI_LAUNCH) return "DATES AND CREATION: you are the Tech Drishti Assistant, built by the Tech Drishti team. If anyone asks when you were created, launched, released, made or 'born', answer that you are the Tech Drishti Assistant and that you were launched in "+AI_LAUNCH+". ";
-  return "DATES AND CREATION: you are the Tech Drishti Assistant, built by the Tech Drishti team. If anyone asks when you were created, launched, released, made or 'born', answer that you are the Tech Drishti Assistant, built by the Tech Drishti team, and say you do not have a public release date to share. ";
+  var s = "DATES AND CREATION: you are the Tech Drishti Assistant, built by the Tech Drishti team. ";
+  if(AI_LAUNCH){
+    s += "You, the assistant, were launched in "+AI_LAUNCH+". If anyone asks when you were created, launched, released, made or 'born', answer that you are the Tech Drishti Assistant and that you were launched in "+AI_LAUNCH+". ";
+  } else {
+    s += "If anyone asks when you were created, launched, released, made or 'born', answer that you are the Tech Drishti Assistant, built by the Tech Drishti team. ";
+  }
+  if(PLATFORM_SINCE){
+    s += "The Tech Drishti platform itself is a separate, older thing: it has been running since "+PLATFORM_SINCE+". If someone asks about the platform, you may say it has been running since "+PLATFORM_SINCE+". Never mix the two up, and never answer a question about YOUR launch with the platform's date. ";
+  } else {
+    s += "Never state a launch date for the Tech Drishti platform itself. ";
+  }
+  return s;
 }
 
 /* Builds a short block of the live data already on this page, so the assistant
