@@ -740,6 +740,11 @@ var FIREBASE_CONFIG = {
 var AI_LAUNCH = "2026";
 var PLATFORM_SINCE = "2025";
 
+/* The site's own locale. Dates, days and numbers are ALWAYS formatted with this,
+   never with the visitor's phone language — so the day never appears in a
+   language the site is not using. */
+var LOC = "en-IN";
+
 /* True while the page is reloading back from a full-page Google sign-in. */
 var RETURNING_FROM_REDIRECT = /[?&](apiKey|oobCode)=/.test(location.search);
 
@@ -908,7 +913,7 @@ var WMO={0:["☀️","Clear sky"],1:["🌤️","Mainly clear"],2:["⛅","Partly 
 80:["🌦️","Rain showers"],81:["🌧️","Rain showers"],82:["⛈️","Violent showers"],85:["🌨️","Snow showers"],86:["🌨️","Snow showers"],
 95:["⛈️","Thunderstorm"],96:["⛈️","Thunderstorm + hail"],99:["⛈️","Thunderstorm + hail"]};
 function wmo(c){ return WMO[c]||["🌡️","—"]; }
-function dayName(iso,i){ if(i===0) return "Today"; return new Date(iso+"T12:00:00").toLocaleDateString(undefined,{weekday:"short"}); }
+function dayName(iso,i){ if(i===0) return "Today"; return new Date(iso+"T12:00:00").toLocaleDateString(LOC,{weekday:"short"}); }
 
 /* Latest live values, kept so the AI assistant can answer about today. */
 var LIVE = { weather:null, news:[], rates:null };
@@ -1072,7 +1077,7 @@ async function fetchNews(url){
 function newsCard(n){
   var meta=[];
   if(n.src) meta.push('<span class="tag">'+esc(n.src)+'</span>');
-  if(n.date){ var d=new Date(n.date); if(!isNaN(d)) meta.push('<span>'+d.toLocaleString()+'</span>'); }
+  if(n.date){ var d=new Date(n.date); if(!isNaN(d)) meta.push('<span>'+d.toLocaleString(LOC,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+'</span>'); }
   return '<article class="nitem">'+(n.img?'<img src="'+esc(n.img)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'')+
     '<div class="nb"><div class="nt"><a href="'+esc(n.link)+'" target="_blank" rel="noopener">'+esc(n.title)+'</a></div>'+
     '<div class="nm">'+meta.join("")+'</div></div></article>';
@@ -1133,13 +1138,13 @@ function inrRate(){ return (rates&&rates.INR)?rates.INR:83; }
 function convert(a,f,t){ if(!rates||!rates[f]||!rates[t]) return null; return a/rates[f]*rates[t]; }
 function conv(){
   var a=parseFloat($("mAmt").value)||0, f=$("mFrom").value, t=$("mTo").value, v=convert(a,f,t);
-  $("mOut").textContent = v==null?"—":v.toLocaleString(undefined,{maximumFractionDigits:2})+" "+t;
+  $("mOut").textContent = v==null?"—":v.toLocaleString(LOC,{maximumFractionDigits:2})+" "+t;
   $("cOut").textContent = v==null?"—":(convert(1,"USD","INR")||0).toFixed(2)+" INR";
-  $("mRate").textContent = v==null?"Rates unavailable — tap ⟳":("1 "+f+" = "+convert(1,f,t).toLocaleString(undefined,{maximumFractionDigits:4})+" "+t+" · "+rateSource);
+  $("mRate").textContent = v==null?"Rates unavailable — tap ⟳":("1 "+f+" = "+convert(1,f,t).toLocaleString(LOC,{maximumFractionDigits:4})+" "+t+" · "+rateSource);
   $("cRate").textContent = rates ? ("1 USD = "+(rates.INR?rates.INR.toFixed(2):"—")+" INR · "+rateSource) : "Rates unavailable";
 }
 var COINS=[["bitcoin","Bitcoin","BTC","btc"],["ethereum","Ethereum","ETH","eth"],["solana","Solana","SOL","sol"],["ripple","XRP","XRP","xrp"]];
-function fmtNum(n){ if(n==null) return "—"; if(n>=1000) return n.toLocaleString(undefined,{maximumFractionDigits:0}); if(n>=1) return n.toLocaleString(undefined,{maximumFractionDigits:2}); return n.toLocaleString(undefined,{maximumFractionDigits:6}); }
+function fmtNum(n){ if(n==null) return "—"; if(n>=1000) return n.toLocaleString(LOC,{maximumFractionDigits:0}); if(n>=1) return n.toLocaleString(LOC,{maximumFractionDigits:2}); return n.toLocaleString(LOC,{maximumFractionDigits:6}); }
 function coinRow(r){
   var ch=r.hasCh?('<span class="'+(r.ch>=0?"up":"down")+'">'+(r.ch>=0?"+":"")+r.ch.toFixed(2)+'%</span>'):'<span class="mut">—</span>';
   return '<tr><td><b>'+r.sym+'</b> <span class="mut small">'+r.name+'</span></td>'+
@@ -1162,7 +1167,7 @@ async function loadCrypto(){
   var tbl = rows.length ? "<tbody>"+rows.map(coinRow).join("")+"</tbody>" : '<tbody><tr><td class="mut">Crypto feed unavailable</td></tr></tbody>';
   $("coinTable").innerHTML=tbl;
   $("homeCoins").innerHTML = rows.length ? "<tbody>"+rows.slice(0,3).map(coinRow).join("")+"</tbody>" : '<tbody><tr><td class="mut">unavailable</td></tr></tbody>';
-  $("coinStamp").textContent = rows.length ? ("Updated "+new Date().toLocaleTimeString()+" · "+src) : "—";
+  $("coinStamp").textContent = rows.length ? ("Updated "+new Date().toLocaleTimeString(LOC,{hour12:false})+" · "+src) : "—";
 }
 
 /* =================================================================== wiki */
@@ -1601,8 +1606,8 @@ if(FIREBASE_CONFIG){
 paintProfile();
 (function tickClock(){
   var d=new Date();
-  $("clock").textContent=d.toLocaleTimeString(undefined,{hour12:false});
-  $("dateline").textContent=d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  $("clock").textContent=d.toLocaleTimeString(LOC,{hour12:false});
+  $("dateline").textContent=d.toLocaleDateString(LOC,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
   var pct=Math.round((d.getHours()*60+d.getMinutes())/1440*100);
   $("daybar").style.width=pct+"%"; $("daypct").textContent=pct+"% of the day has passed";
   setTimeout(tickClock,1000);
