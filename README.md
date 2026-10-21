@@ -13,7 +13,7 @@ The whole platform now lives in **three bottom tabs**, with a **Back button** at
 inner screen and quick-jump chips inside Tools.
 
 - **Home** — live clock and greeting, weather for your location, top headlines and market glance.
-- **Tools** — one page holding every utility, one after another:
+- **Tools** — a menu of tools. Tap one to open just that tool; Back returns to the menu:
   - **Live News** — headlines from Google News with a **language selector** (English, हिन्दी, தமிழ், తెలుగు, বাংলা, मराठी, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, اردو) and a **category filter**, plus **city news**.
   - **Weather** — current conditions plus rain chance, sunrise/sunset, UV index and a 5-day forecast, with a "read the weather aloud" button that speaks every detail.
   - **Markets & knowledge** — currency converter, crypto prices and a Wikipedia knowledge search.
