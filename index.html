@@ -103,6 +103,10 @@
   .calcbtn.fn{color:var(--pri2);}
   .calcbtn.wide{grid-column:span 2;}
 
+  .sharebtn{background:transparent; border:1px solid var(--line); color:var(--mut); border-radius:20px;
+    padding:3px 12px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; margin-left:6px;}
+  .sharebtn:active{transform:scale(.96);}
+
   .wrap{padding-bottom:112px;}
   .toast{bottom:112px;}
 
@@ -293,6 +297,11 @@
         <button class="toolcard" onclick="go('calc')">
           <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><rect x="7" y="6" width="10" height="3.5" rx="1"/><circle cx="8.2" cy="13" r="1.1"/><circle cx="12" cy="13" r="1.1"/><circle cx="15.8" cy="13" r="1.1"/><circle cx="8.2" cy="17.2" r="1.1"/><circle cx="12" cy="17.2" r="1.1"/><circle cx="15.8" cy="17.2" r="1.1"/></svg></span>
           <span class="tmain"><b>Calculator</b><span class="small mut">Big buttons, works offline, reads the answer aloud</span></span>
+          <span class="tarrow" aria-hidden="true">›</span>
+        </button>
+        <button class="toolcard" onclick="go('timer')">
+          <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></span>
+          <span class="tmain"><b>Timer &amp; stopwatch</b><span class="small mut">Counts down or up, and says aloud when time is up</span></span>
           <span class="tarrow" aria-hidden="true">›</span>
         </button>
         <button class="toolcard" onclick="go('notes')">
@@ -512,6 +521,39 @@
         <button class="calcbtn op" onclick="calcKey('=')" aria-label="Equals">=</button>
       </div>
       <button class="btn ghost sm" style="margin-top:12px" onclick="speakCalc()">🔊 Read the answer aloud</button>
+    </div>
+  </section>
+
+  <!-- ============ TIMER ============ -->
+  <section class="screen" id="s-timer" aria-label="Timer and stopwatch">
+    <div class="card">
+      <div class="lbl">Stopwatch</div>
+      <div class="calcdisp" id="swDisp" role="status" aria-live="polite" aria-label="Stopwatch">00:00.0</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="swStart" onclick="swToggle()">Start</button>
+        <button class="btn ghost" onclick="swReset()">Reset</button>
+        <button class="btn ghost" onclick="speakEl('swDisp')">🔊 Read</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Countdown timer</div>
+      <div class="calcdisp" id="tmDisp" role="status" aria-live="polite" aria-label="Countdown timer">00:00</div>
+      <div class="row" style="margin-top:12px; flex-wrap:nowrap">
+        <input id="tmMin" type="number" min="1" max="180" value="5" aria-label="Minutes">
+        <span class="mut small">minutes</span>
+      </div>
+      <div class="chips">
+        <button class="chip" onclick="tmPreset(1)">1 min</button>
+        <button class="chip" onclick="tmPreset(5)">5 min</button>
+        <button class="chip" onclick="tmPreset(10)">10 min</button>
+        <button class="chip" onclick="tmPreset(30)">30 min</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="tmStart" onclick="tmToggle()">Start</button>
+        <button class="btn ghost" onclick="tmReset()">Reset</button>
+      </div>
+      <div class="small mut" style="margin-top:10px">When the countdown ends, Tech Drishti says “Time is up” aloud.</div>
     </div>
   </section>
 
@@ -825,15 +867,15 @@ async function getJSON(url, opts){ var r=await fetch(url, opts||{}); if(!r.ok) t
 var TABS = {
   home:["home"], tools:["toolsmenu"], ai:["ai"], profile:["profile"],
   news:["news"], weather:["weather"], markets:["tools"], notes:["notes"], access:["access"],
-  calc:["calc"]
+  calc:["calc"], timer:["timer"]
 };
 /* which bottom-tab a view belongs to (so Tools stays highlighted inside a tool) */
 var TAB_OF = { home:"home", tools:"tools", ai:"ai", profile:"profile",
-  news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"profile", calc:"tools" };
+  news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"profile", calc:"tools", timer:"tools" };
 /* where the Back button goes from each inner view */
-var BACK_TO = { news:"tools", weather:"tools", markets:"tools", notes:"tools", calc:"tools" };
+var BACK_TO = { news:"tools", weather:"tools", markets:"tools", notes:"tools", calc:"tools", timer:"tools" };
 var VIEW_LABEL = { tools:"Tools", news:"Live News", weather:"Weather", markets:"Markets & knowledge",
-  notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile", calc:"Calculator" };
+  notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile", calc:"Calculator", timer:"Timer & stopwatch" };
 var _navStack = ["home"];
 
 function go(name, el, noPush){
@@ -1140,6 +1182,7 @@ function newsCard(n){
   var meta=[];
   if(n.src) meta.push('<span class="tag">'+esc(n.src)+'</span>');
   if(n.date){ var d=new Date(n.date); if(!isNaN(d)) meta.push('<span>'+d.toLocaleString(LOC,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+'</span>'); }
+  if(n.link) meta.push('<button class="sharebtn" data-t="'+escAttr(n.title)+'" data-l="'+escAttr(n.link)+'" onclick="shareFrom(this)" aria-label="Share this headline">↗ Share</button>');
   return '<article class="nitem">'+(n.img?'<img src="'+esc(n.img)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'')+
     '<div class="nb"><div class="nt"><a href="'+esc(n.link)+'" target="_blank" rel="noopener">'+esc(n.title)+'</a></div>'+
     '<div class="nm">'+meta.join("")+'</div></div></article>';
@@ -1657,6 +1700,54 @@ function speakCalc(){
   speak("The display shows "+calcExpr);
 }
 
+/* =================================================================== timer */
+var swElapsed=0, swT0=0, swTimer=null, swRunning=false;
+function swFmt(ms){
+  var t=Math.floor(ms/100), cs=t%10, s=Math.floor(t/10)%60, m=Math.floor(t/600);
+  return (m<10?"0":"")+m+":"+(s<10?"0":"")+s+"."+cs;
+}
+function swPaint(){ var d=$("swDisp"); if(d) d.textContent=swFmt(swElapsed+(swRunning?Date.now()-swT0:0)); }
+function swToggle(){
+  if(swRunning){ swElapsed+=Date.now()-swT0; swRunning=false; clearInterval(swTimer); swTimer=null; }
+  else { swT0=Date.now(); swRunning=true; swTimer=setInterval(swPaint,100); }
+  var b=$("swStart"); if(b) b.textContent = swRunning?"Pause":"Start";
+  swPaint(); toast(swRunning?"Stopwatch started":"Stopwatch paused");
+}
+function swReset(){ swRunning=false; clearInterval(swTimer); swTimer=null; swElapsed=0; var b=$("swStart"); if(b) b.textContent="Start"; swPaint(); toast("Stopwatch reset"); }
+
+var tmLeft=0, tmTimer=null, tmRunning=false;
+function tmFmt(s){ var m=Math.floor(s/60), ss=s%60; return (m<10?"0":"")+m+":"+(ss<10?"0":"")+ss; }
+function tmPaint(){ var d=$("tmDisp"); if(d) d.textContent=tmFmt(tmLeft); }
+function tmPreset(m){ var i=$("tmMin"); if(i) i.value=m; tmReset(); }
+function tmToggle(){
+  if(tmRunning){ clearInterval(tmTimer); tmTimer=null; tmRunning=false; var b=$("tmStart"); if(b) b.textContent="Start"; toast("Timer paused"); return; }
+  if(tmLeft<=0){
+    var m=parseInt($("tmMin").value,10);
+    if(!(m>0)){ toast("Enter the minutes first"); return; }
+    tmLeft=m*60;
+  }
+  tmRunning=true; var bs=$("tmStart"); if(bs) bs.textContent="Pause"; tmPaint(); toast("Timer started");
+  tmTimer=setInterval(function(){
+    tmLeft--; tmPaint();
+    if(tmLeft<=0){
+      clearInterval(tmTimer); tmTimer=null; tmRunning=false;
+      var b2=$("tmStart"); if(b2) b2.textContent="Start";
+      tmPaint(); toast("Time is up"); speak("Time is up.");
+    }
+  },1000);
+}
+function tmReset(){ clearInterval(tmTimer); tmTimer=null; tmRunning=false; tmLeft=0; var b=$("tmStart"); if(b) b.textContent="Start"; tmPaint(); }
+function speakEl(id){ var e=$(id); if(e) speak(e.textContent); }
+
+/* =================================================================== share */
+function escAttr(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function shareFrom(el){
+  var t=el.getAttribute("data-t")||"", u=el.getAttribute("data-l")||"";
+  var text=t+" — via Tech Drishti";
+  try{ if(navigator.share){ navigator.share({title:t, text:text, url:u}).catch(function(){}); return; } }catch(e){}
+  window.open("https://wa.me/?text="+encodeURIComponent(text+" "+u), "_blank", "noopener");
+}
+
 /* =================================================================== refresh */
 async function refreshAll(){
   var b=$("refreshBtn"); b.classList.add("spin");
@@ -1689,6 +1780,7 @@ netStatus();
 renderChat();
 renderNotes();
 calcRender();
+swPaint(); tmPaint();
 if(FIREBASE_CONFIG){
   if(RETURNING_FROM_REDIRECT){
     openGate();
