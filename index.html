@@ -103,6 +103,19 @@
   .calcbtn.fn{color:var(--pri2);}
   .calcbtn.wide{grid-column:span 2;}
 
+  /* ---- online lookups ---- */
+  .aqi-ok{color:#22c55e;} .aqi-mid{color:#f59e0b;} .aqi-no{color:#ef4444;}
+  .fld{width:100%; background:var(--card2); border:1px solid var(--line); color:var(--txt);
+    border-radius:12px; padding:11px 13px; font-family:inherit; font-size:15px; margin-top:6px;}
+  textarea.fld{min-height:84px; resize:vertical;}
+
+  /* ---- announcement banner ---- */
+  .annbar{margin:12px 0 4px; padding:13px 16px; border-radius:14px; border:1px solid var(--line);
+    background:linear-gradient(135deg,rgba(79,70,229,.20),rgba(6,182,212,.12)); font-weight:700;}
+  .annbar.warn{background:linear-gradient(135deg,rgba(245,158,11,.22),rgba(245,158,11,.05));}
+  .annbar.ok{background:linear-gradient(135deg,rgba(34,197,94,.20),rgba(34,197,94,.05));}
+  .annbar a{color:var(--pri2);}
+
   .sharebtn{background:transparent; border:1px solid var(--line); color:var(--mut); border-radius:20px;
     padding:3px 12px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; margin-left:6px;}
   .sharebtn:active{transform:scale(.96);}
@@ -265,6 +278,8 @@
     <button class="avatar" id="avatarBtn" title="Profile and sign-in" aria-label="Open profile and sign-in" onclick="go('profile')">?</button>
   </header>
 
+  <div id="annBar" class="annbar" role="status" aria-live="polite" hidden></div>
+
 
   <main id="main">
 
@@ -302,6 +317,16 @@
         <button class="toolcard" onclick="go('timer')">
           <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></span>
           <span class="tmain"><b>Timer &amp; stopwatch</b><span class="small mut">Counts down or up, and says aloud when time is up</span></span>
+          <span class="tarrow" aria-hidden="true">›</span>
+        </button>
+        <button class="toolcard" onclick="go('aqi')">
+          <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10a3 3 0 1 0-3-3"/><path d="M3 12h14a3 3 0 1 1-3 3"/><path d="M3 16h8"/></svg></span>
+          <span class="tmain"><b>Air quality (AQI)</b><span class="small mut">Live pollution level for any city, with a health warning</span></span>
+          <span class="tarrow" aria-hidden="true">›</span>
+        </button>
+        <button class="toolcard" onclick="go('lookup')">
+          <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg></span>
+          <span class="tmain"><b>India lookups</b><span class="small mut">Find the area from a PIN code, or the bank branch from an IFSC</span></span>
           <span class="tarrow" aria-hidden="true">›</span>
         </button>
         <button class="toolcard" onclick="go('notes')">
@@ -557,6 +582,43 @@
     </div>
   </section>
 
+  <!-- ============ AIR QUALITY ============ -->
+  <section class="screen" id="s-aqi" aria-label="Air quality">
+    <div class="card">
+      <div class="lbl">Air quality in <span id="aqiCity">your city</span></div>
+      <div class="row" style="margin-top:12px; flex-wrap:nowrap">
+        <input id="aqiInput" placeholder="City name…" aria-label="City for air quality" onkeydown="if(event.key==='Enter')aqiSearch()">
+        <button class="btn" onclick="aqiSearch()">Go</button>
+        <button class="btn ghost" onclick="aqiLoad()">My city</button>
+      </div>
+      <div id="aqiBox" style="margin-top:16px"><div class="small mut">Tap “My city” or search a city.</div></div>
+      <button class="btn ghost sm" style="margin-top:12px" onclick="speakEl('aqiBox')">🔊 Read aloud</button>
+    </div>
+  </section>
+
+  <!-- ============ INDIA LOOKUPS ============ -->
+  <section class="screen" id="s-lookup" aria-label="India lookups">
+    <div class="card">
+      <div class="lbl">PIN code lookup</div>
+      <div class="mut small">Type any 6-digit PIN code to see the area, district and state.</div>
+      <div class="row" style="margin-top:12px; flex-wrap:nowrap">
+        <input id="pinInput" inputmode="numeric" maxlength="6" placeholder="e.g. 110001" aria-label="PIN code" onkeydown="if(event.key==='Enter')pinLookup()">
+        <button class="btn" onclick="pinLookup()">Search</button>
+      </div>
+      <div id="pinBox" style="margin-top:14px"></div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Bank branch (IFSC) lookup</div>
+      <div class="mut small">Type an 11-character IFSC code to see the bank, branch and address.</div>
+      <div class="row" style="margin-top:12px; flex-wrap:nowrap">
+        <input id="ifscInput" autocapitalize="characters" maxlength="11" placeholder="e.g. HDFC0000001" aria-label="IFSC code" onkeydown="if(event.key==='Enter')ifscLookup()">
+        <button class="btn" onclick="ifscLookup()">Search</button>
+      </div>
+      <div id="ifscBox" style="margin-top:14px"></div>
+    </div>
+  </section>
+
   <!-- ============ NOTES ============ -->
   <section class="screen" id="s-notes" aria-label="My notes">
     <div class="card">
@@ -641,6 +703,40 @@
   </section>
 
   <!-- ============ PROFILE ============ -->
+  <!-- ============ ADMIN ============ -->
+  <section class="screen" id="s-admin" aria-label="Admin panel">
+    <div class="card">
+      <div class="h2">🛠 Admin panel</div>
+      <div class="small mut">Post an announcement. It appears on the site for everyone straight away — no need to update or redeploy the site.</div>
+      <label class="small mut" for="anTitle" style="display:block;margin-top:16px">Title</label>
+      <input id="anTitle" class="fld" placeholder="e.g. Our new app is out">
+      <label class="small mut" for="anBody" style="display:block;margin-top:12px">Message</label>
+      <textarea id="anBody" class="fld" rows="3" placeholder="Write the announcement…"></textarea>
+      <label class="small mut" for="anLink" style="display:block;margin-top:12px">Link (optional)</label>
+      <input id="anLink" class="fld" placeholder="https://…">
+      <div class="row" style="margin-top:12px; flex-wrap:nowrap; align-items:flex-start">
+        <div style="flex:1">
+          <label class="small mut" for="anLevel">Style</label>
+          <select id="anLevel" class="fld">
+            <option value="">Normal</option>
+            <option value="warn">Important (amber)</option>
+            <option value="ok">Good news (green)</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label class="small mut" for="anUntil">Show until (optional)</label>
+          <input id="anUntil" class="fld" type="date">
+        </div>
+      </div>
+      <button class="btn" style="margin-top:16px; width:100%" onclick="adminPost()">Post announcement</button>
+    </div>
+    <div class="card">
+      <div class="lbl">Posted announcements</div>
+      <div id="adminList" style="margin-top:12px"></div>
+      <button class="btn ghost sm" style="margin-top:12px" onclick="loadAnnouncements()">↻ Refresh</button>
+    </div>
+  </section>
+
   <section class="screen" id="s-profile" aria-label="Profile, about and support">
     <div class="card">
       <div class="row" style="gap:16px; flex-wrap:nowrap">
@@ -661,6 +757,15 @@
       <button class="toolcard" style="margin-top:14px" onclick="go('access')">
         <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v6M8 10h8M12 13l-3 7M12 13l3 7"/></svg></span>
         <span class="tmain"><b>Accessibility</b><span class="small mut">Display, text size, voice and reading speed</span></span>
+        <span class="tarrow" aria-hidden="true">›</span>
+      </button>
+    </div>
+
+    <div class="card" id="adminCard" hidden>
+      <div class="lbl">Admin</div>
+      <button class="toolcard" style="margin-top:14px" onclick="go('admin')">
+        <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20V9l6-5 6 5v11"/><path d="M10 20v-5h4v5"/></svg></span>
+        <span class="tmain"><b>Admin panel</b><span class="small mut">Post announcements and manage the site</span></span>
         <span class="tarrow" aria-hidden="true">›</span>
       </button>
     </div>
@@ -867,15 +972,15 @@ async function getJSON(url, opts){ var r=await fetch(url, opts||{}); if(!r.ok) t
 var TABS = {
   home:["home"], tools:["toolsmenu"], ai:["ai"], profile:["profile"],
   news:["news"], weather:["weather"], markets:["tools"], notes:["notes"], access:["access"],
-  calc:["calc"], timer:["timer"]
+  calc:["calc"], timer:["timer"], aqi:["aqi"], lookup:["lookup"], admin:["admin"]
 };
 /* which bottom-tab a view belongs to (so Tools stays highlighted inside a tool) */
 var TAB_OF = { home:"home", tools:"tools", ai:"ai", profile:"profile",
-  news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"profile", calc:"tools", timer:"tools" };
+  news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"profile", calc:"tools", timer:"tools", aqi:"tools", lookup:"tools", admin:"profile" };
 /* where the Back button goes from each inner view */
-var BACK_TO = { news:"tools", weather:"tools", markets:"tools", notes:"tools", calc:"tools", timer:"tools" };
+var BACK_TO = { news:"tools", weather:"tools", markets:"tools", notes:"tools", calc:"tools", timer:"tools", aqi:"tools", lookup:"tools", admin:"profile" };
 var VIEW_LABEL = { tools:"Tools", news:"Live News", weather:"Weather", markets:"Markets & knowledge",
-  notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile", calc:"Calculator", timer:"Timer & stopwatch" };
+  notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile", calc:"Calculator", timer:"Timer & stopwatch", aqi:"Air quality", lookup:"India lookups", admin:"Admin panel" };
 var _navStack = ["home"];
 
 function go(name, el, noPush){
@@ -1408,6 +1513,7 @@ function paintProfile(){
   $("pName").textContent = n;
   $("pSub").textContent = isUser ? (a.email || "Signed in")
     : (a.mode === "guest" ? "Browsing as a guest — you can sign in any time" : "Not signed in");
+  var ac = $("adminCard"); if(ac) ac.hidden = !isAdmin();
   var g = $("greeting");
   if(g){
     var h = new Date().getHours();
@@ -1533,7 +1639,12 @@ function fbLoad(cb){
   s.onload=function(){
     var t=document.createElement("script");
     t.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js";
-    t.onload=function(){ try{ firebase.initializeApp(FIREBASE_CONFIG); cb(null); }catch(e){ cb(e); } };
+    t.onload=function(){
+      var f=document.createElement("script");
+      f.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js";
+      f.onload=f.onerror=function(){ try{ firebase.initializeApp(FIREBASE_CONFIG); cb(null); }catch(e){ cb(e); } };
+      document.head.appendChild(f);
+    };
     t.onerror=function(){ cb(new Error("auth sdk")); };
     document.head.appendChild(t);
   };
@@ -1557,7 +1668,9 @@ function startAuth(){
         if(u){
           AUTH.mode="user"; AUTH.user=u;
           state.auth = { mode:"user", name:u.displayName||"", email:u.email||"", picture:u.photoURL||"", uid:u.uid };
-          save(); closeGate(); paintProfile();
+          save(); closeGate(); paintProfile(); loadAnnouncements();
+        } else {
+          loadAnnouncements();
         }
       });
     }catch(e){}
@@ -1620,7 +1733,7 @@ function emailSignUp(){
 }
 function continueGuest(){
   state.auth = { mode:"guest" };
-  save(); closeGate(); paintProfile();
+  save(); closeGate(); paintProfile(); loadAnnouncements();
   toast("Continuing as a guest");
 }
 function signOut(){
@@ -1700,6 +1813,102 @@ function speakCalc(){
   speak("The display shows "+calcExpr);
 }
 
+/* =================================================================== air quality */
+function aqiBand(a){
+  if(a==null) return ["—","mut"];
+  if(a<=50) return ["Good","aqi-ok"];
+  if(a<=100) return ["Moderate","aqi-mid"];
+  if(a<=150) return ["Unhealthy for sensitive groups","aqi-mid"];
+  if(a<=200) return ["Unhealthy","aqi-no"];
+  if(a<=300) return ["Very unhealthy","aqi-no"];
+  return ["Hazardous","aqi-no"];
+}
+function aqiAdvice(a){
+  if(a==null) return "";
+  if(a<=50) return "Air is clean today — a good time to be outside.";
+  if(a<=100) return "Air is acceptable. Very sensitive people should take it easy.";
+  if(a<=150) return "Sensitive groups should limit long outdoor activity.";
+  if(a<=200) return "Everyone should limit outdoor activity. Consider a mask.";
+  if(a<=300) return "Avoid outdoor activity. Keep windows closed and wear a mask if you must go out.";
+  return "Hazardous. Stay indoors, keep windows closed, and wear a mask if you must go out.";
+}
+function aqiLoad(){
+  var c = state.city;
+  if(c.lat==null){ aqiLoadFor("Delhi, IN", 28.6139, 77.2090); return; }
+  aqiLoadFor(c.name || "Your location", c.lat, c.lon);
+}
+function aqiSearch(){
+  var q = $("aqiInput").value.trim(); if(!q) return;
+  getJSON("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(q)+"&count=1&language=en&format=json")
+    .then(function(j){
+      if(!j.results || !j.results.length){ toast("City not found"); return; }
+      var r = j.results[0];
+      aqiLoadFor(r.name + (r.country_code ? ", "+r.country_code : ""), r.latitude, r.longitude);
+    })
+    .catch(function(){ toast("Could not search right now"); });
+}
+function aqiLoadFor(name, lat, lon){
+  var box = $("aqiBox"); if(!box) return;
+  var n = $("aqiCity"); if(n) n.textContent = name;
+  box.innerHTML = '<div class="small mut">Checking the air…</div>';
+  getJSON("https://air-quality-api.open-meteo.com/v1/air-quality?latitude="+lat+"&longitude="+lon+
+    "&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,european_aqi,us_aqi&timezone=auto")
+  .then(function(j){
+    var c = (j && j.current) || {};
+    var aqi = (c.us_aqi!=null ? c.us_aqi : c.european_aqi);
+    var b = aqiBand(aqi);
+    function v(x,u){ return x==null ? "—" : (Math.round(x*10)/10)+" "+u; }
+    box.innerHTML =
+      '<div style="font-size:36px;font-weight:900" class="'+b[1]+'">'+(aqi==null?"—":Math.round(aqi))+'</div>'+
+      '<div class="small mut" style="margin-bottom:12px">Air Quality Index — <b class="'+b[1]+'">'+b[0]+'</b></div>'+
+      '<div class="kv"><span class="mut">PM2.5 (fine dust)</span><b>'+v(c.pm2_5,"µg/m³")+'</b></div>'+
+      '<div class="kv"><span class="mut">PM10 (dust)</span><b>'+v(c.pm10,"µg/m³")+'</b></div>'+
+      '<div class="kv"><span class="mut">Ozone</span><b>'+v(c.ozone,"µg/m³")+'</b></div>'+
+      '<div class="kv"><span class="mut">Nitrogen dioxide</span><b>'+v(c.nitrogen_dioxide,"µg/m³")+'</b></div>'+
+      '<div class="kv"><span class="mut">Carbon monoxide</span><b>'+v(c.carbon_monoxide,"µg/m³")+'</b></div>'+
+      '<div class="small" style="margin-top:12px">'+aqiAdvice(aqi)+'</div>';
+  })
+  .catch(function(){
+    box.innerHTML = '<div class="err">Could not load air quality right now. Please try again in a moment.</div>';
+  });
+}
+
+/* =================================================================== india lookups */
+function pinLookup(){
+  var p = ($("pinInput").value||"").replace(/\D/g,"");
+  var box = $("pinBox"); if(!box) return;
+  if(p.length!==6){ box.innerHTML='<div class="err">Please type a 6-digit PIN code, for example 110001.</div>'; return; }
+  box.innerHTML = '<div class="small mut">Searching…</div>';
+  getJSON("https://api.postalpincode.in/pincode/"+p).then(function(j){
+    var r = j && j[0];
+    if(!r || r.Status!=="Success" || !r.PostOffice || !r.PostOffice.length){
+      box.innerHTML='<div class="err">No area found for this PIN code.</div>'; return;
+    }
+    var po = r.PostOffice;
+    box.innerHTML = '<div class="h2" style="margin:0 0 4px">'+esc(po[0].District)+", "+esc(po[0].State)+'</div>'+
+      '<div class="small mut" style="margin-bottom:10px">'+po.length+' post office'+(po.length>1?"s":"")+' found</div>'+
+      po.slice(0,12).map(function(x){
+        return '<div class="kv"><span>'+esc(x.Name)+'</span><span class="mut small">'+esc(x.BranchType||"")+
+          (x.DeliveryStatus ? " · "+esc(x.DeliveryStatus) : "")+'</span></div>';
+      }).join("");
+  }).catch(function(){ box.innerHTML='<div class="err">Could not look up right now. Please try again.</div>'; });
+}
+function ifscLookup(){
+  var c = ($("ifscInput").value||"").trim().toUpperCase();
+  var box = $("ifscBox"); if(!box) return;
+  if(c.length!==11){ box.innerHTML='<div class="err">An IFSC code has 11 characters, like HDFC0000001.</div>'; return; }
+  box.innerHTML = '<div class="small mut">Searching…</div>';
+  getJSON("https://ifsc.razorpay.com/"+encodeURIComponent(c)).then(function(j){
+    var ok = [j.UPI?"UPI":"", j.NEFT?"NEFT":"", j.IMPS?"IMPS":""].filter(Boolean).join(" · ");
+    box.innerHTML = '<div class="h2" style="margin:0 0 8px">'+esc(j.BANK||"")+'</div>'+
+      '<div class="kv"><span class="mut">Branch</span><b>'+esc(j.BRANCH||"—")+'</b></div>'+
+      '<div class="kv"><span class="mut">Centre</span><b>'+esc(j.CENTRE||"—")+'</b></div>'+
+      '<div class="kv"><span class="mut">City / State</span><b>'+esc(j.CITY||"—")+", "+esc(j.STATE||"—")+'</b></div>'+
+      '<div class="kv"><span class="mut">Address</span><b>'+esc(j.ADDRESS||"—")+'</b></div>'+
+      (ok ? '<div class="kv"><span class="mut">Supports</span><b>'+ok+'</b></div>' : "");
+  }).catch(function(){ box.innerHTML='<div class="err">No branch found for this IFSC code, or the service is busy.</div>'; });
+}
+
 /* =================================================================== timer */
 var swElapsed=0, swT0=0, swTimer=null, swRunning=false;
 function swFmt(ms){
@@ -1748,6 +1957,90 @@ function shareFrom(el){
   window.open("https://wa.me/?text="+encodeURIComponent(text+" "+u), "_blank", "noopener");
 }
 
+/* =================================================================== announcements & admin */
+/* Only this account can post. The same address is set in the Firestore rules. */
+var ADMIN_EMAIL = "shrigovind8090@gmail.com";
+var ANNOUNCEMENTS = [];
+var _FS = null;
+function fsdb(){
+  try{ if(!_FS && window.firebase && firebase.firestore) _FS = firebase.firestore(); }catch(e){ _FS = null; }
+  return _FS;
+}
+function isAdmin(){
+  var u = AUTH.user;
+  return !!(u && String(u.email||"").toLowerCase() === ADMIN_EMAIL);
+}
+function liveAnnouncements(){
+  var now = Date.now();
+  return (ANNOUNCEMENTS||[]).filter(function(a){
+    if(!a.until) return true;
+    var t = new Date(a.until + "T23:59:59").getTime();
+    return isNaN(t) ? true : (t > now);
+  });
+}
+function loadAnnouncements(){
+  var db = fsdb();
+  if(!db){ renderAnnouncements(); renderAdminList(); return; }
+  db.collection("announcements").orderBy("ts","desc").limit(30).get()
+    .then(function(snap){
+      ANNOUNCEMENTS = snap.docs.map(function(d){ var o = d.data() || {}; o.id = d.id; return o; });
+      renderAnnouncements(); renderAdminList();
+    })
+    .catch(function(){ renderAnnouncements(); renderAdminList(); });
+}
+function renderAnnouncements(){
+  var bar = $("annBar"); if(!bar) return;
+  var act = liveAnnouncements();
+  if(!act.length){ bar.hidden = true; bar.innerHTML = ""; return; }
+  var a = act[0];
+  bar.hidden = false;
+  bar.className = "annbar" + (a.level ? (" " + a.level) : "");
+  bar.innerHTML = '<b>' + esc(a.title || "Announcement") + '</b> — ' + esc(a.body || "") +
+    (a.link ? ' <a href="' + escAttr(a.link) + '" target="_blank" rel="noopener">Open link</a>' : "") +
+    (act.length > 1 ? ' <span class="mut small">(+' + (act.length - 1) + ' more)</span>' : "");
+}
+function renderAdminList(){
+  var box = $("adminList"); if(!box) return;
+  if(!isAdmin()){ box.innerHTML = '<div class="small mut">Admins only.</div>'; return; }
+  var n = ANNOUNCEMENTS || [];
+  if(!n.length){ box.innerHTML = '<div class="small mut">No announcements yet. Post one above.</div>'; return; }
+  var live = liveAnnouncements();
+  box.innerHTML = n.map(function(a){
+    var isLive = live.some(function(x){ return x.id === a.id; });
+    return '<div style="border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px">' +
+      '<b>' + esc(a.title || "") + '</b> <span class="tag">' + (isLive ? "live" : "expired") + '</span>' +
+      '<div class="small mut" style="margin-top:4px">' + esc(a.body || "") + '</div>' +
+      (a.until ? '<div class="small mut">Shown until ' + esc(a.until) + '</div>' : "") +
+      '<div class="row" style="margin-top:10px">' +
+        (a.link ? '<a class="btn ghost sm" href="' + escAttr(a.link) + '" target="_blank" rel="noopener">Open</a>' : "") +
+        '<button class="btn ghost sm" onclick="adminDelete(\'' + escAttr(a.id) + '\')">Delete</button>' +
+      '</div></div>';
+  }).join("");
+}
+function adminPost(){
+  if(!isAdmin()){ toast("This area is for the admin only"); return; }
+  var db = fsdb();
+  if(!db){ toast("Not connected — please check your internet and reload"); return; }
+  var t = ($("anTitle").value || "").trim(), b = ($("anBody").value || "").trim();
+  if(!t || !b){ toast("Please fill in the title and the message"); return; }
+  var o = { title:t, body:b, link:($("anLink").value||"").trim(), level:$("anLevel").value,
+            until:$("anUntil").value||"", ts:Date.now(), by:ADMIN_EMAIL };
+  db.collection("announcements").add(o).then(function(){
+    $("anTitle").value=""; $("anBody").value=""; $("anLink").value=""; $("anUntil").value=""; $("anLevel").value="";
+    toast("Posted — it is live on the site now");
+    loadAnnouncements();
+  }).catch(function(){
+    toast("Could not post. Check the Firestore rules in the Firebase console.");
+  });
+}
+function adminDelete(id){
+  if(!isAdmin()){ toast("This area is for the admin only"); return; }
+  if(!confirm("Delete this announcement for everyone?")) return;
+  var db = fsdb(); if(!db) return;
+  db.collection("announcements").doc(id).delete().then(function(){ toast("Deleted"); loadAnnouncements(); })
+    .catch(function(){ toast("Could not delete"); });
+}
+
 /* =================================================================== refresh */
 async function refreshAll(){
   var b=$("refreshBtn"); b.classList.add("spin");
@@ -1781,6 +2074,7 @@ renderChat();
 renderNotes();
 calcRender();
 swPaint(); tmPaint();
+loadAnnouncements();
 if(FIREBASE_CONFIG){
   if(RETURNING_FROM_REDIRECT){
     openGate();
