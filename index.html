@@ -707,13 +707,33 @@
   <section class="screen" id="s-admin" aria-label="Admin panel">
     <div class="card">
       <div class="h2">🛠 Admin panel</div>
-      <div class="small mut">Post an announcement. It appears on the site for everyone straight away — no need to update or redeploy the site.</div>
-      <label class="small mut" for="anTitle" style="display:block;margin-top:16px">Title</label>
+      <div class="small mut">Post an announcement and it appears on the site for everyone straight away. There is nothing to update or redeploy.</div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Connection</div>
+      <div class="small mut" id="adminConnState"></div>
+      <label class="small mut" for="admApi" style="display:block;margin-top:14px">Backend URL</label>
+      <input id="admApi" class="fld" placeholder="https://your-worker.workers.dev">
+      <label class="small mut" for="admToken" style="display:block;margin-top:12px">Admin token</label>
+      <input id="admToken" class="fld" type="password" placeholder="the ADMIN_TOKEN you set">
+      <div class="row" style="margin-top:14px">
+        <button class="btn" onclick="adminSaveConn()">Save &amp; test</button>
+        <button class="btn ghost" onclick="adminForget()">Forget</button>
+      </div>
+      <div class="small mut" style="margin-top:10px">Setup takes about ten minutes and is free — Cloudflare R2 gives 10&nbsp;GB with no egress charges. The steps are in the <b>techdrishti-admin-backend</b> folder (README).</div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">New announcement</div>
+      <label class="small mut" for="anTitle" style="display:block;margin-top:14px">Title</label>
       <input id="anTitle" class="fld" placeholder="e.g. Our new app is out">
       <label class="small mut" for="anBody" style="display:block;margin-top:12px">Message</label>
       <textarea id="anBody" class="fld" rows="3" placeholder="Write the announcement…"></textarea>
       <label class="small mut" for="anLink" style="display:block;margin-top:12px">Link (optional)</label>
       <input id="anLink" class="fld" placeholder="https://…">
+      <label class="small mut" for="anImage" style="display:block;margin-top:12px">Image (optional, up to 5&nbsp;MB)</label>
+      <input id="anImage" class="fld" type="file" accept="image/*">
       <div class="row" style="margin-top:12px; flex-wrap:nowrap; align-items:flex-start">
         <div style="flex:1">
           <label class="small mut" for="anLevel">Style</label>
@@ -728,8 +748,9 @@
           <input id="anUntil" class="fld" type="date">
         </div>
       </div>
-      <button class="btn" style="margin-top:16px; width:100%" onclick="adminPost()">Post announcement</button>
+      <button class="btn" style="margin-top:16px; width:100%" id="anPostBtn" onclick="adminPost()">Post announcement</button>
     </div>
+
     <div class="card">
       <div class="lbl">Posted announcements</div>
       <div id="adminList" style="margin-top:12px"></div>
@@ -1513,7 +1534,7 @@ function paintProfile(){
   $("pName").textContent = n;
   $("pSub").textContent = isUser ? (a.email || "Signed in")
     : (a.mode === "guest" ? "Browsing as a guest — you can sign in any time" : "Not signed in");
-  var ac = $("adminCard"); if(ac) ac.hidden = !isAdmin();
+  var ac = $("adminCard"); if(ac) ac.hidden = !adminVisible();
   var g = $("greeting");
   if(g){
     var h = new Date().getHours();
@@ -1639,12 +1660,7 @@ function fbLoad(cb){
   s.onload=function(){
     var t=document.createElement("script");
     t.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js";
-    t.onload=function(){
-      var f=document.createElement("script");
-      f.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js";
-      f.onload=f.onerror=function(){ try{ firebase.initializeApp(FIREBASE_CONFIG); cb(null); }catch(e){ cb(e); } };
-      document.head.appendChild(f);
-    };
+    t.onload=function(){ try{ firebase.initializeApp(FIREBASE_CONFIG); cb(null); }catch(e){ cb(e); } };
     t.onerror=function(){ cb(new Error("auth sdk")); };
     document.head.appendChild(t);
   };
@@ -1958,17 +1974,26 @@ function shareFrom(el){
 }
 
 /* =================================================================== announcements & admin */
-/* Only this account can post. The same address is set in the Firestore rules. */
+/* Your own backend — no Firebase. Put the Worker URL here once you have deployed it,
+   or simply paste it into the Admin panel on the device you use. */
+var ADMIN_API_DEFAULT = "";
 var ADMIN_EMAIL = "shrigovind8090@gmail.com";
 var ANNOUNCEMENTS = [];
-var _FS = null;
-function fsdb(){
-  try{ if(!_FS && window.firebase && firebase.firestore) _FS = firebase.firestore(); }catch(e){ _FS = null; }
-  return _FS;
-}
-function isAdmin(){
+var ADM = { api:"", token:"" };
+
+function adminLoad(){ try{ var r=localStorage.getItem("td_admin"); if(r) ADM=Object.assign(ADM, JSON.parse(r)); }catch(e){} }
+function adminStore(){ try{ localStorage.setItem("td_admin", JSON.stringify(ADM)); }catch(e){} }
+function adminApi(){ return String(ADM.api || ADMIN_API_DEFAULT || "").replace(/\/+$/,""); }
+function adminConnected(){ return !!adminApi() && !!ADM.token; }
+function isAdmin(){ return adminConnected(); }
+function adminVisible(){
   var u = AUTH.user;
-  return !!(u && String(u.email||"").toLowerCase() === ADMIN_EMAIL);
+  var byEmail = !!(u && String(u.email||"").toLowerCase() === ADMIN_EMAIL);
+  return byEmail || adminConnected();
+}
+function adminConn(msg){
+  var e = $("adminConnState"); if(!e) return;
+  e.textContent = msg || (adminConnected() ? "Connected." : "Not connected yet — paste the backend URL and the admin token below.");
 }
 function liveAnnouncements(){
   var now = Date.now();
@@ -1979,13 +2004,10 @@ function liveAnnouncements(){
   });
 }
 function loadAnnouncements(){
-  var db = fsdb();
-  if(!db){ renderAnnouncements(); renderAdminList(); return; }
-  db.collection("announcements").orderBy("ts","desc").limit(30).get()
-    .then(function(snap){
-      ANNOUNCEMENTS = snap.docs.map(function(d){ var o = d.data() || {}; o.id = d.id; return o; });
-      renderAnnouncements(); renderAdminList();
-    })
+  var api = adminApi();
+  if(!api){ renderAnnouncements(); renderAdminList(); return; }
+  getJSON(api + "/announcements")
+    .then(function(list){ ANNOUNCEMENTS = Array.isArray(list) ? list : []; renderAnnouncements(); renderAdminList(); })
     .catch(function(){ renderAnnouncements(); renderAdminList(); });
 }
 function renderAnnouncements(){
@@ -1997,11 +2019,13 @@ function renderAnnouncements(){
   bar.className = "annbar" + (a.level ? (" " + a.level) : "");
   bar.innerHTML = '<b>' + esc(a.title || "Announcement") + '</b> — ' + esc(a.body || "") +
     (a.link ? ' <a href="' + escAttr(a.link) + '" target="_blank" rel="noopener">Open link</a>' : "") +
+    (a.image ? '<div style="margin-top:10px"><img src="' + escAttr(a.image) + '" alt="" style="max-width:100%;border-radius:12px"></div>' : "") +
     (act.length > 1 ? ' <span class="mut small">(+' + (act.length - 1) + ' more)</span>' : "");
 }
 function renderAdminList(){
   var box = $("adminList"); if(!box) return;
-  if(!isAdmin()){ box.innerHTML = '<div class="small mut">Admins only.</div>'; return; }
+  adminConn();
+  if(!isAdmin()){ box.innerHTML = '<div class="small mut">Connect the backend above to see and manage your announcements.</div>'; return; }
   var n = ANNOUNCEMENTS || [];
   if(!n.length){ box.innerHTML = '<div class="small mut">No announcements yet. Post one above.</div>'; return; }
   var live = liveAnnouncements();
@@ -2010,6 +2034,7 @@ function renderAdminList(){
     return '<div style="border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px">' +
       '<b>' + esc(a.title || "") + '</b> <span class="tag">' + (isLive ? "live" : "expired") + '</span>' +
       '<div class="small mut" style="margin-top:4px">' + esc(a.body || "") + '</div>' +
+      (a.image ? '<div style="margin-top:8px"><img src="' + escAttr(a.image) + '" alt="" style="max-width:100%;border-radius:10px"></div>' : "") +
       (a.until ? '<div class="small mut">Shown until ' + esc(a.until) + '</div>' : "") +
       '<div class="row" style="margin-top:10px">' +
         (a.link ? '<a class="btn ghost sm" href="' + escAttr(a.link) + '" target="_blank" rel="noopener">Open</a>' : "") +
@@ -2017,27 +2042,71 @@ function renderAdminList(){
       '</div></div>';
   }).join("");
 }
+function adminSaveConn(){
+  ADM.api = ($("admApi").value || "").trim();
+  ADM.token = ($("admToken").value || "").trim();
+  adminStore();
+  adminConn("Testing…");
+  getJSON(adminApi() + "/announcements").then(function(list){
+    ANNOUNCEMENTS = Array.isArray(list) ? list : [];
+    adminConn("Connected — you can post now.");
+    toast("Connected");
+    renderAnnouncements(); renderAdminList(); paintProfile();
+  }).catch(function(){
+    adminConn("Could not reach the backend. Check the URL and the token.");
+    toast("Could not connect");
+  });
+}
+function adminForget(){
+  ADM = { api:"", token:"" }; adminStore();
+  adminConn("Not connected yet."); renderAdminList(); paintProfile();
+  toast("Connection forgotten");
+}
+function uploadImage(file){
+  return fetch(adminApi() + "/upload", {
+    method:"POST",
+    headers:{ "Content-Type": file.type || "image/jpeg", "Authorization":"Bearer " + ADM.token },
+    body: file
+  }).then(function(r){ if(!r.ok) throw new Error("upload " + r.status); return r.json(); })
+    .then(function(j){ return j.url || ""; });
+}
 function adminPost(){
-  if(!isAdmin()){ toast("This area is for the admin only"); return; }
-  var db = fsdb();
-  if(!db){ toast("Not connected — please check your internet and reload"); return; }
+  if(!isAdmin()){ toast("Set the backend URL and the admin token first"); return; }
   var t = ($("anTitle").value || "").trim(), b = ($("anBody").value || "").trim();
   if(!t || !b){ toast("Please fill in the title and the message"); return; }
-  var o = { title:t, body:b, link:($("anLink").value||"").trim(), level:$("anLevel").value,
-            until:$("anUntil").value||"", ts:Date.now(), by:ADMIN_EMAIL };
-  db.collection("announcements").add(o).then(function(){
+  var btn = $("anPostBtn"); if(btn){ btn.disabled = true; btn.textContent = "Posting…"; }
+  var fi = $("anImage");
+  var file = (fi && fi.files && fi.files[0]) ? fi.files[0] : null;
+  var prep = file ? uploadImage(file) : Promise.resolve("");
+  prep.then(function(imgUrl){
+    return fetch(adminApi() + "/announcements", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + ADM.token },
+      body: JSON.stringify({ title:t, body:b, link:($("anLink").value||"").trim(),
+        level:$("anLevel").value, until:$("anUntil").value||"", image:imgUrl })
+    });
+  }).then(function(r){
+    if(r.status === 401) throw new Error("401");
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }).then(function(){
     $("anTitle").value=""; $("anBody").value=""; $("anLink").value=""; $("anUntil").value=""; $("anLevel").value="";
+    if(fi) fi.value="";
     toast("Posted — it is live on the site now");
     loadAnnouncements();
-  }).catch(function(){
-    toast("Could not post. Check the Firestore rules in the Firebase console.");
+  }).catch(function(e){
+    var m = String((e && e.message) || e);
+    toast(m === "401" ? "The admin token is wrong — check it in the Connection box" : "Could not post. Check the connection.");
+  }).then(function(){
+    if(btn){ btn.disabled = false; btn.textContent = "Post announcement"; }
   });
 }
 function adminDelete(id){
-  if(!isAdmin()){ toast("This area is for the admin only"); return; }
+  if(!isAdmin()) return;
   if(!confirm("Delete this announcement for everyone?")) return;
-  var db = fsdb(); if(!db) return;
-  db.collection("announcements").doc(id).delete().then(function(){ toast("Deleted"); loadAnnouncements(); })
+  fetch(adminApi() + "/announcements/" + encodeURIComponent(id), {
+    method:"DELETE", headers:{ "Authorization":"Bearer " + ADM.token }
+  }).then(function(){ toast("Deleted"); loadAnnouncements(); })
     .catch(function(){ toast("Could not delete"); });
 }
 
@@ -2074,6 +2143,7 @@ renderChat();
 renderNotes();
 calcRender();
 swPaint(); tmPaint();
+adminLoad();
 loadAnnouncements();
 if(FIREBASE_CONFIG){
   if(RETURNING_FROM_REDIRECT){
