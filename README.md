@@ -24,8 +24,10 @@ at the top of every inner screen. Profile and Settings open from the avatar butt
   - **My notes** — write or **dictate** a note; saved on your device and readable aloud.
 - **Assistant** — free AI, no API key. It knows today's live data from this site (your weather, the
   current headlines, the dollar rate) and answers in your own language. One-tap chips included.
-- **Admin panel** — the owner signs in and posts announcements that appear on the site
-  immediately, with no redeploy (backed by Cloud Firestore).
+- **Admin panel** — the owner posts announcements (with an optional image) that appear on the
+  site immediately, with no redeploy. It talks to your **own backend** (a small Cloudflare
+  Worker storing everything in R2 — free 10 GB, no egress charges, no Firebase).
+  The backend and its setup steps ship in `techdrishti-admin-backend.zip`.
 - **Profile** — your account, **Settings → Accessibility** (contrast, text size, voice feedback on/off,
   reading speed), About & Support and the legal pages.
 
