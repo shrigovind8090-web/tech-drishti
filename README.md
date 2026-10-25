@@ -19,9 +19,13 @@ at the top of every inner screen. Profile and Settings open from the avatar butt
   - **Markets & knowledge** — currency converter, crypto prices and Wikipedia knowledge search.
   - **Calculator** — big buttons, works fully offline, reads the answer aloud.
   - **Timer & stopwatch** — counts down or up and says "Time is up" aloud.
+  - **Air quality (AQI)** — live pollution level for any city, with a health warning.
+  - **India lookups** — find the area from a PIN code, or the bank branch from an IFSC code.
   - **My notes** — write or **dictate** a note; saved on your device and readable aloud.
 - **Assistant** — free AI, no API key. It knows today's live data from this site (your weather, the
   current headlines, the dollar rate) and answers in your own language. One-tap chips included.
+- **Admin panel** — the owner signs in and posts announcements that appear on the site
+  immediately, with no redeploy (backed by Cloud Firestore).
 - **Profile** — your account, **Settings → Accessibility** (contrast, text size, voice feedback on/off,
   reading speed), About & Support and the legal pages.
 
