@@ -76,6 +76,36 @@
     width:36px; height:3px; border-radius:3px; background:linear-gradient(90deg,var(--pri),var(--pri2));}
   nav.tabs button:active{background:var(--card2);}
 
+  /* ---- left navigation drawer ---- */
+  .drawerScrim{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:90;}
+  .drawer{position:fixed; top:0; left:0; bottom:0; width:min(86vw,320px); z-index:95;
+    background:var(--bg2); border-right:1px solid var(--line); box-shadow:10px 0 34px rgba(0,0,0,.5);
+    display:flex; flex-direction:column; overflow-y:auto; animation:slideIn .2s ease;}
+  @keyframes slideIn{from{transform:translateX(-100%)}to{transform:none}}
+  .drawer[hidden],.drawerScrim[hidden]{display:none;}
+  .drawerHead{display:flex; align-items:center; gap:12px; padding:16px; border-bottom:1px solid var(--line);}
+  .drawerNav{display:flex; flex-direction:column; padding:10px 10px 8px; gap:4px;}
+  .drawerNav button{display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    background:transparent; border:none; color:var(--txt); font-family:inherit; font-size:15.5px;
+    font-weight:700; padding:13px 14px; border-radius:12px; cursor:pointer;}
+  .drawerNav button:active{background:var(--card2);}
+  .drawerNav button.on{background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff;}
+  .drawerNav button svg{width:20px; height:20px; flex-shrink:0;}
+  .drawerNav hr{border:none; border-top:1px solid var(--line); margin:8px 4px;}
+  .drawerFoot{padding:12px 18px 20px; margin-top:auto;}
+
+  /* ---- video player ---- */
+  .videoModal{position:fixed; z-index:96; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(94vw,720px); background:var(--bg2); border:1px solid var(--line); border-radius:18px;
+    padding:14px; box-shadow:0 20px 60px rgba(0,0,0,.6);}
+  .videoModal[hidden]{display:none;}
+  .videoWrap{position:relative; width:100%; aspect-ratio:16/9; margin-top:10px; border-radius:12px; overflow:hidden; background:#000;}
+  .videoWrap iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
+  .vthumb{width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; display:block;}
+
+  /* ---- store cards ---- */
+  .appcard .h2{margin:0; font-size:17px;}
+
   /* ---- back bar at the top of every inner screen ---- */
   .topbar{position:sticky; top:0; z-index:55; display:flex; align-items:center; gap:10px;
     padding:10px 0; margin-bottom:8px; background:var(--bg); border-bottom:1px solid var(--line);}
@@ -120,8 +150,8 @@
     padding:3px 12px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; margin-left:6px;}
   .sharebtn:active{transform:scale(.96);}
 
-  .wrap{padding-bottom:112px;}
-  .toast{bottom:112px;}
+  .wrap{padding-bottom:44px;}
+  .toast{bottom:26px;}
 
   .screen{display:none;} .screen.on{display:block; animation:rise .3s ease;}
   /* screens are only ever focused programmatically (for screen readers),
@@ -265,6 +295,9 @@
 <div class="wrap" id="appRoot">
 
   <header class="top">
+    <button class="iconbtn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="drawer" onclick="openDrawer()">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
     <div class="logo">TD</div>
     <div class="brand">
       <h1>Tech <span>Drishti</span></h1>
@@ -703,6 +736,30 @@
   </section>
 
   <!-- ============ PROFILE ============ -->
+  <!-- ============ TD STORE ============ -->
+  <section class="screen" id="s-store" aria-label="TD Store">
+    <div class="card">
+      <div class="h2">TD Store</div>
+      <div class="small mut">Apps made by our team. Open one to read about it and download the APK.</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn ghost sm" onclick="loadStore()">↻ Refresh</button>
+        <a class="btn ghost sm" id="storeRepoLink" href="https://github.com/shrigovind8090-web/td-store" target="_blank" rel="noopener">The repository</a>
+      </div>
+    </div>
+    <div id="storeList"></div>
+  </section>
+
+  <!-- ============ VIDEOS ============ -->
+  <section class="screen" id="s-videos" aria-label="Videos">
+    <div class="card">
+      <div class="h2">Videos</div>
+      <div class="small mut">Our latest videos. Watch them here, or open them on YouTube.</div>
+      <div class="chips" id="ytTabs" style="margin-top:12px"></div>
+      <button class="btn ghost sm" style="margin-top:12px" onclick="loadVideos()">↻ Refresh</button>
+    </div>
+    <div id="videoList"></div>
+  </section>
+
   <!-- ============ ADMIN ============ -->
   <section class="screen" id="s-admin" aria-label="Admin panel">
     <div class="card">
@@ -868,18 +925,51 @@
     <div style="margin-top:6px">Live data is fetched fresh every visit. News, weather and rates belong to their respective sources.</div>
   </footer>
 
-  <nav class="tabs" aria-label="Main sections">
-    <button class="on" data-s="home" aria-current="page" onclick="go('home',this)">
-      <span class="tico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="tlab">Home</span>
-    </button>
-    <button data-s="tools" onclick="go('tools',this)">
-      <span class="tico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg></span><span class="tlab">Tools</span>
-    </button>
-    <button data-s="ai" onclick="go('ai',this)">
-      <span class="tico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="tlab">Assistant</span>
-    </button>
-  </nav>
+
 </div>
+<div class="drawerScrim" id="drawerScrim" hidden onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+  <div class="drawerHead">
+    <div class="logo">TD</div>
+    <div style="flex:1; min-width:0">
+      <b id="drawerTitle">Tech Drishti</b>
+      <div class="small mut" id="drawerWho">Menu</div>
+    </div>
+    <button class="iconbtn" aria-label="Close menu" onclick="closeDrawer()">✕</button>
+  </div>
+  <nav class="drawerNav" aria-label="Main sections">
+    <button data-s="home" onclick="drawerGo('home')">
+      <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+      Home</button>
+    <button data-s="tools" onclick="drawerGo('tools')">
+      <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg></span>
+      Tools</button>
+    <button data-s="ai" onclick="drawerGo('ai')">
+      <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      Assistant</button>
+    <button data-s="store" onclick="drawerGo('store')">
+      <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16l-1.2 12H5.2z"/><path d="M8.5 8V6a3.5 3.5 0 0 1 7 0v2"/></svg></span>
+      TD Store</button>
+    <button data-s="videos" onclick="drawerGo('videos')">
+      <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10.5 9.5l5 2.5-5 2.5z"/></svg></span>
+      Videos</button>
+    <hr>
+    <button data-s="profile" onclick="drawerGo('profile')">
+      <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+      Profile &amp; settings</button>
+  </nav>
+  <div class="drawerFoot small mut">Tech Drishti — news, weather, AI, tools and our apps in one place.</div>
+</aside>
+
+<div class="drawerScrim" id="videoScrim" hidden onclick="closeVideo()"></div>
+<div class="videoModal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="videoTitle" hidden>
+  <div class="row" style="justify-content:space-between; align-items:center">
+    <b id="videoTitle" style="flex:1; min-width:0"></b>
+    <button class="iconbtn" aria-label="Close video" onclick="closeVideo()">✕</button>
+  </div>
+  <div class="videoWrap" id="videoWrap"></div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- ============ SIGN-IN GATE ============ -->
@@ -993,15 +1083,16 @@ async function getJSON(url, opts){ var r=await fetch(url, opts||{}); if(!r.ok) t
 var TABS = {
   home:["home"], tools:["toolsmenu"], ai:["ai"], profile:["profile"],
   news:["news"], weather:["weather"], markets:["tools"], notes:["notes"], access:["access"],
-  calc:["calc"], timer:["timer"], aqi:["aqi"], lookup:["lookup"], admin:["admin"]
+  calc:["calc"], timer:["timer"], aqi:["aqi"], lookup:["lookup"], admin:["admin"],
+  store:["store"], videos:["videos"]
 };
 /* which bottom-tab a view belongs to (so Tools stays highlighted inside a tool) */
 var TAB_OF = { home:"home", tools:"tools", ai:"ai", profile:"profile",
-  news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"profile", calc:"tools", timer:"tools", aqi:"tools", lookup:"tools", admin:"profile" };
+  news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"profile", calc:"tools", timer:"tools", aqi:"tools", lookup:"tools", admin:"profile", store:"store", videos:"videos" };
 /* where the Back button goes from each inner view */
 var BACK_TO = { news:"tools", weather:"tools", markets:"tools", notes:"tools", calc:"tools", timer:"tools", aqi:"tools", lookup:"tools", admin:"profile" };
 var VIEW_LABEL = { tools:"Tools", news:"Live News", weather:"Weather", markets:"Markets & knowledge",
-  notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile", calc:"Calculator", timer:"Timer & stopwatch", aqi:"Air quality", lookup:"India lookups", admin:"Admin panel" };
+  notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile", calc:"Calculator", timer:"Timer & stopwatch", aqi:"Air quality", lookup:"India lookups", admin:"Admin panel", store:"TD Store", videos:"Videos" };
 var _navStack = ["home"];
 
 function go(name, el, noPush){
@@ -1010,13 +1101,7 @@ function go(name, el, noPush){
   for(var i=0;i<all.length;i++) all[i].classList.remove("on");
   for(var k=0;k<secs.length;k++){ var t=$("s-"+secs[k]); if(t) t.classList.add("on"); }
 
-  var tabName = TAB_OF[name] || name;
-  var b=document.querySelectorAll("nav.tabs button");
-  for(var j=0;j<b.length;j++){ b[j].classList.remove("on"); b[j].removeAttribute("aria-current"); }
-  var active = el || document.querySelector('nav.tabs button[data-s='+tabName+']');
-  if(active && (tabName==="home"||tabName==="tools"||tabName==="ai")){
-    active.classList.add("on"); active.setAttribute("aria-current","page");
-  }
+  markDrawerActive();
 
   var tb=$("topBar"); if(tb) tb.hidden = (name==="home");
   var lbl=$("topBarLabel"); if(lbl) lbl.textContent = VIEW_LABEL[name] || "";
@@ -1025,6 +1110,8 @@ function go(name, el, noPush){
 
   window.scrollTo(0, 0);
   if(secs.indexOf("news")>-1 && !$("newsList").dataset.loaded) loadNews();
+  if(name==="store" && !STORE.length) loadStore();
+  if(name==="videos" && !VIDEOS.length) loadVideos();
 
   var first=$("s-"+secs[0]);
   if(first && !noPush){ setTimeout(function(){ try{ first.focus({preventScroll:true}); }catch(e){ try{ first.focus(); }catch(e2){} } }, 60); }
@@ -1535,6 +1622,7 @@ function paintProfile(){
   $("pSub").textContent = isUser ? (a.email || "Signed in")
     : (a.mode === "guest" ? "Browsing as a guest — you can sign in any time" : "Not signed in");
   var ac = $("adminCard"); if(ac) ac.hidden = !adminVisible();
+  var dw = $("drawerWho"); if(dw) dw.textContent = n;
   var g = $("greeting");
   if(g){
     var h = new Date().getHours();
@@ -1972,6 +2060,246 @@ function shareFrom(el){
   try{ if(navigator.share){ navigator.share({title:t, text:text, url:u}).catch(function(){}); return; } }catch(e){}
   window.open("https://wa.me/?text="+encodeURIComponent(text+" "+u), "_blank", "noopener");
 }
+
+/* =================================================================== left drawer */
+var _drawerReturn = null;
+function drawerInert(on){
+  var m=$("main"), a=$("annBar"), h=document.querySelector("header.top");
+  [m,a,h].forEach(function(el){
+    if(!el) return;
+    if(on){ el.setAttribute("inert",""); el.setAttribute("aria-hidden","true"); }
+    else { el.removeAttribute("inert"); el.removeAttribute("aria-hidden"); }
+  });
+}
+function openDrawer(){
+  var d=$("drawer"), sc=$("drawerScrim");
+  if(!d || !d.hidden) return;
+  _drawerReturn = document.activeElement;
+  d.hidden=false; sc.hidden=false;
+  document.body.style.overflow="hidden";
+  drawerInert(true);
+  var mb=$("menuBtn"); if(mb) mb.setAttribute("aria-expanded","true");
+  markDrawerActive();
+  setTimeout(function(){ try{ d.querySelector(".drawerNav button").focus(); }catch(e){} }, 50);
+  document.addEventListener("keydown", drawerKeys);
+}
+function closeDrawer(){
+  var d=$("drawer"), sc=$("drawerScrim");
+  if(!d || d.hidden) return;
+  d.hidden=true; sc.hidden=true;
+  document.body.style.overflow="";
+  drawerInert(false);
+  var mb=$("menuBtn"); if(mb) mb.setAttribute("aria-expanded","false");
+  document.removeEventListener("keydown", drawerKeys);
+  if(_drawerReturn && _drawerReturn.focus){ try{ _drawerReturn.focus(); }catch(e){} }
+}
+function drawerKeys(e){
+  if(e.key==="Escape"){ e.preventDefault(); closeDrawer(); return; }
+  if(e.key!=="Tab") return;
+  var d=$("drawer"); if(!d) return;
+  var f=d.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if(!f.length) return;
+  var first=f[0], last=f[f.length-1];
+  if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+}
+function drawerGo(name){ closeDrawer(); go(name); }
+function markDrawerActive(){
+  var cur = _navStack.length ? _navStack[_navStack.length-1] : "home";
+  var tab = TAB_OF[cur] || cur;
+  var b=document.querySelectorAll(".drawerNav button");
+  for(var i=0;i<b.length;i++){
+    var on = b[i].getAttribute("data-s") === tab;
+    b[i].classList.toggle("on", on);
+    if(on) b[i].setAttribute("aria-current","page"); else b[i].removeAttribute("aria-current");
+  }
+}
+
+/* =================================================================== TD Store (GitHub) */
+var STORE_REPO = "shrigovind8090-web/td-store";
+var STORE = [];
+function fmtSize(b){
+  if(!b) return "";
+  if(b >= 1048576) return (b/1048576).toFixed(1)+" MB";
+  return Math.round(b/1024)+" KB";
+}
+function loadStore(){
+  var box=$("storeList"); if(!box) return;
+  box.innerHTML='<div class="card"><div class="small mut">Loading apps…</div></div>';
+  getJSON("https://api.github.com/repos/"+STORE_REPO+"/releases?per_page=30")
+    .then(function(rel){
+      STORE = (rel||[]).filter(function(r){ return !r.draft; }).map(function(r){
+        var assets = r.assets || [];
+        var apk  = assets.filter(function(a){ return /\.apk$/i.test(a.name); })[0];
+        var icon = assets.filter(function(a){ return /^icon\.(png|jpe?g|webp)$/i.test(a.name); })[0];
+        return {
+          name: r.name || r.tag_name || "App",
+          version: r.tag_name || "",
+          notes: r.body || "",
+          size: apk ? apk.size : 0,
+          url: apk ? apk.browser_download_url : "",
+          icon: icon ? icon.browser_download_url : ""
+        };
+      });
+      renderStore();
+    })
+    .catch(function(){ loadStoreFiles(); });
+}
+function loadStoreFiles(){
+  getJSON("https://api.github.com/repos/"+STORE_REPO+"/git/trees/HEAD?recursive=1")
+    .then(function(t){
+      STORE = (t.tree||[]).filter(function(x){ return /\.apk$/i.test(x.path); }).map(function(x){
+        return { name: x.path.replace(/^.*\//,"").replace(/\.apk$/i,""), version:"", notes:"",
+                 size: x.size||0, icon:"",
+                 url: "https://github.com/"+STORE_REPO+"/raw/HEAD/"+x.path };
+      });
+      renderStore();
+    })
+    .catch(function(){
+      $("storeList").innerHTML='<div class="card"><div class="err">Could not reach TD Store right now. Please try again in a moment.</div></div>';
+    });
+}
+function renderStore(){
+  var box=$("storeList"); if(!box) return;
+  if(!STORE.length){
+    box.innerHTML='<div class="card"><div class="small mut">No apps published yet. Publish a Release in the repository and it will appear here.</div></div>';
+    return;
+  }
+  box.innerHTML = STORE.map(function(a){
+    var initial = (a.name||"?").trim().slice(0,2).toUpperCase();
+    var meta = [];
+    if(a.version) meta.push("v"+a.version);
+    if(a.size) meta.push(fmtSize(a.size));
+    var notes = (a.notes||"").slice(0,600);
+    return '<div class="card appcard">'+
+      '<div class="row" style="gap:14px; flex-wrap:nowrap; align-items:flex-start">'+
+        (a.icon
+          ? '<img src="'+escAttr(a.icon)+'" alt="" style="width:56px;height:56px;border-radius:14px;object-fit:cover;flex-shrink:0">'
+          : '<div class="logo" style="width:56px;height:56px;border-radius:14px;flex-shrink:0">'+esc(initial)+'</div>')+
+        '<div style="flex:1; min-width:0">'+
+          '<div class="h2">'+esc(a.name)+'</div>'+
+          (meta.length?'<div class="small mut">'+esc(meta.join(" · "))+'</div>':'')+
+        '</div>'+
+      '</div>'+
+      (notes?'<div class="small" style="margin-top:10px; white-space:pre-wrap">'+esc(notes)+'</div>':'')+
+      (a.url
+        ? '<a class="btn" style="margin-top:14px; width:100%; display:block; text-align:center; text-decoration:none" href="'+escAttr(a.url)+'" rel="noopener">⬇ Download APK</a>'
+        : '<div class="err" style="margin-top:12px">No APK is attached to this release yet.</div>')+
+      '</div>';
+  }).join("");
+}
+
+/* =================================================================== videos (YouTube) */
+var YT_CHANNELS = [
+  { name:"Tech Drishti",  handle:"@TechDrishti-o6c",      id:"" },
+  { name:"Drishti Tales", handle:"@DrishtiTalesOfficial", id:"" }
+];
+var VIDEOS = [];
+var YT_ACTIVE = 0;
+function ytChannelId(ch){
+  if(ch.id) return Promise.resolve(ch.id);
+  var cached = null;
+  try{ cached = localStorage.getItem("ytid_"+ch.handle); }catch(e){}
+  if(cached){ ch.id = cached; return Promise.resolve(cached); }
+  var page = "https://www.youtube.com/"+ch.handle;
+  var chain = Promise.reject();
+  PROXIES.slice(0,-1).forEach(function(px){
+    chain = chain.catch(function(){
+      return getText(px(page)).then(function(html){
+        var m = html.match(/"channelId":"(UC[\w-]{22})"/) || html.match(/channel_id=(UC[\w-]{22})/);
+        if(!m) throw new Error("no id");
+        ch.id = m[1];
+        try{ localStorage.setItem("ytid_"+ch.handle, m[1]); }catch(e){}
+        return m[1];
+      });
+    });
+  });
+  return chain.catch(function(){ return ""; });
+}
+function ytFeed(ch){
+  return ytChannelId(ch).then(function(id){
+    if(!id) return [];
+    var feed = "https://www.youtube.com/feeds/videos.xml?channel_id="+id;
+    var chain = Promise.reject();
+    PROXIES.slice(0,-1).forEach(function(px){
+      chain = chain.catch(function(){
+        return getText(px(feed)).then(function(xml){
+          var doc = new DOMParser().parseFromString(xml, "text/xml");
+          var es = doc.getElementsByTagName("entry");
+          var out = [];
+          for(var k=0;k<es.length && k<12;k++){
+            var e = es[k];
+            var raw = (e.getElementsByTagName("id")[0]||{}).textContent || "";
+            var vid = raw.replace(/^yt:video:/,"").trim();
+            if(!vid) continue;
+            out.push({
+              id: vid,
+              title: (e.getElementsByTagName("title")[0]||{}).textContent || "",
+              date: (e.getElementsByTagName("published")[0]||{}).textContent || "",
+              url: "https://www.youtube.com/watch?v="+vid,
+              thumb: "https://i.ytimg.com/vi/"+vid+"/hqdefault.jpg"
+            });
+          }
+          if(!out.length) throw new Error("empty");
+          return out;
+        });
+      });
+    });
+    return chain.catch(function(){ return []; });
+  });
+}
+function renderYtTabs(){
+  var box=$("ytTabs"); if(!box) return;
+  box.innerHTML = YT_CHANNELS.map(function(c,i){
+    return '<button class="chip '+(i===YT_ACTIVE?"on":"")+'" onclick="setYtTab('+i+')">'+esc(c.name)+'</button>';
+  }).join("");
+}
+function setYtTab(i){ YT_ACTIVE=i; renderYtTabs(); loadVideos(); }
+function loadVideos(){
+  var box=$("videoList"); if(!box) return;
+  renderYtTabs();
+  var ch = YT_CHANNELS[YT_ACTIVE];
+  box.innerHTML='<div class="card"><div class="small mut">Loading videos from '+esc(ch.name)+'…</div></div>';
+  ytFeed(ch).then(function(v){
+    VIDEOS = v;
+    if(!v.length){
+      box.innerHTML='<div class="card"><div class="small mut">Could not load the videos right now. '+
+        '<a href="https://www.youtube.com/'+escAttr(ch.handle)+'" target="_blank" rel="noopener">Open the channel on YouTube</a> instead.</div></div>';
+      return;
+    }
+    box.innerHTML = v.map(function(x,i){
+      var d = "";
+      try{ if(x.date) d = new Date(x.date).toLocaleDateString(LOC,{day:"numeric",month:"short",year:"numeric"}); }catch(e){}
+      return '<div class="card">'+
+        '<img class="vthumb" src="'+escAttr(x.thumb)+'" alt="" loading="lazy">'+
+        '<div class="h2" style="margin:12px 0 4px; font-size:16.5px">'+esc(x.title)+'</div>'+
+        (d?'<div class="small mut">'+esc(d)+'</div>':'')+
+        '<div class="row" style="margin-top:12px">'+
+          '<button class="btn" onclick="playVideo('+i+')">▶ Watch here</button>'+
+          '<a class="btn ghost" href="'+escAttr(x.url)+'" target="_blank" rel="noopener">Open on YouTube</a>'+
+        '</div></div>';
+    }).join("");
+  });
+}
+function playVideo(i){
+  var v = VIDEOS[i]; if(!v) return;
+  var m=$("videoModal"), sc=$("videoScrim"), w=$("videoWrap"), t=$("videoTitle");
+  t.textContent = v.title;
+  w.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/'+encodeURIComponent(v.id)+
+    '?autoplay=1&rel=0" title="'+escAttr(v.title)+'" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+  m.hidden=false; sc.hidden=false;
+  document.body.style.overflow="hidden";
+  setTimeout(function(){ try{ m.querySelector("button").focus(); }catch(e){} }, 50);
+  document.addEventListener("keydown", videoKeys);
+}
+function closeVideo(){
+  var m=$("videoModal"), sc=$("videoScrim"), w=$("videoWrap");
+  if(!m || m.hidden) return;
+  m.hidden=true; sc.hidden=true; w.innerHTML="";
+  document.body.style.overflow="";
+  document.removeEventListener("keydown", videoKeys);
+}
+function videoKeys(e){ if(e.key==="Escape"){ e.preventDefault(); closeVideo(); } }
 
 /* =================================================================== announcements & admin */
 /* Your own backend — no Firebase. Put the Worker URL here once you have deployed it,
