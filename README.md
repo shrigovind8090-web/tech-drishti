@@ -7,29 +7,33 @@ accessibility mode, all in one place.
 No installation. No API keys. Everything runs in the browser. You can sign in
 with Google or an email address to keep your profile, or continue as a guest.
 
-## Sections — three tabs
+## Navigation
 
-The whole platform lives in **three bottom tabs** (Home · Tools · Assistant), with a **Back button**
-at the top of every inner screen. Profile and Settings open from the avatar button in the header.
+There are no tabs. A **left navigation drawer** (the ☰ button in the header) holds
+Home, Tools, Assistant, TD Store, Videos and Profile & settings. The right side of the
+header stays as it was — refresh, theme and your profile avatar.
+
+## Sections
 
 - **Home** — live clock, weather for your location, top headlines and market glance.
 - **Tools** — a menu; tap one to open just that tool:
-  - **Live News** — Google News headlines with a **language selector** (English, हिन्दी, தமிழ், తెలుగు, বাংলা, मराठी, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, اردو), a **category filter**, **city news**, and a **Share** button on every headline.
+  - **Live News** — Google News headlines with a language selector, a category filter, city news and a Share button on every headline.
   - **Weather** — current conditions plus rain chance, sunrise/sunset, UV index and a 5-day forecast, with read-aloud.
   - **Markets & knowledge** — currency converter, crypto prices and Wikipedia knowledge search.
   - **Calculator** — big buttons, works fully offline, reads the answer aloud.
   - **Timer & stopwatch** — counts down or up and says "Time is up" aloud.
   - **Air quality (AQI)** — live pollution level for any city, with a health warning.
   - **India lookups** — find the area from a PIN code, or the bank branch from an IFSC code.
-  - **My notes** — write or **dictate** a note; saved on your device and readable aloud.
-- **Assistant** — free AI, no API key. It knows today's live data from this site (your weather, the
-  current headlines, the dollar rate) and answers in your own language. One-tap chips included.
-- **Admin panel** — the owner posts announcements (with an optional image) that appear on the
-  site immediately, with no redeploy. It talks to your **own backend** (a small Cloudflare
-  Worker storing everything in R2 — free 10 GB, no egress charges, no Firebase).
-  The backend and its setup steps ship in `techdrishti-admin-backend.zip`.
-- **Profile** — your account, **Settings → Accessibility** (contrast, text size, voice feedback on/off,
-  reading speed), About & Support and the legal pages.
+  - **My notes** — write or dictate a note; saved on your device and readable aloud.
+- **Assistant** — free AI, no API key, and it knows today's live data from this site.
+- **TD Store** — our own app store. It reads the public GitHub repository
+  `shrigovind8090-web/td-store`: every Release there becomes an app with its description,
+  version, size and a working APK download. Plain `.apk` files in the repo work too.
+- **Videos** — the latest videos from our YouTube channels, with an in-page player
+  and an "Open on YouTube" button.
+- **Admin panel** — the owner posts announcements (with an optional image) that appear on
+  the site immediately, with no redeploy, through your own Cloudflare Worker + R2 backend.
+- **Profile** — your account, **Settings → Accessibility**, About & Support and the legal pages.
 
 
 ## Live data sources
