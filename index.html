@@ -40,7 +40,17 @@
   .skip:focus{left:0;}
   :focus-visible{outline:3px solid var(--saf); outline-offset:2px; border-radius:6px;}
 
-  header.top{display:flex; align-items:center; gap:13px; margin-bottom:18px; flex-wrap:wrap;}
+  header.top{display:flex; align-items:center; gap:13px; margin-bottom:18px; flex-wrap:nowrap;}
+  header.top .brand{min-width:0; overflow:hidden;}
+  header.top .brand h1{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  @media (max-width:560px){
+    header.top{gap:8px;}
+    header.top .brand p{display:none;}
+    header.top .brand h1{font-size:18px;}
+    header.top .logo{width:40px;height:40px;font-size:15px;border-radius:12px;}
+    header.top .iconbtn{min-width:40px;height:40px;padding:0 8px;}
+    header.top .avatar{width:40px;height:40px;font-size:14px;}
+  }
   .logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--pri),var(--pri2));
     display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;color:#fff;flex-shrink:0;
     box-shadow:0 10px 26px rgba(79,70,229,.42); letter-spacing:.5px;}
@@ -310,10 +320,7 @@
       <p>Live news · weather · AI assistant · accessibility — all online</p>
     </div>
     <div class="spacer"></div>
-    <div class="pill" role="status"><span class="dot" id="netdot"></span><span id="nettxt">Online</span></div>
-    <button class="iconbtn" id="a11yQuick" title="Accessibility options" aria-label="Accessibility options" onclick="go('access')">♿</button>
     <button class="iconbtn" id="refreshBtn" title="Refresh live data" aria-label="Refresh live data" onclick="refreshAll()">⟳</button>
-    <button class="iconbtn" id="themeBtn" title="Switch light or dark theme" aria-label="Switch theme" onclick="toggleTheme()">◐</button>
     <button class="iconbtn notifbtn" id="notifBtn" aria-label="Notifications, none new" onclick="openNotif()">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
       <span class="notifdot" id="notifDot" hidden></span>
@@ -847,6 +854,14 @@
         <span class="tmain"><b>Accessibility</b><span class="small mut">Display, text size, voice and reading speed</span></span>
         <span class="tarrow" aria-hidden="true">›</span>
       </button>
+      <div class="switch" style="margin-top:14px">
+        <div><b>Appearance</b><div class="small mut" id="themeLabel">Dark</div></div>
+        <button class="btn ghost sm" onclick="toggleTheme()">Switch</button>
+      </div>
+      <div class="switch">
+        <div><b>Connection</b></div>
+        <div class="pill" role="status"><span class="dot" id="netdot"></span><span id="nettxt">Online</span></div>
+      </div>
     </div>
 
     <div class="card" id="adminCard" hidden>
@@ -1153,6 +1168,7 @@ function applyAll(){
     var a=p.split(":"), el=$(a[0]); if(el) el.classList.toggle("on", !!state.a11y[a[1]]);
   });
   var rv=$("rateVal"); if(rv) rv.textContent = Number(state.a11y.rate).toFixed(1)+"×";
+  var tl=$("themeLabel"); if(tl) tl.textContent = state.theme === "light" ? "Light" : "Dark";
   var fv=$("fsVal"); if(fv) fv.textContent = state.a11y.fs+"px";
   paintProfile();
 }
