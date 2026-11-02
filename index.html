@@ -1079,6 +1079,10 @@ var PLATFORM_SINCE = "2025";
    language the site is not using. */
 var LOC = "en-IN";
 
+/* Opened inside a Telegram Mini App? Google sign-in cannot work in Telegram's
+   built-in browser, so there we go straight in as a guest. */
+var IN_TELEGRAM = /Telegram/i.test(navigator.userAgent);
+
 /* True while the page is reloading back from a full-page Google sign-in. */
 var RETURNING_FROM_REDIRECT = /[?&](apiKey|oobCode)=/.test(location.search);
 
@@ -1662,7 +1666,8 @@ function paintProfile(){
   setAvatar($("bigAvatar"), initials, pic);
   $("pName").textContent = n;
   $("pSub").textContent = isUser ? (a.email || "Signed in")
-    : (a.mode === "guest" ? "Browsing as a guest — you can sign in any time" : "Not signed in");
+    : (IN_TELEGRAM ? "Browsing as a guest inside Telegram"
+      : (a.mode === "guest" ? "Browsing as a guest — you can sign in any time" : "Not signed in"));
   var ac = $("adminCard"); if(ac) ac.hidden = !adminVisible();
   var dw = $("drawerWho"); if(dw) dw.textContent = n;
   var g = $("greeting");
@@ -2755,13 +2760,19 @@ swPaint(); tmPaint();
 adminLoad();
 loadAnnouncements();
 setTimeout(function(){ loadStore(); setTimeout(primeNotifVideos, 1500); }, 1200);
+if(IN_TELEGRAM && !(state.auth && state.auth.mode)){
+  state.auth = { mode:"guest" };
+  save();
+}
 if(FIREBASE_CONFIG){
-  if(RETURNING_FROM_REDIRECT){
+  if(IN_TELEGRAM && state.auth && state.auth.mode){
+    closeGate(); paintProfile(); loadAnnouncements();
+  } else if(RETURNING_FROM_REDIRECT){
     openGate();
     var _gn = $("gateNote"); if(_gn){ _gn.hidden=false; _gn.textContent="Signing you in, please wait…"; }
   } else if(state.auth && state.auth.mode){ closeGate(); }
   else { openGate(); }
-  startAuth();
+  if(!IN_TELEGRAM) startAuth();
 } else {
   closeGate();
 }
