@@ -333,6 +333,11 @@
 
   <main id="main">
 
+  <div class="topbar" id="toolBar" hidden>
+    <button class="btn ghost sm" onclick="toolBack()">← Back</button>
+    <span class="small mut" id="toolBarLabel" style="margin-left:auto"></span>
+  </div>
+
   <!-- ============ TOOLS MENU ============ -->
   <section class="screen" id="s-toolsmenu" aria-label="Tools">
     <div class="card">
@@ -770,15 +775,6 @@
       <button class="btn ghost sm" style="margin-top:12px" onclick="loadVideos()">↻ Refresh</button>
     </div>
     <div id="videoList"></div>
-    <div class="card">
-      <div class="lbl">Show every video</div>
-      <div class="small mut">Without a key you see the latest 15 videos. Add a free YouTube API key and your whole channel loads, 50 at a time with a “Load more” button.</div>
-      <input id="ytKeyInput" class="fld" placeholder="Paste your YouTube API key" aria-label="YouTube API key">
-      <div class="row" style="margin-top:12px">
-        <button class="btn" onclick="saveYtKey()">Save key</button>
-        <button class="btn ghost" onclick="clearYtKey()">Remove</button>
-      </div>
-    </div>
   </section>
 
   <!-- ============ ADMIN ============ -->
@@ -1129,6 +1125,11 @@ var TAB_OF = { home:"home", tools:"tools", ai:"ai", profile:"profile",
 var VIEW_LABEL = { tools:"Tools", news:"Live News", weather:"Weather", markets:"Markets & knowledge",
   notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile", calc:"Calculator", timer:"Timer & stopwatch", aqi:"Air quality", lookup:"India lookups", admin:"Admin panel", store:"TD Store", videos:"Videos" };
 var _navStack = ["home"];
+var _view = "home";
+/* a tool goes back to the Tools list; the two settings screens go back to Profile */
+var TOOL_BACK = { news:"tools", weather:"tools", markets:"tools", notes:"tools",
+  calc:"tools", timer:"tools", aqi:"tools", lookup:"tools", access:"profile", admin:"profile" };
+function toolBack(){ go(TOOL_BACK[_view] || "tools"); }
 
 function go(name, el, noPush){
   var secs = TABS[name] || [name];
@@ -1137,6 +1138,10 @@ function go(name, el, noPush){
   for(var k=0;k<secs.length;k++){ var t=$("s-"+secs[k]); if(t) t.classList.add("on"); }
 
   markDrawerActive();
+
+  _view = name;
+  var tb=$("toolBar"); if(tb) tb.hidden = !TOOL_BACK[name];
+  var tl=$("toolBarLabel"); if(tl) tl.textContent = VIEW_LABEL[name] || "";
 
   if(!noPush && _navStack[_navStack.length-1]!==name) _navStack.push(name);
 
@@ -2238,7 +2243,11 @@ var YT_ACTIVE = 0;
 var YT_NEXT = "";        /* page token for "load more" */
 var YT_PLAYLIST = {};    /* handle -> uploads playlist id */
 
-function ytKey(){ return String(state.ytKey || "").trim(); }
+/* Put the YouTube Data API key here. With a key the Videos screen loads the whole
+   channel, 50 at a time; without one it falls back to the latest 15 from the RSS feed. */
+var YT_API_KEY = "";
+
+function ytKey(){ return String(YT_API_KEY || "").trim(); }
 function ytApiGet(path, params){
   var qs = Object.keys(params).filter(function(k){ return params[k] !== undefined && params[k] !== ""; })
     .map(function(k){ return k + "=" + encodeURIComponent(params[k]); }).join("&");
@@ -2325,7 +2334,6 @@ function renderYtTabs(){
   box.innerHTML = YT_CHANNELS.map(function(c,i){
     return '<button class="chip ' + (i === YT_ACTIVE ? "on" : "") + '" onclick="setYtTab(' + i + ')">' + esc(c.name) + '</button>';
   }).join("");
-  var ki = $("ytKeyInput"); if(ki) ki.value = state.ytKey || "";
 }
 function setYtTab(i){ YT_ACTIVE = i; renderYtTabs(); loadVideos(); }
 function videoCard(x, i){
@@ -2387,18 +2395,6 @@ function loadVideosRss(ch){
     }
     renderVideos(); refreshNotifs();
   });
-}
-function saveYtKey(){
-  state.ytKey = ($("ytKeyInput").value || "").trim();
-  save();
-  toast(state.ytKey ? "Key saved — loading every video" : "Key removed");
-  loadVideos();
-}
-function clearYtKey(){
-  state.ytKey = ""; save();
-  var i = $("ytKeyInput"); if(i) i.value = "";
-  toast("Key removed");
-  loadVideos();
 }
 function playVideo(i){
   var v = VIDEOS[i]; if(!v) return;
