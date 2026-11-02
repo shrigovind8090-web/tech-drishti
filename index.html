@@ -333,11 +333,6 @@
 
   <main id="main">
 
-  <div class="topbar" id="topBar" hidden>
-    <button class="btn ghost sm" onclick="goBack()">← Back</button>
-    <span class="small mut" id="topBarLabel" style="margin-left:auto"></span>
-  </div>
-
   <!-- ============ TOOLS MENU ============ -->
   <section class="screen" id="s-toolsmenu" aria-label="Tools">
     <div class="card">
@@ -1131,8 +1126,6 @@ var TABS = {
 /* which bottom-tab a view belongs to (so Tools stays highlighted inside a tool) */
 var TAB_OF = { home:"home", tools:"tools", ai:"ai", profile:"profile",
   news:"tools", weather:"tools", markets:"tools", notes:"tools", access:"profile", calc:"tools", timer:"tools", aqi:"tools", lookup:"tools", admin:"profile", store:"store", videos:"videos" };
-/* where the Back button goes from each inner view */
-var BACK_TO = { news:"tools", weather:"tools", markets:"tools", notes:"tools", calc:"tools", timer:"tools", aqi:"tools", lookup:"tools", admin:"profile" };
 var VIEW_LABEL = { tools:"Tools", news:"Live News", weather:"Weather", markets:"Markets & knowledge",
   notes:"My notes", access:"Accessibility", ai:"Assistant", profile:"Profile", calc:"Calculator", timer:"Timer & stopwatch", aqi:"Air quality", lookup:"India lookups", admin:"Admin panel", store:"TD Store", videos:"Videos" };
 var _navStack = ["home"];
@@ -1145,9 +1138,6 @@ function go(name, el, noPush){
 
   markDrawerActive();
 
-  var tb=$("topBar"); if(tb) tb.hidden = (name==="home");
-  var lbl=$("topBarLabel"); if(lbl) lbl.textContent = VIEW_LABEL[name] || "";
-
   if(!noPush && _navStack[_navStack.length-1]!==name) _navStack.push(name);
 
   window.scrollTo(0, 0);
@@ -1157,12 +1147,6 @@ function go(name, el, noPush){
 
   var first=$("s-"+secs[0]);
   if(first && !noPush){ setTimeout(function(){ try{ first.focus({preventScroll:true}); }catch(e){ try{ first.focus(); }catch(e2){} } }, 60); }
-}
-function goBack(){
-  var cur = _navStack.length ? _navStack[_navStack.length-1] : "home";
-  _navStack.pop();
-  if(BACK_TO[cur]){ go(BACK_TO[cur], null, true); return; }
-  go(_navStack.length ? _navStack[_navStack.length-1] : "home", null, true);
 }
 function openAccess(){ go("access"); }
 
