@@ -2245,7 +2245,7 @@ var YT_PLAYLIST = {};    /* handle -> uploads playlist id */
 
 /* Put the YouTube Data API key here. With a key the Videos screen loads the whole
    channel, 50 at a time; without one it falls back to the latest 15 from the RSS feed. */
-var YT_API_KEY = "";
+var YT_API_KEY = "AIzaSyAkhFdYdnROUykddTewnsO8CFlaZ559lI4";
 
 function ytKey(){ return String(YT_API_KEY || "").trim(); }
 function ytApiGet(path, params){
@@ -2265,7 +2265,7 @@ function ytUploadsPlaylist(ch){
 }
 function ytVideosApi(ch, pageToken){
   return ytUploadsPlaylist(ch).then(function(pl){
-    return ytApiGet("playlistItems", { part:"snippet,contentDetails", playlistId:pl, maxResults:50, pageToken:pageToken || "" });
+    return ytApiGet("playlistItems", { part:"snippet,contentDetails", playlistId:pl, maxResults:12, pageToken:pageToken || "" });
   }).then(function(j){
     var out = (j.items || []).map(function(x){
       var sn = x.snippet || {}, cd = x.contentDetails || {};
@@ -2335,7 +2335,7 @@ function renderYtTabs(){
     return '<button class="chip ' + (i === YT_ACTIVE ? "on" : "") + '" onclick="setYtTab(' + i + ')">' + esc(c.name) + '</button>';
   }).join("");
 }
-function setYtTab(i){ YT_ACTIVE = i; renderYtTabs(); loadVideos(); }
+function setYtTab(i){ YT_ACTIVE = i; _ytRendered = 0; _ytLoading = false; renderYtTabs(); loadVideos(); }
 function videoCard(x, i){
   var d = "";
   try{ if(x.date) d = new Date(x.date).toLocaleDateString(LOC,{day:"numeric",month:"short",year:"numeric"}); }catch(e){}
@@ -2348,40 +2348,87 @@ function videoCard(x, i){
       '<a class="btn ghost" href="' + escAttr(x.url) + '" target="_blank" rel="noopener">Open on YouTube</a>' +
     '</div></div>';
 }
-function renderVideos(){
-  var box = $("videoList"); if(!box) return;
-  if(!VIDEOS.length) return;
-  var html = VIDEOS.map(videoCard).join("");
-  if(YT_NEXT){
-    html += '<button class="btn ghost" style="width:100%; margin-top:2px" onclick="loadMoreVideos()">Load more videos</button>';
+var _ytRendered = 0;
+var _ytLoading = false;
+var _ytObs = null;
+function ytSentinel(){
+  var box = $("videoList"); if(!box) return null;
+  var el = $("ytSentinel");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "ytSentinel";
+    el.style.cssText = "height:1px; width:100%";
   }
-  box.innerHTML = html;
+  box.appendChild(el);
+  return el;
+}
+function ytStatus(msg){
+  var box = $("videoList"); if(!box) return;
+  var el = $("ytStatus");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "ytStatus";
+    el.className = "small mut";
+    el.style.cssText = "text-align:center; padding:16px 0";
+    box.appendChild(el);
+  }
+  el.textContent = msg || "";
+  el.hidden = !msg;
+}
+function renderVideos(reset){
+  var box = $("videoList"); if(!box) return;
+  if(reset){ box.innerHTML = ""; _ytRendered = 0; }
+  if(!VIDEOS.length) return;
+  var start = _ytRendered;
+  var html = VIDEOS.slice(start).map(function(x, k){ return videoCard(x, start + k); }).join("");
+  var sn = ytSentinel();
+  if(sn) sn.insertAdjacentHTML("beforebegin", html); else box.insertAdjacentHTML("beforeend", html);
+  _ytRendered = VIDEOS.length;
+  ytSentinel();
+  ytStatus("");
+  setupYtObserver();
+}
+function setupYtObserver(){
+  var sn = $("ytSentinel"); if(!sn) return;
+  if(_ytObs){ _ytObs.disconnect(); _ytObs = null; }
+  if(!("IntersectionObserver" in window)) return;
+  _ytObs = new IntersectionObserver(function(entries){
+    for(var i = 0; i < entries.length; i++){ if(entries[i].isIntersecting){ loadMoreVideos(); break; } }
+  }, { rootMargin: "700px 0px" });
+  _ytObs.observe(sn);
 }
 function loadVideos(){
   var box = $("videoList"); if(!box) return;
   renderYtTabs();
   var ch = YT_CHANNELS[YT_ACTIVE];
-  VIDEOS = []; YT_NEXT = "";
+  VIDEOS = []; YT_NEXT = ""; _ytRendered = 0; _ytLoading = false;
+  if(_ytObs){ _ytObs.disconnect(); _ytObs = null; }
   box.innerHTML = '<div class="card"><div class="small mut">Loading videos from ' + esc(ch.name) + '…</div></div>';
   if(ytKey()){
     ytVideosApi(ch, "").then(function(r){
       if(!r.items.length) throw new Error("empty");
       VIDEOS = r.items; YT_NEXT = r.next;
-      renderVideos(); refreshNotifs();
+      renderVideos(true); refreshNotifs();
     }).catch(function(){ loadVideosRss(ch); });
   } else {
     loadVideosRss(ch);
   }
 }
 function loadMoreVideos(){
+  if(_ytLoading || !YT_NEXT || !ytKey()) return;
   var ch = YT_CHANNELS[YT_ACTIVE];
-  if(!YT_NEXT || !ytKey()) return;
-  var btn = document.querySelector('#videoList button.btn.ghost');
-  if(btn){ btn.disabled = true; btn.textContent = "Loading…"; }
+  _ytLoading = true;
+  ytStatus("Loading more videos…");
   ytVideosApi(ch, YT_NEXT).then(function(r){
-    VIDEOS = VIDEOS.concat(r.items); YT_NEXT = r.next;
-    renderVideos();
-  }).catch(function(){ toast("Could not load more videos"); if(btn){ btn.disabled = false; btn.textContent = "Load more videos"; } });
+    VIDEOS = VIDEOS.concat(r.items);
+    YT_NEXT = r.next;
+    _ytLoading = false;
+    renderVideos(false);
+    if(!YT_NEXT) ytStatus("That is every video.");
+  }).catch(function(){
+    _ytLoading = false;
+    ytStatus("Could not load more right now.");
+  });
 }
 function loadVideosRss(ch){
   var box = $("videoList"); if(!box) return;
@@ -2393,7 +2440,7 @@ function loadVideosRss(ch){
         (ytKey() ? "" : '<div class="small mut" style="margin-top:10px">Add a free YouTube API key below to load your whole channel.</div>') + '</div>';
       return;
     }
-    renderVideos(); refreshNotifs();
+    renderVideos(true); refreshNotifs();
   });
 }
 function playVideo(i){
