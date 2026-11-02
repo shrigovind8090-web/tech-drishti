@@ -775,6 +775,15 @@
       <button class="btn ghost sm" style="margin-top:12px" onclick="loadVideos()">↻ Refresh</button>
     </div>
     <div id="videoList"></div>
+    <div class="card">
+      <div class="lbl">Show every video</div>
+      <div class="small mut">Without a key you see the latest 15 videos. Add a free YouTube API key and your whole channel loads, 50 at a time with a “Load more” button.</div>
+      <input id="ytKeyInput" class="fld" placeholder="Paste your YouTube API key" aria-label="YouTube API key">
+      <div class="row" style="margin-top:12px">
+        <button class="btn" onclick="saveYtKey()">Save key</button>
+        <button class="btn ghost" onclick="clearYtKey()">Remove</button>
+      </div>
+    </div>
   </section>
 
   <!-- ============ ADMIN ============ -->
@@ -1086,7 +1095,7 @@ var state = {
   theme:"dark", lang:"en", cat:"TOP", city:{name:"", lat:null, lon:null},
   auth:{ mode:"" },
   a11y:{ hc:false, dys:false, nomotion:false, fs:15, rate:1, voice:true },
-  chat:[], notes:[], notif:null
+  chat:[], notes:[], notif:null, ytKey:""
 };
 function load(){
   try{ var r=localStorage.getItem(KEY); if(r) state=Object.assign(state, JSON.parse(r)); }catch(e){}
@@ -2242,12 +2251,47 @@ var YT_CHANNELS = [
 ];
 var VIDEOS = [];
 var YT_ACTIVE = 0;
+var YT_NEXT = "";        /* page token for "load more" */
+var YT_PLAYLIST = {};    /* handle -> uploads playlist id */
+
+function ytKey(){ return String(state.ytKey || "").trim(); }
+function ytApiGet(path, params){
+  var qs = Object.keys(params).filter(function(k){ return params[k] !== undefined && params[k] !== ""; })
+    .map(function(k){ return k + "=" + encodeURIComponent(params[k]); }).join("&");
+  return getJSON("https://www.googleapis.com/youtube/v3/" + path + "?" + qs + "&key=" + encodeURIComponent(ytKey()));
+}
+function ytUploadsPlaylist(ch){
+  if(YT_PLAYLIST[ch.handle]) return Promise.resolve(YT_PLAYLIST[ch.handle]);
+  return ytApiGet("channels", { part:"contentDetails", forHandle:ch.handle }).then(function(j){
+    var it = j.items && j.items[0];
+    var pl = it && it.contentDetails && it.contentDetails.relatedPlaylists && it.contentDetails.relatedPlaylists.uploads;
+    if(!pl) throw new Error("no playlist");
+    YT_PLAYLIST[ch.handle] = pl;
+    return pl;
+  });
+}
+function ytVideosApi(ch, pageToken){
+  return ytUploadsPlaylist(ch).then(function(pl){
+    return ytApiGet("playlistItems", { part:"snippet,contentDetails", playlistId:pl, maxResults:50, pageToken:pageToken || "" });
+  }).then(function(j){
+    var out = (j.items || []).map(function(x){
+      var sn = x.snippet || {}, cd = x.contentDetails || {};
+      var vid = cd.videoId || (sn.resourceId && sn.resourceId.videoId) || "";
+      var th = (sn.thumbnails && (sn.thumbnails.medium || sn.thumbnails.default) || {}).url;
+      return { id:vid, title:sn.title || "", date:sn.publishedAt || "",
+               ts:(function(d){ var t = Date.parse(d); return isNaN(t) ? 0 : t; })(sn.publishedAt || ""),
+               url:"https://www.youtube.com/watch?v=" + vid,
+               thumb: th || ("https://i.ytimg.com/vi/" + vid + "/hqdefault.jpg") };
+    }).filter(function(v){ return v.id; });
+    return { items: out, next: j.nextPageToken || "" };
+  });
+}
 function ytChannelId(ch){
   if(ch.id) return Promise.resolve(ch.id);
   var cached = null;
-  try{ cached = localStorage.getItem("ytid_"+ch.handle); }catch(e){}
+  try{ cached = localStorage.getItem("ytid_" + ch.handle); }catch(e){}
   if(cached){ ch.id = cached; return Promise.resolve(cached); }
-  var page = "https://www.youtube.com/"+ch.handle;
+  var page = "https://www.youtube.com/" + ch.handle;
   var chain = Promise.reject();
   PROXIES.slice(0,-1).forEach(function(px){
     chain = chain.catch(function(){
@@ -2255,7 +2299,7 @@ function ytChannelId(ch){
         var m = html.match(/"channelId":"(UC[\w-]{22})"/) || html.match(/channel_id=(UC[\w-]{22})/);
         if(!m) throw new Error("no id");
         ch.id = m[1];
-        try{ localStorage.setItem("ytid_"+ch.handle, m[1]); }catch(e){}
+        try{ localStorage.setItem("ytid_" + ch.handle, m[1]); }catch(e){}
         return m[1];
       });
     });
@@ -2265,7 +2309,7 @@ function ytChannelId(ch){
 function ytFeed(ch){
   return ytChannelId(ch).then(function(id){
     if(!id) return [];
-    var feed = "https://www.youtube.com/feeds/videos.xml?channel_id="+id;
+    var feed = "https://www.youtube.com/feeds/videos.xml?channel_id=" + id;
     var chain = Promise.reject();
     PROXIES.slice(0,-1).forEach(function(px){
       chain = chain.catch(function(){
@@ -2273,19 +2317,16 @@ function ytFeed(ch){
           var doc = new DOMParser().parseFromString(xml, "text/xml");
           var es = doc.getElementsByTagName("entry");
           var out = [];
-          for(var k=0;k<es.length && k<12;k++){
+          for(var k = 0; k < es.length; k++){
             var e = es[k];
-            var raw = (e.getElementsByTagName("id")[0]||{}).textContent || "";
-            var vid = raw.replace(/^yt:video:/,"").trim();
+            var raw = (e.getElementsByTagName("id")[0] || {}).textContent || "";
+            var vid = raw.replace(/^yt:video:/, "").trim();
             if(!vid) continue;
-            out.push({
-              id: vid,
-              title: (e.getElementsByTagName("title")[0]||{}).textContent || "",
-              date: (e.getElementsByTagName("published")[0]||{}).textContent || "",
-              ts: (function(d){ var t=Date.parse(d); return isNaN(t)?0:t; })((e.getElementsByTagName("published")[0]||{}).textContent || ""),
-              url: "https://www.youtube.com/watch?v="+vid,
-              thumb: "https://i.ytimg.com/vi/"+vid+"/hqdefault.jpg"
-            });
+            var pub = (e.getElementsByTagName("published")[0] || {}).textContent || "";
+            out.push({ id:vid, title:(e.getElementsByTagName("title")[0] || {}).textContent || "",
+                       date:pub, ts:(function(d){ var t = Date.parse(d); return isNaN(t) ? 0 : t; })(pub),
+                       url:"https://www.youtube.com/watch?v=" + vid,
+                       thumb:"https://i.ytimg.com/vi/" + vid + "/hqdefault.jpg" });
           }
           if(!out.length) throw new Error("empty");
           return out;
@@ -2296,38 +2337,84 @@ function ytFeed(ch){
   });
 }
 function renderYtTabs(){
-  var box=$("ytTabs"); if(!box) return;
+  var box = $("ytTabs"); if(!box) return;
   box.innerHTML = YT_CHANNELS.map(function(c,i){
-    return '<button class="chip '+(i===YT_ACTIVE?"on":"")+'" onclick="setYtTab('+i+')">'+esc(c.name)+'</button>';
+    return '<button class="chip ' + (i === YT_ACTIVE ? "on" : "") + '" onclick="setYtTab(' + i + ')">' + esc(c.name) + '</button>';
   }).join("");
+  var ki = $("ytKeyInput"); if(ki) ki.value = state.ytKey || "";
 }
-function setYtTab(i){ YT_ACTIVE=i; renderYtTabs(); loadVideos(); }
+function setYtTab(i){ YT_ACTIVE = i; renderYtTabs(); loadVideos(); }
+function videoCard(x, i){
+  var d = "";
+  try{ if(x.date) d = new Date(x.date).toLocaleDateString(LOC,{day:"numeric",month:"short",year:"numeric"}); }catch(e){}
+  return '<div class="card">' +
+    '<img class="vthumb" src="' + escAttr(x.thumb) + '" alt="" loading="lazy">' +
+    '<div class="h2" style="margin:12px 0 4px; font-size:16.5px">' + esc(x.title) + '</div>' +
+    (d ? '<div class="small mut">' + esc(d) + '</div>' : '') +
+    '<div class="row" style="margin-top:12px">' +
+      '<button class="btn" onclick="playVideo(' + i + ')">▶ Watch here</button>' +
+      '<a class="btn ghost" href="' + escAttr(x.url) + '" target="_blank" rel="noopener">Open on YouTube</a>' +
+    '</div></div>';
+}
+function renderVideos(){
+  var box = $("videoList"); if(!box) return;
+  if(!VIDEOS.length) return;
+  var html = VIDEOS.map(videoCard).join("");
+  if(YT_NEXT){
+    html += '<button class="btn ghost" style="width:100%; margin-top:2px" onclick="loadMoreVideos()">Load more videos</button>';
+  }
+  box.innerHTML = html;
+}
 function loadVideos(){
-  var box=$("videoList"); if(!box) return;
+  var box = $("videoList"); if(!box) return;
   renderYtTabs();
   var ch = YT_CHANNELS[YT_ACTIVE];
-  box.innerHTML='<div class="card"><div class="small mut">Loading videos from '+esc(ch.name)+'…</div></div>';
+  VIDEOS = []; YT_NEXT = "";
+  box.innerHTML = '<div class="card"><div class="small mut">Loading videos from ' + esc(ch.name) + '…</div></div>';
+  if(ytKey()){
+    ytVideosApi(ch, "").then(function(r){
+      if(!r.items.length) throw new Error("empty");
+      VIDEOS = r.items; YT_NEXT = r.next;
+      renderVideos(); refreshNotifs();
+    }).catch(function(){ loadVideosRss(ch); });
+  } else {
+    loadVideosRss(ch);
+  }
+}
+function loadMoreVideos(){
+  var ch = YT_CHANNELS[YT_ACTIVE];
+  if(!YT_NEXT || !ytKey()) return;
+  var btn = document.querySelector('#videoList button.btn.ghost');
+  if(btn){ btn.disabled = true; btn.textContent = "Loading…"; }
+  ytVideosApi(ch, YT_NEXT).then(function(r){
+    VIDEOS = VIDEOS.concat(r.items); YT_NEXT = r.next;
+    renderVideos();
+  }).catch(function(){ toast("Could not load more videos"); if(btn){ btn.disabled = false; btn.textContent = "Load more videos"; } });
+}
+function loadVideosRss(ch){
+  var box = $("videoList"); if(!box) return;
   ytFeed(ch).then(function(v){
-    VIDEOS = v;
+    VIDEOS = v; YT_NEXT = "";
     if(!v.length){
-      box.innerHTML='<div class="card"><div class="small mut">Could not load the videos right now. '+
-        '<a href="https://www.youtube.com/'+escAttr(ch.handle)+'" target="_blank" rel="noopener">Open the channel on YouTube</a> instead.</div></div>';
+      box.innerHTML = '<div class="card"><div class="small mut">Could not load the videos right now. ' +
+        '<a href="https://www.youtube.com/' + escAttr(ch.handle) + '" target="_blank" rel="noopener">Open the channel on YouTube</a> instead.</div>' +
+        (ytKey() ? "" : '<div class="small mut" style="margin-top:10px">Add a free YouTube API key below to load your whole channel.</div>') + '</div>';
       return;
     }
-    box.innerHTML = v.map(function(x,i){
-      var d = "";
-      try{ if(x.date) d = new Date(x.date).toLocaleDateString(LOC,{day:"numeric",month:"short",year:"numeric"}); }catch(e){}
-      return '<div class="card">'+
-        '<img class="vthumb" src="'+escAttr(x.thumb)+'" alt="" loading="lazy">'+
-        '<div class="h2" style="margin:12px 0 4px; font-size:16.5px">'+esc(x.title)+'</div>'+
-        (d?'<div class="small mut">'+esc(d)+'</div>':'')+
-        '<div class="row" style="margin-top:12px">'+
-          '<button class="btn" onclick="playVideo('+i+')">▶ Watch here</button>'+
-          '<a class="btn ghost" href="'+escAttr(x.url)+'" target="_blank" rel="noopener">Open on YouTube</a>'+
-        '</div></div>';
-    }).join("");
-    refreshNotifs();
+    renderVideos(); refreshNotifs();
   });
+}
+function saveYtKey(){
+  state.ytKey = ($("ytKeyInput").value || "").trim();
+  save();
+  toast(state.ytKey ? "Key saved — loading every video" : "Key removed");
+  loadVideos();
+}
+function clearYtKey(){
+  state.ytKey = ""; save();
+  var i = $("ytKeyInput"); if(i) i.value = "";
+  toast("Key removed");
+  loadVideos();
 }
 function playVideo(i){
   var v = VIDEOS[i]; if(!v) return;
