@@ -105,6 +105,8 @@
   .drawerFoot{padding:12px 18px 20px; margin-top:auto;}
 
   /* ---- notifications ---- */
+  .authbtn.tg{background:linear-gradient(135deg,#229ED9,#1c8fc4); color:#fff; border-color:transparent;}
+  .authbtn.tg .gicon{background:#fff; color:#229ED9;}
   .notifbtn{position:relative;}
   .notifdot{position:absolute; top:5px; right:5px; width:10px; height:10px; border-radius:50%;
     background:#ef4444; border:2px solid var(--bg2);}
@@ -1009,8 +1011,9 @@
 
     <div id="gateNote" class="small mut" style="margin-bottom:14px" hidden></div>
 
-    <button class="authbtn google" onclick="signInGoogle()"><span class="gicon">G</span> Continue with Google</button>
-    <button class="authbtn" onclick="toggleEmailForm()">✉ Continue with Email</button>
+    <button class="authbtn tg" id="tgBtn" onclick="signInTelegram()" hidden><span class="gicon">✈</span> Continue with Telegram</button>
+    <button class="authbtn google" id="gateGoogle" onclick="signInGoogle()"><span class="gicon">G</span> Continue with Google</button>
+    <button class="authbtn" id="gateEmail" onclick="toggleEmailForm()">✉ Continue with Email</button>
 
     <div class="emailform" id="emailForm" hidden>
       <input id="emEmail" type="email" placeholder="Email address" autocomplete="email" aria-label="Email address">
@@ -1022,7 +1025,7 @@
       <div class="small mut" id="emMsg" style="margin-top:8px" role="status"></div>
     </div>
 
-    <div class="gateor">or</div>
+    <div class="gateor" id="gateOr">or</div>
     <button class="btn ghost" style="width:100%" onclick="continueGuest()">Continue as Guest</button>
 
     <div id="gateMsg" class="err" role="alert" style="margin-top:14px; text-align:left" hidden></div>
@@ -1083,31 +1086,58 @@ var IN_TELEGRAM = /Telegram/i.test(navigator.userAgent);
 /* Inside a Telegram Mini App we sign the visitor in with their Telegram account.
    There is no server here, so this is not cryptographically verified — but the
    site holds no server-side data, so it is enough to personalise the experience. */
-function startTelegramAuth(){
-  if(!IN_TELEGRAM) return;
+function telegramUser(){
+  try{
+    var wa = window.Telegram && window.Telegram.WebApp;
+    return (wa && wa.initDataUnsafe && wa.initDataUnsafe.user) || null;
+  }catch(e){ return null; }
+}
+function loadTelegramSdk(cb){
+  if(window.Telegram && window.Telegram.WebApp) return cb(true);
   var sc = document.createElement("script");
   sc.src = "https://telegram.org/js/telegram-web-app.js";
   sc.onload = function(){
-    try{
-      var wa = window.Telegram && window.Telegram.WebApp;
-      if(!wa) return;
-      try{ wa.ready(); wa.expand(); }catch(e){}
-      var u = (wa.initDataUnsafe && wa.initDataUnsafe.user) || null;
-      if(!u) return;
-      var nm = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username || "Telegram user";
-      state.auth = {
-        mode: "user",
-        name: nm,
-        email: u.username ? ("@" + u.username) : "",
-        picture: u.photo_url || "",
-        uid: "tg:" + u.id,
-        tg: true
-      };
-      save();
-      paintProfile();
-    }catch(e){}
+    try{ if(window.Telegram && window.Telegram.WebApp){ window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); } }catch(e){}
+    cb(true);
   };
+  sc.onerror = function(){ cb(false); };
   document.head.appendChild(sc);
+}
+function applyTelegramGate(){
+  if(!IN_TELEGRAM) return;
+  var g = $("gateGoogle"), e = $("gateEmail"), o = $("gateOr"), t = $("tgBtn");
+  if(g) g.hidden = true;
+  if(e) e.hidden = true;
+  if(o) o.hidden = true;
+  if(t) t.hidden = false;
+}
+function signInTelegram(){
+  var msg = $("gateMsg");
+  if(msg) msg.hidden = true;
+  var btn = $("tgBtn");
+  if(btn){ btn.disabled = true; btn.textContent = "Connecting to Telegram…"; }
+  loadTelegramSdk(function(){
+    var u = telegramUser();
+    if(btn){ btn.disabled = false; btn.innerHTML = '<span class="gicon">✈</span> Continue with Telegram'; }
+    if(!u){
+      if(msg){ msg.hidden = false; msg.textContent = "Could not read your Telegram account. Please open Tech Drishti from inside the bot."; }
+      return;
+    }
+    var nm = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username || "Telegram user";
+    state.auth = {
+      mode: "user",
+      name: nm,
+      email: u.username ? ("@" + u.username) : "",
+      picture: u.photo_url || "",
+      uid: "tg:" + u.id,
+      tg: true
+    };
+    save();
+    closeGate();
+    paintProfile();
+    loadAnnouncements();
+    toast("Signed in as " + nm);
+  });
 }
 
 /* True while the page is reloading back from a full-page Google sign-in. */
@@ -1706,10 +1736,6 @@ function paintProfile(){
     else g.textContent = part;
   }
   renderAuthBox();
-  if(IN_TELEGRAM){
-    var ab = $("authBox");
-    if(ab){ ab.innerHTML = ""; ab.hidden = true; }
-  }
 }
 
 /* ============================================================ authentication */
@@ -2791,19 +2817,17 @@ swPaint(); tmPaint();
 adminLoad();
 loadAnnouncements();
 setTimeout(function(){ loadStore(); setTimeout(primeNotifVideos, 1500); }, 1200);
-if(IN_TELEGRAM && !(state.auth && state.auth.mode)){
-  state.auth = { mode:"guest" };
-  save();
-}
-if(FIREBASE_CONFIG){
-  if(IN_TELEGRAM && state.auth && state.auth.mode){
-    closeGate(); paintProfile(); loadAnnouncements(); startTelegramAuth();
-  } else if(RETURNING_FROM_REDIRECT){
+if(IN_TELEGRAM){
+  applyTelegramGate();
+  if(state.auth && state.auth.mode === "user"){ closeGate(); paintProfile(); loadAnnouncements(); }
+  else { openGate(); }
+} else if(FIREBASE_CONFIG){
+  if(RETURNING_FROM_REDIRECT){
     openGate();
     var _gn = $("gateNote"); if(_gn){ _gn.hidden=false; _gn.textContent="Signing you in, please wait…"; }
   } else if(state.auth && state.auth.mode){ closeGate(); }
   else { openGate(); }
-  if(!IN_TELEGRAM) startAuth();
+  startAuth();
 } else {
   closeGate();
 }
