@@ -842,9 +842,6 @@
         </div>
       </div>
       <div id="authBox" style="margin-top:14px"></div>
-      <div class="small mut" style="margin-top:12px">
-        Sign-in is handled securely by Firebase Authentication. Tech Drishti never sees or stores your password.
-      </div>
     </div>
 
     <div class="card">
@@ -1082,6 +1079,36 @@ var LOC = "en-IN";
 /* Opened inside a Telegram Mini App? Google sign-in cannot work in Telegram's
    built-in browser, so there we go straight in as a guest. */
 var IN_TELEGRAM = /Telegram/i.test(navigator.userAgent);
+
+/* Inside a Telegram Mini App we sign the visitor in with their Telegram account.
+   There is no server here, so this is not cryptographically verified — but the
+   site holds no server-side data, so it is enough to personalise the experience. */
+function startTelegramAuth(){
+  if(!IN_TELEGRAM) return;
+  var sc = document.createElement("script");
+  sc.src = "https://telegram.org/js/telegram-web-app.js";
+  sc.onload = function(){
+    try{
+      var wa = window.Telegram && window.Telegram.WebApp;
+      if(!wa) return;
+      try{ wa.ready(); wa.expand(); }catch(e){}
+      var u = (wa.initDataUnsafe && wa.initDataUnsafe.user) || null;
+      if(!u) return;
+      var nm = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username || "Telegram user";
+      state.auth = {
+        mode: "user",
+        name: nm,
+        email: u.username ? ("@" + u.username) : "",
+        picture: u.photo_url || "",
+        uid: "tg:" + u.id,
+        tg: true
+      };
+      save();
+      paintProfile();
+    }catch(e){}
+  };
+  document.head.appendChild(sc);
+}
 
 /* True while the page is reloading back from a full-page Google sign-in. */
 var RETURNING_FROM_REDIRECT = /[?&](apiKey|oobCode)=/.test(location.search);
@@ -1679,6 +1706,10 @@ function paintProfile(){
     else g.textContent = part;
   }
   renderAuthBox();
+  if(IN_TELEGRAM){
+    var ab = $("authBox");
+    if(ab){ ab.innerHTML = ""; ab.hidden = true; }
+  }
 }
 
 /* ============================================================ authentication */
@@ -2766,7 +2797,7 @@ if(IN_TELEGRAM && !(state.auth && state.auth.mode)){
 }
 if(FIREBASE_CONFIG){
   if(IN_TELEGRAM && state.auth && state.auth.mode){
-    closeGate(); paintProfile(); loadAnnouncements();
+    closeGate(); paintProfile(); loadAnnouncements(); startTelegramAuth();
   } else if(RETURNING_FROM_REDIRECT){
     openGate();
     var _gn = $("gateNote"); if(_gn){ _gn.hidden=false; _gn.textContent="Signing you in, please wait…"; }
