@@ -1753,11 +1753,12 @@ function renderAuthBox(){
   var box = $("authBox"); if(!box) return;
   var a = state.auth || {};
   if(a.mode === "user"){
-    var img = a.picture ? '<img src="'+esc(a.picture)+'" alt="" style="width:40px;height:40px;border-radius:50%;flex-shrink:0">' : '';
+    var img = a.picture ? '<img src="'+esc(a.picture)+'" alt="" referrerpolicy="no-referrer" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;object-fit:cover">' : '';
+    var sub = a.tg ? "Signed in with Telegram" : (a.email || "Signed in");
     box.innerHTML = '<div class="row" style="gap:12px; flex-wrap:nowrap">'+img+
-      '<div style="flex:1; min-width:0"><b>'+esc(a.name || "Signed in")+'</b><div class="small mut">'+esc(a.email||"")+'</div></div>'+
+      '<div style="flex:1; min-width:0"><b>'+esc(a.name || "Signed in")+'</b><div class="small mut">'+esc(sub)+'</div></div>'+
       '<button class="btn ghost sm" onclick="signOut()">Sign out</button></div>'+
-      '<div style="margin-top:12px"><button class="btn ghost sm" style="color:var(--danger); border-color:var(--danger)" onclick="deleteAccount()">Delete my account</button></div>';
+      (a.tg ? '' : '<div style="margin-top:12px"><button class="btn ghost sm" style="color:var(--danger); border-color:var(--danger)" onclick="deleteAccount()">Delete my account</button></div>');
   } else {
     box.innerHTML = '<div class="small mut" style="margin-bottom:10px">You are browsing as a guest. Sign in with Google or email to keep your profile with you.</div>'+
       '<button class="btn sm" onclick="openGate()">Sign in</button>';
@@ -1796,6 +1797,7 @@ function trapFocus(container, e){
 }
 function setGateNote(){
   var n = $("gateNote"); if(!n) return;
+  if(IN_TELEGRAM){ n.hidden = true; n.textContent = ""; return; }
   if(AUTH.ready){ n.hidden = true; n.textContent = ""; return; }
   n.hidden = false;
   if(AUTH.failed) n.textContent = "Sign-in could not start. Please check your internet and reload the page. You can continue as a guest right now.";
