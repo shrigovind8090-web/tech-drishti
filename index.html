@@ -521,7 +521,8 @@
   <section class="screen" id="s-ai" aria-label="AI assistant">
     <div class="card" id="aiLock" hidden>
       <div class="h2">AI Assistant</div>
-      <div class="small mut">Sign in to use the assistant. It is free — no card, no API key, and your conversation stays on your own device.</div>
+      <div class="small mut"><b>You must sign in to use this feature.</b></div>
+      <div class="small mut" style="margin-top:8px">The assistant is free — no card, no API key — and your conversation stays on your own device.</div>
       <button class="btn" style="margin-top:14px; width:100%" onclick="openGate()">Sign in to unlock</button>
     </div>
     <div class="card" id="aiTop">
@@ -796,61 +797,6 @@
     <div id="videoList"></div>
   </section>
 
-  <!-- ============ ADMIN ============ -->
-  <section class="screen" id="s-admin" aria-label="Admin panel">
-    <div class="card">
-      <div class="h2">🛠 Admin panel</div>
-      <div class="small mut">Post an announcement and it appears on the site for everyone straight away. There is nothing to update or redeploy.</div>
-    </div>
-
-    <div class="card">
-      <div class="lbl">Connection</div>
-      <div class="small mut" id="adminConnState"></div>
-      <label class="small mut" for="admApi" style="display:block;margin-top:14px">Backend URL</label>
-      <input id="admApi" class="fld" placeholder="https://your-worker.workers.dev">
-      <label class="small mut" for="admToken" style="display:block;margin-top:12px">Admin token</label>
-      <input id="admToken" class="fld" type="password" placeholder="the ADMIN_TOKEN you set">
-      <div class="row" style="margin-top:14px">
-        <button class="btn" onclick="adminSaveConn()">Save &amp; test</button>
-        <button class="btn ghost" onclick="adminForget()">Forget</button>
-      </div>
-      <div class="small mut" style="margin-top:10px">Setup takes about ten minutes and is free — Cloudflare R2 gives 10&nbsp;GB with no egress charges. The steps are in the <b>techdrishti-admin-backend</b> folder (README).</div>
-    </div>
-
-    <div class="card">
-      <div class="lbl">New announcement</div>
-      <label class="small mut" for="anTitle" style="display:block;margin-top:14px">Title</label>
-      <input id="anTitle" class="fld" placeholder="e.g. Our new app is out">
-      <label class="small mut" for="anBody" style="display:block;margin-top:12px">Message</label>
-      <textarea id="anBody" class="fld" rows="3" placeholder="Write the announcement…"></textarea>
-      <label class="small mut" for="anLink" style="display:block;margin-top:12px">Link (optional)</label>
-      <input id="anLink" class="fld" placeholder="https://…">
-      <label class="small mut" for="anImage" style="display:block;margin-top:12px">Image (optional, up to 5&nbsp;MB)</label>
-      <input id="anImage" class="fld" type="file" accept="image/*">
-      <div class="row" style="margin-top:12px; flex-wrap:nowrap; align-items:flex-start">
-        <div style="flex:1">
-          <label class="small mut" for="anLevel">Style</label>
-          <select id="anLevel" class="fld">
-            <option value="">Normal</option>
-            <option value="warn">Important (amber)</option>
-            <option value="ok">Good news (green)</option>
-          </select>
-        </div>
-        <div style="flex:1">
-          <label class="small mut" for="anUntil">Show until (optional)</label>
-          <input id="anUntil" class="fld" type="date">
-        </div>
-      </div>
-      <button class="btn" style="margin-top:16px; width:100%" id="anPostBtn" onclick="adminPost()">Post announcement</button>
-    </div>
-
-    <div class="card">
-      <div class="lbl">Posted announcements</div>
-      <div id="adminList" style="margin-top:12px"></div>
-      <button class="btn ghost sm" style="margin-top:12px" onclick="loadAnnouncements()">↻ Refresh</button>
-    </div>
-  </section>
-
   <section class="screen" id="s-profile" aria-label="Profile, about and support">
     <div class="card">
       <div class="row" style="gap:16px; flex-wrap:nowrap">
@@ -989,7 +935,6 @@
       Videos</button>
   </nav>
   <div class="drawerFoot small mut">
-  <button class="btn ghost sm" id="adminLink" hidden onclick="drawerGo('admin')" style="margin-bottom:10px">Admin panel</button>
 Tech Drishti — news, weather, AI, tools and our apps in one place.</div>
 </aside>
 
@@ -1189,8 +1134,7 @@ async function getJSON(url, opts){ var r=await fetch(url, opts||{}); if(!r.ok) t
 var TABS = {
   home:["home"], tools:["toolsmenu"], ai:["ai"], profile:["profile"],
   news:["news"], weather:["weather"], markets:["tools"], notes:["notes"], access:["access"],
-  calc:["calc"], timer:["timer"], aqi:["aqi"], lookup:["lookup"], admin:["admin"],
-  store:["store"], videos:["videos"]
+  calc:["calc"], timer:["timer"], aqi:["aqi"], lookup:["lookup"],   store:["store"], videos:["videos"]
 };
 /* which bottom-tab a view belongs to (so Tools stays highlighted inside a tool) */
 var TAB_OF = { home:"home", tools:"tools", ai:"ai", profile:"profile",
@@ -1201,7 +1145,7 @@ var _navStack = ["home"];
 var _view = "home";
 /* a tool goes back to the Tools list; the two settings screens go back to Profile */
 var TOOL_BACK = { news:"tools", weather:"tools", markets:"tools", notes:"tools",
-  calc:"tools", timer:"tools", aqi:"tools", lookup:"tools", access:"profile", admin:"profile" };
+  calc:"tools", timer:"tools", aqi:"tools", lookup:"tools", access:"profile" };
 function toolBack(){ go(TOOL_BACK[_view] || "tools"); }
 
 function go(name, el, noPush){
@@ -1732,7 +1676,6 @@ function applyGuestLocks(){
   if(lock) lock.hidden = !guest;
   if(top) top.hidden = guest;
   if(chat) chat.hidden = guest;
-  var al = $("adminLink"); if(al) al.hidden = !adminVisible();
 }
 function paintProfile(){
   var a = state.auth || {};
@@ -1747,7 +1690,6 @@ function paintProfile(){
   $("pSub").textContent = isUser ? (a.email || "Signed in")
     : (IN_TELEGRAM ? "Browsing as a guest inside Telegram"
       : (a.mode === "guest" ? "Browsing as a guest — you can sign in any time" : "Not signed in"));
-  var ac = $("adminCard"); if(ac) ac.hidden = !adminVisible();
   var dw = $("drawerWho"); if(dw) dw.textContent = n;
   var g = $("greeting");
   if(g){
@@ -2314,7 +2256,8 @@ function renderStore(){
       (notes?'<div class="small" style="margin-top:10px; white-space:pre-wrap">'+esc(notes)+'</div>':'')+
       (a.url
         ? (isGuest()
-            ? '<button class="btn" style="margin-top:14px; width:100%" onclick="openGate()">Sign in to download</button>'
+            ? '<div class="small mut" style="margin-top:14px"><b>You must sign in to download apps.</b></div>' +
+            '<button class="btn" style="margin-top:8px; width:100%" onclick="openGate()">Sign in to download</button>'
             : '<a class="btn" style="margin-top:14px; width:100%; display:block; text-align:center; text-decoration:none" href="'+escAttr(a.url)+'" rel="noopener">⬇ Download APK</a>')
         : '<div class="err" style="margin-top:12px">No APK is attached to this release yet.</div>')+
       '</div>';
@@ -2671,42 +2614,29 @@ function primeNotifVideos(){
   });
 }
 
-/* =================================================================== announcements & admin */
-/* Your own backend — no Firebase. Put the Worker URL here once you have deployed it,
-   or simply paste it into the Admin panel on the device you use. */
-var ADMIN_API_DEFAULT = "";
-var ADMIN_EMAIL = "shrigovind8090@gmail.com";
+/* =================================================================== announcements */
+/* Announcements are just a JSON file in the repository:
+   https://github.com/shrigovind8090-web/tech-drishti/blob/main/announcements.json
+   Edit that file from anywhere — GitHub on a phone, or any tool that can write it —
+   and the site shows it straight away. Nothing on the website has to be touched. */
+var ANNOUNCEMENTS_URL = "https://raw.githubusercontent.com/shrigovind8090-web/tech-drishti/main/announcements.json";
 var ANNOUNCEMENTS = [];
-var ADM = { api:"", token:"" };
 
-function adminLoad(){ try{ var r=localStorage.getItem("td_admin"); if(r) ADM=Object.assign(ADM, JSON.parse(r)); }catch(e){} }
-function adminStore(){ try{ localStorage.setItem("td_admin", JSON.stringify(ADM)); }catch(e){} }
-function adminApi(){ return String(ADM.api || ADMIN_API_DEFAULT || "").replace(/\/+$/,""); }
-function adminConnected(){ return !!adminApi() && !!ADM.token; }
-function isAdmin(){ return adminConnected(); }
-function adminVisible(){
-  var u = AUTH.user;
-  var byEmail = !!(u && String(u.email||"").toLowerCase() === ADMIN_EMAIL);
-  return byEmail || adminConnected();
-}
-function adminConn(msg){
-  var e = $("adminConnState"); if(!e) return;
-  e.textContent = msg || (adminConnected() ? "Connected." : "Not connected yet — paste the backend URL and the admin token below.");
-}
 function liveAnnouncements(){
   var now = Date.now();
-  return (ANNOUNCEMENTS||[]).filter(function(a){
+  return (ANNOUNCEMENTS || []).filter(function(a){
     if(!a.until) return true;
     var t = new Date(a.until + "T23:59:59").getTime();
     return isNaN(t) ? true : (t > now);
   });
 }
 function loadAnnouncements(){
-  var api = adminApi();
-  if(!api){ renderAnnouncements(); renderAdminList(); return; }
-  getJSON(api + "/announcements")
-    .then(function(list){ ANNOUNCEMENTS = Array.isArray(list) ? list : []; renderAnnouncements(); renderAdminList(); })
-    .catch(function(){ renderAnnouncements(); renderAdminList(); });
+  getJSON(ANNOUNCEMENTS_URL + "?t=" + Date.now())
+    .then(function(list){
+      ANNOUNCEMENTS = Array.isArray(list) ? list : [];
+      renderAnnouncements();
+    })
+    .catch(function(){ renderAnnouncements(); });
 }
 function renderAnnouncements(){
   var bar = $("annBar"); if(!bar) return;
@@ -2717,95 +2647,7 @@ function renderAnnouncements(){
   bar.className = "annbar" + (a.level ? (" " + a.level) : "");
   bar.innerHTML = '<b>' + esc(a.title || "Announcement") + '</b> — ' + esc(a.body || "") +
     (a.link ? ' <a href="' + escAttr(a.link) + '" target="_blank" rel="noopener">Open link</a>' : "") +
-    (a.image ? '<div style="margin-top:10px"><img src="' + escAttr(a.image) + '" alt="" style="max-width:100%;border-radius:12px"></div>' : "") +
     (act.length > 1 ? ' <span class="mut small">(+' + (act.length - 1) + ' more)</span>' : "");
-}
-function renderAdminList(){
-  var box = $("adminList"); if(!box) return;
-  adminConn();
-  if(!isAdmin()){ box.innerHTML = '<div class="small mut">Connect the backend above to see and manage your announcements.</div>'; return; }
-  var n = ANNOUNCEMENTS || [];
-  if(!n.length){ box.innerHTML = '<div class="small mut">No announcements yet. Post one above.</div>'; return; }
-  var live = liveAnnouncements();
-  box.innerHTML = n.map(function(a){
-    var isLive = live.some(function(x){ return x.id === a.id; });
-    return '<div style="border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px">' +
-      '<b>' + esc(a.title || "") + '</b> <span class="tag">' + (isLive ? "live" : "expired") + '</span>' +
-      '<div class="small mut" style="margin-top:4px">' + esc(a.body || "") + '</div>' +
-      (a.image ? '<div style="margin-top:8px"><img src="' + escAttr(a.image) + '" alt="" style="max-width:100%;border-radius:10px"></div>' : "") +
-      (a.until ? '<div class="small mut">Shown until ' + esc(a.until) + '</div>' : "") +
-      '<div class="row" style="margin-top:10px">' +
-        (a.link ? '<a class="btn ghost sm" href="' + escAttr(a.link) + '" target="_blank" rel="noopener">Open</a>' : "") +
-        '<button class="btn ghost sm" onclick="adminDelete(\'' + escAttr(a.id) + '\')">Delete</button>' +
-      '</div></div>';
-  }).join("");
-}
-function adminSaveConn(){
-  ADM.api = ($("admApi").value || "").trim();
-  ADM.token = ($("admToken").value || "").trim();
-  adminStore();
-  adminConn("Testing…");
-  getJSON(adminApi() + "/announcements").then(function(list){
-    ANNOUNCEMENTS = Array.isArray(list) ? list : [];
-    adminConn("Connected — you can post now.");
-    toast("Connected");
-    renderAnnouncements(); renderAdminList(); paintProfile();
-  }).catch(function(){
-    adminConn("Could not reach the backend. Check the URL and the token.");
-    toast("Could not connect");
-  });
-}
-function adminForget(){
-  ADM = { api:"", token:"" }; adminStore();
-  adminConn("Not connected yet."); renderAdminList(); paintProfile();
-  toast("Connection forgotten");
-}
-function uploadImage(file){
-  return fetch(adminApi() + "/upload", {
-    method:"POST",
-    headers:{ "Content-Type": file.type || "image/jpeg", "Authorization":"Bearer " + ADM.token },
-    body: file
-  }).then(function(r){ if(!r.ok) throw new Error("upload " + r.status); return r.json(); })
-    .then(function(j){ return j.url || ""; });
-}
-function adminPost(){
-  if(!isAdmin()){ toast("Set the backend URL and the admin token first"); return; }
-  var t = ($("anTitle").value || "").trim(), b = ($("anBody").value || "").trim();
-  if(!t || !b){ toast("Please fill in the title and the message"); return; }
-  var btn = $("anPostBtn"); if(btn){ btn.disabled = true; btn.textContent = "Posting…"; }
-  var fi = $("anImage");
-  var file = (fi && fi.files && fi.files[0]) ? fi.files[0] : null;
-  var prep = file ? uploadImage(file) : Promise.resolve("");
-  prep.then(function(imgUrl){
-    return fetch(adminApi() + "/announcements", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + ADM.token },
-      body: JSON.stringify({ title:t, body:b, link:($("anLink").value||"").trim(),
-        level:$("anLevel").value, until:$("anUntil").value||"", image:imgUrl })
-    });
-  }).then(function(r){
-    if(r.status === 401) throw new Error("401");
-    if(!r.ok) throw new Error("HTTP " + r.status);
-    return r.json();
-  }).then(function(){
-    $("anTitle").value=""; $("anBody").value=""; $("anLink").value=""; $("anUntil").value=""; $("anLevel").value="";
-    if(fi) fi.value="";
-    toast("Posted — it is live on the site now");
-    loadAnnouncements();
-  }).catch(function(e){
-    var m = String((e && e.message) || e);
-    toast(m === "401" ? "The admin token is wrong — check it in the Connection box" : "Could not post. Check the connection.");
-  }).then(function(){
-    if(btn){ btn.disabled = false; btn.textContent = "Post announcement"; }
-  });
-}
-function adminDelete(id){
-  if(!isAdmin()) return;
-  if(!confirm("Delete this announcement for everyone?")) return;
-  fetch(adminApi() + "/announcements/" + encodeURIComponent(id), {
-    method:"DELETE", headers:{ "Authorization":"Bearer " + ADM.token }
-  }).then(function(){ toast("Deleted"); loadAnnouncements(); })
-    .catch(function(){ toast("Could not delete"); });
 }
 
 /* =================================================================== refresh */
@@ -2841,7 +2683,6 @@ renderChat();
 renderNotes();
 calcRender();
 swPaint(); tmPaint();
-adminLoad();
 loadAnnouncements();
 setTimeout(function(){ loadStore(); setTimeout(primeNotifVideos, 1500); }, 1200);
 /* The site is open to everyone. Guests see it straight away; the sign-in screen
