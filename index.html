@@ -2615,25 +2615,26 @@ function primeNotifVideos(){
 }
 
 /* =================================================================== announcements */
-/* Announcements are just a JSON file in the repository:
-   https://github.com/shrigovind8090-web/tech-drishti/blob/main/announcements.json
-   Edit that file from anywhere — GitHub on a phone, or any tool that can write it —
-   and the site shows it straight away. Nothing on the website has to be touched. */
-var ANNOUNCEMENTS_URL = "https://raw.githubusercontent.com/shrigovind8090-web/tech-drishti/main/announcements.json";
+/* Just write plain text in announcements.txt in the repository — no JSON, no fields.
+   One announcement per paragraph: the first line is the headline, the rest is the message.
+   Leave a blank line between announcements. The site reads it live; nothing to rebuild. */
+var ANNOUNCEMENTS_URL = "https://raw.githubusercontent.com/shrigovind8090-web/tech-drishti/main/announcements.txt";
 var ANNOUNCEMENTS = [];
 
-function liveAnnouncements(){
-  var now = Date.now();
-  return (ANNOUNCEMENTS || []).filter(function(a){
-    if(!a.until) return true;
-    var t = new Date(a.until + "T23:59:59").getTime();
-    return isNaN(t) ? true : (t > now);
+function parseAnnouncements(txt){
+  var out = [];
+  String(txt || "").split(/\n\s*\n/).forEach(function(block){
+    var lines = block.split("\n").map(function(l){ return l.trim(); }).filter(function(l){ return l.length; });
+    if(!lines.length) return;
+    out.push({ title: lines[0], body: lines.slice(1).join(" ") });
   });
+  return out;
 }
+function liveAnnouncements(){ return ANNOUNCEMENTS || []; }
 function loadAnnouncements(){
-  getJSON(ANNOUNCEMENTS_URL + "?t=" + Date.now())
-    .then(function(list){
-      ANNOUNCEMENTS = Array.isArray(list) ? list : [];
+  getText(ANNOUNCEMENTS_URL + "?t=" + Date.now())
+    .then(function(txt){
+      ANNOUNCEMENTS = parseAnnouncements(txt);
       renderAnnouncements();
     })
     .catch(function(){ renderAnnouncements(); });
@@ -2644,9 +2645,8 @@ function renderAnnouncements(){
   if(!act.length){ bar.hidden = true; bar.innerHTML = ""; return; }
   var a = act[0];
   bar.hidden = false;
-  bar.className = "annbar" + (a.level ? (" " + a.level) : "");
-  bar.innerHTML = '<b>' + esc(a.title || "Announcement") + '</b> — ' + esc(a.body || "") +
-    (a.link ? ' <a href="' + escAttr(a.link) + '" target="_blank" rel="noopener">Open link</a>' : "") +
+  bar.className = "annbar";
+  bar.innerHTML = '<b>' + esc(a.title || "") + '</b>' + (a.body ? (' — ' + esc(a.body)) : "") +
     (act.length > 1 ? ' <span class="mut small">(+' + (act.length - 1) + ' more)</span>' : "");
 }
 
