@@ -169,6 +169,13 @@
     font-size:10.5px; font-weight:900; padding:3px 9px; border-radius:20px; margin-left:8px;
     vertical-align:middle; letter-spacing:.3px;}
   .descbox{white-space:pre-wrap; line-height:1.7; margin-top:10px;}
+  .micfab{position:fixed; right:16px; bottom:20px; z-index:80; width:58px; height:58px; border-radius:50%;
+    border:none; background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff; cursor:pointer;
+    box-shadow:0 12px 30px rgba(79,70,229,.45); display:flex; align-items:center; justify-content:center;}
+  .micfab[hidden]{display:none;}
+  .micfab.listening{animation:micpulse 1s infinite;}
+  @keyframes micpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+  body.voiceon .wrap{padding-bottom:104px;}
 
   /* ---- back bar at the top of every inner screen ---- */
   .topbar{position:sticky; top:0; z-index:55; display:flex; align-items:center; gap:10px;
@@ -485,6 +492,16 @@
         <div class="lbl">Ask the assistant</div>
         <div class="mut small">A free AI assistant that needs no API key. Ask anything — in English or Hindi.</div>
         <button class="btn" style="margin-top:12px; width:100%" onclick="go('ai')">Open AI Assistant</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Listen to today</div>
+      <div class="small mut" style="margin-top:8px">Your weather, the top headlines and the dollar rate — read out in one go.</div>
+      <button class="btn" style="margin-top:12px; width:100%" onclick="tellMeToday()">🔊 Tell me today</button>
+      <div class="switch" style="margin-top:14px">
+        <div><b>Voice commands</b><div class="small mut">Say a word to move around the site</div></div>
+        <button class="btn ghost sm" id="voiceToggleBtn" onclick="voiceToggle()"><span id="voiceState">Off</span></button>
       </div>
     </div>
 
@@ -998,6 +1015,9 @@ Tech Drishti — news, weather, AI, tools and our apps in one place.</div>
   <div class="videoWrap" id="videoWrap"></div>
 </div>
 
+<button class="micfab" id="voiceBtn" hidden onclick="voiceListen()" aria-label="Speak a command">
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+</button>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- ============ SIGN-IN GATE ============ -->
@@ -1145,7 +1165,7 @@ var state = {
   theme:"dark", lang:"en", cat:"TOP", city:{name:"", lat:null, lon:null},
   auth:{ mode:"" },
   a11y:{ hc:false, dys:false, nomotion:false, fs:15, rate:1, voice:true },
-  chat:[], notes:[], notif:null, ytKey:""
+  chat:[], notes:[], notif:null, ytKey:"", voiceCmd:false
 };
 function load(){
   try{ var r=localStorage.getItem(KEY); if(r) state=Object.assign(state, JSON.parse(r)); }catch(e){}
@@ -1486,6 +1506,7 @@ function newsCard(n){
   if(n.src) meta.push('<span class="tag">'+esc(n.src)+'</span>');
   if(n.date){ var d=new Date(n.date); if(!isNaN(d)) meta.push('<span>'+d.toLocaleString(LOC,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+'</span>'); }
   if(n.link) meta.push('<button class="sharebtn" data-t="'+escAttr(n.title)+'" data-l="'+escAttr(n.link)+'" onclick="shareFrom(this)" aria-label="Share this headline">↗ Share</button>');
+  if(n.title) meta.push('<button class="sharebtn" data-t="'+escAttr(n.title)+'" onclick="explainNews(this)" aria-label="Explain this headline">Explain</button>');
   return '<article class="nitem">'+(n.img?'<img src="'+esc(n.img)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'')+
     '<div class="nb"><div class="nt"><a href="'+esc(n.link)+'" target="_blank" rel="noopener">'+esc(n.title)+'</a></div>'+
     '<div class="nm">'+meta.join("")+'</div></div></article>';
@@ -1751,6 +1772,7 @@ function paintProfile(){
   }
   renderAuthBox();
   applyGuestLocks();
+  paintVoice();
 }
 
 /* ============================================================ authentication */
@@ -2175,6 +2197,104 @@ function speakEl(id){ var e=$(id); if(e) speak(e.textContent); }
 
 /* =================================================================== share */
 function escAttr(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+/* ---- explain one headline with the assistant ---- */
+function explainNews(el){
+  if(isGuest()){ toast("You must sign in to use the AI Assistant"); openGate(); return; }
+  var t = el.getAttribute("data-t") || "";
+  if(!t) return;
+  go("ai");
+  setTimeout(function(){
+    ask("Explain this news headline in simple, everyday words, in the same language as my question: " + t);
+  }, 260);
+}
+
+/* ---- one spoken briefing for the whole day ---- */
+function tellMeToday(){
+  if(state.a11y && state.a11y.voice === false){
+    toast("Voice feedback is off — turn it on in Settings"); return;
+  }
+  var parts = [];
+  var h = new Date().getHours();
+  parts.push(h < 12 ? "Good morning." : (h < 17 ? "Good afternoon." : "Good evening."));
+  var w = LIVE.weather;
+  if(w){
+    parts.push("In " + w.place + " it is " + w.temp + " degrees with " + w.desc.toLowerCase() +
+      ", feels like " + w.feels + " degrees. Today's high " + w.hi + ", low " + w.lo +
+      (w.rain != null ? ", with a " + w.rain + " percent chance of rain" : "") + ".");
+  }
+  if(LIVE.news && LIVE.news.length){
+    parts.push("Your top headlines. " + LIVE.news.slice(0,3).map(function(t,i){ return (i+1) + ". " + t; }).join(" "));
+  }
+  if(LIVE.rates && LIVE.rates.USD_INR){
+    parts.push("One US dollar is " + Number(LIVE.rates.USD_INR).toFixed(2) + " Indian rupees.");
+  }
+  if(parts.length <= 1){ toast("Still gathering today's data — try again in a moment"); return; }
+  parts.push("That is your briefing from Tech Drishti.");
+  speak(parts.join(" "));
+  toast("Reading your briefing…");
+}
+
+/* ---- voice commands, off until you switch them on ---- */
+var VOICE_REC = null;
+var VOICE_MAP = [
+  [/(^|\s)(home|dashboard)(\s|$)/, "home"],
+  [/(^|\s)(tools)(\s|$)/, "tools"],
+  [/(^|\s)(assistant|a i|ai|chat)(\s|$)/, "ai"],
+  [/(^|\s)(store|app store|td store)(\s|$)/, "store"],
+  [/(^|\s)(videos|video|youtube)(\s|$)/, "videos"],
+  [/(^|\s)(news|headlines)(\s|$)/, "news"],
+  [/(^|\s)(weather|temperature)(\s|$)/, "weather"],
+  [/(^|\s)(calculator|calc)(\s|$)/, "calc"],
+  [/(^|\s)(timer|stopwatch)(\s|$)/, "timer"],
+  [/(^|\s)(notes|note)(\s|$)/, "notes"],
+  [/(air quality|a q i|pollution)/, "aqi"],
+  [/(^|\s)(lookup|pin code|ifsc)(\s|$)/, "lookup"],
+  [/(^|\s)(profile|account|settings)(\s|$)/, "profile"]
+];
+function paintVoice(){
+  var on = !!state.voiceCmd;
+  var b = $("voiceBtn"); if(b) b.hidden = !on;
+  var t = $("voiceState"); if(t) t.textContent = on ? "On" : "Off";
+  document.body.classList.toggle("voiceon", on);
+}
+function voiceToggle(){
+  state.voiceCmd = !state.voiceCmd; save(); paintVoice();
+  toast(state.voiceCmd ? "Voice commands are on — tap the microphone and speak" : "Voice commands are off");
+}
+function voiceListen(){
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ toast("Voice commands are not supported in this browser"); return; }
+  if(VOICE_REC){ try{ VOICE_REC.stop(); }catch(e){} VOICE_REC = null; }
+  var r = new SR();
+  r.lang = "en-IN"; r.interimResults = false; r.maxAlternatives = 1;
+  r.onresult = function(e){
+    var said = (e.results[0][0].transcript || "").toLowerCase().trim();
+    runVoiceCommand(said);
+  };
+  r.onerror = function(){ toast("Did not catch that — tap the microphone and try again"); };
+  r.onend = function(){
+    VOICE_REC = null;
+    var b = $("voiceBtn"); if(b) b.classList.remove("listening");
+  };
+  VOICE_REC = r;
+  var b = $("voiceBtn"); if(b) b.classList.add("listening");
+  try{ r.start(); toast("Listening…"); }catch(e){ toast("Could not start listening"); }
+}
+function runVoiceCommand(said){
+  if(!said){ toast("Nothing heard"); return; }
+  if(/\b(stop|quiet|silence)\b/.test(said)){ stopSpeak(); return; }
+  if(/\b(read|read the page|read page)\b/.test(said)){ readPage(); return; }
+  if(/(tell me today|briefing|my day)/.test(said)){ tellMeToday(); return; }
+  for(var i=0;i<VOICE_MAP.length;i++){
+    if(VOICE_MAP[i][0].test(said)){
+      var dest = VOICE_MAP[i][1];
+      go(dest);
+      toast("Opening " + (VIEW_LABEL[dest] || dest));
+      return;
+    }
+  }
+  toast("I did not understand: " + said);
+}
 function shareSite(){
   var url = "https://tech-drishti.vercel.app";
   var text = "Tech Drishti — live news, weather, a free AI assistant and useful tools, built to work with screen readers.";
