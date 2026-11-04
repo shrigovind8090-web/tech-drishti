@@ -519,7 +519,12 @@
 
   <!-- ============ AI ============ -->
   <section class="screen" id="s-ai" aria-label="AI assistant">
-    <div class="card">
+    <div class="card" id="aiLock" hidden>
+      <div class="h2">AI Assistant</div>
+      <div class="small mut">Sign in to use the assistant. It is free — no card, no API key, and your conversation stays on your own device.</div>
+      <button class="btn" style="margin-top:14px; width:100%" onclick="openGate()">Sign in to unlock</button>
+    </div>
+    <div class="card" id="aiTop">
       <div class="row" style="justify-content:space-between">
         <div>
           <div class="h2">AI Assistant</div>
@@ -538,7 +543,7 @@
         <div class="chip" onclick="ask('Explain photosynthesis to a 10 year old')">Explain to a child</div>
       </div>
     </div>
-    <div class="card">
+    <div class="card" id="aiChat">
       <div class="chat" id="chat" role="log" aria-live="polite" aria-label="Conversation">
         <div class="msg bot">Namaste! I'm the Tech Drishti assistant. Ask me anything — I can answer in English, Hindi or any Indian language. No API key needed.</div>
       </div>
@@ -875,14 +880,7 @@
       </div>
     </div>
 
-    <div class="card" id="adminCard" hidden>
-      <div class="lbl">Admin</div>
-      <button class="toolcard" style="margin-top:14px" onclick="go('admin')">
-        <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20V9l6-5 6 5v11"/><path d="M10 20v-5h4v5"/></svg></span>
-        <span class="tmain"><b>Admin panel</b><span class="small mut">Post announcements and manage the site</span></span>
-        <span class="tarrow" aria-hidden="true">›</span>
-      </button>
-    </div>
+    
 
     <div class="card">
       <div class="lbl">About Tech Drishti</div>
@@ -990,7 +988,9 @@
       <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10.5 9.5l5 2.5-5 2.5z"/></svg></span>
       Videos</button>
   </nav>
-  <div class="drawerFoot small mut">Tech Drishti — news, weather, AI, tools and our apps in one place.</div>
+  <div class="drawerFoot small mut">
+  <button class="btn ghost sm" id="adminLink" hidden onclick="drawerGo('admin')" style="margin-bottom:10px">Admin panel</button>
+Tech Drishti — news, weather, AI, tools and our apps in one place.</div>
 </aside>
 
 <div class="drawerScrim" id="notifScrim" hidden onclick="closeNotif()"></div>
@@ -1677,6 +1677,7 @@ function liveBrief(){
   return "\n\nLIVE DATA from this website, fetched moments ago. Use it whenever the user asks about the weather, today's news, or exchange rates, and answer in the user's own language. Never say you do not have this information. Do not repeat all of it unless it is relevant:\n"+out.join("\n");
 }
 async function ask(preset){
+  if(isGuest()){ toast("Sign in to use the AI Assistant"); openGate(); return; }
   var inp=$("aiInput");
   var q = typeof preset==="string" ? preset : inp.value.trim();
   if(!q) return;
@@ -1724,6 +1725,15 @@ function setAvatar(el, initials, pic){
     el.textContent = initials;
   }
 }
+function isGuest(){ return !(state.auth && state.auth.mode === "user"); }
+function applyGuestLocks(){
+  var guest = isGuest();
+  var lock = $("aiLock"), top = $("aiTop"), chat = $("aiChat");
+  if(lock) lock.hidden = !guest;
+  if(top) top.hidden = guest;
+  if(chat) chat.hidden = guest;
+  var al = $("adminLink"); if(al) al.hidden = !adminVisible();
+}
 function paintProfile(){
   var a = state.auth || {};
   var isUser = a.mode === "user";
@@ -1748,6 +1758,7 @@ function paintProfile(){
     else g.textContent = part;
   }
   renderAuthBox();
+  applyGuestLocks();
 }
 
 /* ============================================================ authentication */
@@ -2302,7 +2313,9 @@ function renderStore(){
       '</div>'+
       (notes?'<div class="small" style="margin-top:10px; white-space:pre-wrap">'+esc(notes)+'</div>':'')+
       (a.url
-        ? '<a class="btn" style="margin-top:14px; width:100%; display:block; text-align:center; text-decoration:none" href="'+escAttr(a.url)+'" rel="noopener">⬇ Download APK</a>'
+        ? (isGuest()
+            ? '<button class="btn" style="margin-top:14px; width:100%" onclick="openGate()">Sign in to download</button>'
+            : '<a class="btn" style="margin-top:14px; width:100%; display:block; text-align:center; text-decoration:none" href="'+escAttr(a.url)+'" rel="noopener">⬇ Download APK</a>')
         : '<div class="err" style="margin-top:12px">No APK is attached to this release yet.</div>')+
       '</div>';
   }).join("");
@@ -2831,20 +2844,13 @@ swPaint(); tmPaint();
 adminLoad();
 loadAnnouncements();
 setTimeout(function(){ loadStore(); setTimeout(primeNotifVideos, 1500); }, 1200);
-if(IN_TELEGRAM){
-  applyTelegramGate();
-  if(state.auth && state.auth.mode === "user"){ closeGate(); paintProfile(); loadAnnouncements(); }
-  else { openGate(); }
-} else if(FIREBASE_CONFIG){
-  if(RETURNING_FROM_REDIRECT){
-    openGate();
-    var _gn = $("gateNote"); if(_gn){ _gn.hidden=false; _gn.textContent="Signing you in, please wait…"; }
-  } else if(state.auth && state.auth.mode){ closeGate(); }
-  else { openGate(); }
-  startAuth();
-} else {
-  closeGate();
-}
+/* The site is open to everyone. Guests see it straight away; the sign-in screen
+   only appears when someone asks for it, or reaches a locked feature. */
+if(!(state.auth && state.auth.mode)){ state.auth = { mode:"guest" }; save(); }
+closeGate();
+if(IN_TELEGRAM){ applyTelegramGate(); }
+else if(FIREBASE_CONFIG){ startAuth(); }
+applyGuestLocks();
 paintProfile();
 (function tickClock(){
   var d=new Date();
