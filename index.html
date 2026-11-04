@@ -1402,6 +1402,10 @@ function buildNewsChips(){
   $("langChips").innerHTML=LANGS.map(function(l){ return '<button class="chip '+(state.lang===l[0]?"on":"")+'" onclick="setLang(\''+l[0]+'\')">'+l[1]+'</button>'; }).join("");
   $("catChips").innerHTML=CATS.map(function(c){ return '<button class="chip '+(state.cat===c[0]?"on":"")+'" onclick="setCat(\''+c[0]+'\')">'+c[1]+'</button>'; }).join("");
 }
+function newsGoogleLink(){
+  var l = langInfo(state.lang);
+  return "https://news.google.com/?hl=" + l[0] + "&gl=IN&ceid=" + l[3];
+}
 function setLang(c){ state.lang=c; save(); buildNewsChips(); loadNews(); }
 function setCat(c){ state.cat=c; save(); buildNewsChips(); loadNews(); }
 
@@ -1427,8 +1431,8 @@ function newsUrls(city){
    Google's RSS directly. If one is down the next is used. */
 var PROXIES=[
   function(u){ return "https://api.allorigins.win/raw?url="+encodeURIComponent(u); },
+  function(u){ return "https://corsproxy.io/?url="+encodeURIComponent(u); },
   function(u){ return "https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(u); },
-  function(u){ return "https://corsproxy.io/?"+encodeURIComponent(u); },
   function(u){ return "https://api.cors.lol/?url="+encodeURIComponent(u); },
   function(u){ return u; }
 ];
@@ -1448,37 +1452,33 @@ function parseRss(xmlText){
   }
   return out;
 }
+/* BBC publishes real news in most of these languages. If Google News cannot be
+   reached we fall back to the BBC feed for the SAME language — never to English
+   when you asked for something else. */
+var BBC_FEEDS = { en:"news", hi:"hindi", ta:"tamil", te:"telugu", bn:"bengali",
+                  mr:"marathi", gu:"gujarati", pa:"punjabi", ur:"urdu" };
 async function fetchNews(urls){
   if(typeof urls === "string") urls = [urls];
   var lastErr=null;
-  for(var u=0; u<urls.length; u++){
-    for(var i=0;i<PROXIES.length;i++){
-      try{
-        var txt=await getText(PROXIES[i](urls[u]));
-        var items=parseRss(txt);
-        if(items.length) return {items:items, via:(i===PROXIES.length-1?"direct":"relay "+(i+1))};
-      }catch(e){ lastErr=e; }
-    }
-  }
-  // verified fallback: Wikipedia's curated world news (works without any relay)
-  try{
-    var out=[], seen={};
-    var itn=await getJSON("https://en.wikipedia.org/w/api.php?action=parse&page=Template:In_the_news&prop=text&format=json&origin=*");
-    var l1=new DOMParser().parseFromString(itn.parse.text["*"],"text/html").querySelectorAll("li");
-    for(var i=0;i<l1.length;i++){ var t=(l1[i].textContent||"").replace(/\s+/g," ").trim();
-      if(t.length>30 && !seen[t]){ seen[t]=1; out.push({title:t, link:"https://en.wikipedia.org/wiki/Portal:Current_events", src:"Wikipedia", date:"", img:""}); } }
-    if(out.length<8){
-      var pe=await getJSON("https://en.wikipedia.org/w/api.php?action=parse&page=Portal:Current_events&prop=text&format=json&origin=*");
-      var l2=new DOMParser().parseFromString(pe.parse.text["*"],"text/html").querySelectorAll("li");
-      for(var k=0;k<l2.length && out.length<20;k++){
-        var t2=(l2[k].textContent||"").replace(/\s+/g," ").trim();
-        var dots=(t2.match(/ · /g)||[]).length;
-        if(t2.length>70 && t2.length<300 && dots<2 && !/portal|subpage|editor|wikipedia|checked|needed|nomination|criteria|discussion|recent deaths|ongoing|error report|main page|template|wikidata|talk|history/i.test(t2) && !seen[t2]){
-          seen[t2]=1; out.push({title:t2, link:"https://en.wikipedia.org/wiki/Portal:Current_events", src:"Wikipedia", date:"", img:""}); }
+  var lists = [urls];
+  var bbc = BBC_FEEDS[state.lang];
+  if(bbc) lists.push(["https://feeds.bbci.co.uk/" + bbc + "/rss.xml"]);
+  for(var li=0; li<lists.length; li++){
+    for(var u=0; u<lists[li].length; u++){
+      for(var i=0;i<PROXIES.length;i++){
+        try{
+          var txt=await getText(PROXIES[i](lists[li][u]));
+          var items=parseRss(txt);
+          if(items.length){
+            var via = (li === 0)
+              ? (i===PROXIES.length-1 ? "direct" : "relay "+(i+1))
+              : ("BBC " + langInfo(state.lang)[1]);
+            return {items:items, via:via};
+          }
+        }catch(e){ lastErr=e; }
       }
     }
-    if(out.length) return {items:out, via:"Wikipedia world news (fallback)"};
-  }catch(e2){}
+  }
   throw lastErr||new Error("news unavailable");
 }
 function newsCard(n){
@@ -1492,12 +1492,15 @@ function newsCard(n){
 }
 function skeletonNews(n){ var h=""; for(var i=0;i<(n||5);i++) h+='<div class="skeleton" style="height:74px; border-radius:15px"></div>'; return h; }
 
+var _newsSeq = 0;
 async function loadNews(){
+  var seq = ++_newsSeq;          /* only the newest request may draw */
   var box=$("newsList"); box.innerHTML=skeletonNews(5);
   $("newsMeta").textContent="Fetching live headlines…";
   var c=catInfo(state.cat);
   try{
     var r=await fetchNews(newsUrls());
+    if(seq !== _newsSeq) return;
     box.innerHTML=r.items.map(newsCard).join("");
     box.dataset.loaded="1";
     LIVE.news=r.items.slice(0,5).map(function(x){ var t=String(x.title||"").replace(/\s+/g," ").trim(); return t.length>110?t.slice(0,110)+"…":t; });
@@ -1505,7 +1508,11 @@ async function loadNews(){
     var hn=await fetchNews(newsUrls(state.city.name||"India")).catch(function(){return null;});
     if(hn) $("homeNews").innerHTML=hn.items.slice(0,4).map(newsCard).join("");
   }catch(e){
-    box.innerHTML='<div class="err">Live news could not be loaded right now. This feed uses a public relay to reach Google News; if it is busy, tap ⟳ Reload in a moment.</div>';
+    if(seq !== _newsSeq) return;
+    var ln = langInfo(state.lang)[1];
+    box.innerHTML='<div class="err">Could not load headlines in '+esc(ln)+' right now — the news services are busy.'+
+      '<div style="margin-top:12px"><button class="btn ghost sm" onclick="loadNews()">↻ Try again</button></div>'+
+      '<div class="small mut" style="margin-top:12px"><a href="'+escAttr(newsGoogleLink())+'" target="_blank" rel="noopener">Open Google News in '+esc(ln)+'</a></div></div>';
     $("newsMeta").textContent="Unavailable";
   }
 }
@@ -1514,7 +1521,9 @@ function loadNewsCity(){
   if(!c){ toast("Type a city name first"); return; }
   go("news");
   var box=$("newsList"); box.innerHTML=skeletonNews(5); $("newsMeta").textContent="Fetching news for "+c+"…";
+  var seq = ++_newsSeq;
   fetchNews(newsUrls(c)).then(function(r){
+    if(seq !== _newsSeq) return;
     box.innerHTML=r.items.map(newsCard).join(""); box.dataset.loaded="1";
     $("newsMeta").textContent=r.items.length+' headlines for "'+c+'" · via '+r.via;
   }).catch(function(){
