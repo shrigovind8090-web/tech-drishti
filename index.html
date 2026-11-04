@@ -5,6 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="google-site-verification" content="k0OK1Tvr1kagUvUaaV8LoYBH6QtA6NpaVKOZ4nd3faU" />
 <meta name="theme-color" content="#0a0f1e">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Tech Drishti",
+  "alternateName": "TechDrishti",
+  "url": "https://tech-drishti.vercel.app/",
+  "description": "Live news in 11 Indian languages, weather and air quality, a free AI assistant, market rates, PIN code and IFSC lookups, and a full accessibility mode for screen-reader users.",
+  "inLanguage": [
+    "en",
+    "hi"
+  ],
+  "publisher": {
+    "@type": "Organization",
+    "name": "Tech Drishti",
+    "url": "https://tech-drishti.vercel.app/",
+    "logo": "https://tech-drishti.vercel.app/icon.png"
+  }
+}
+</script>
+
 <title>Tech Drishti — Live News, Weather, AI Assistant &amp; Accessibility</title>
 <meta name="description" content="Tech Drishti is a professional live platform: news in many Indian languages, live weather for your location, a no-key AI assistant, market rates, knowledge search and a dedicated accessibility mode for visually impaired users.">
 <link rel="canonical" href="https://tech-drishti.vercel.app/">
@@ -453,6 +474,13 @@
         <div class="mut small">A free AI assistant that needs no API key. Ask anything — in English or Hindi.</div>
         <button class="btn" style="margin-top:12px; width:100%" onclick="go('ai')">Open AI Assistant</button>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">About Tech Drishti</div>
+      <p class="small" style="margin-top:10px; line-height:1.65">Tech Drishti is a free online platform for India. It brings together live news in eleven Indian languages, weather and air quality for your city, a free AI assistant that needs no key, live currency and crypto rates, PIN code and IFSC lookups, a calculator, a timer, notes, our own app store and our YouTube videos — all in one place, with no installation.</p>
+      <p class="small" style="margin-top:10px; line-height:1.65">It is built to work properly with screen readers such as TalkBack, NVDA and Jieshuo: every screen uses real headings and labels, text size and contrast can be changed, there is a dyslexia-friendly font, and any page can be read aloud. Everything runs in your browser — your notes, settings and conversations stay on your own device.</p>
+      <button class="btn" style="margin-top:14px; width:100%" onclick="shareSite()">↗ Share Tech Drishti</button>
     </div>
   </section>
 
@@ -2126,6 +2154,14 @@ function speakEl(id){ var e=$(id); if(e) speak(e.textContent); }
 
 /* =================================================================== share */
 function escAttr(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function shareSite(){
+  var url = "https://tech-drishti.vercel.app";
+  var text = "Tech Drishti — live news, weather, a free AI assistant and useful tools, built to work with screen readers.";
+  try{
+    if(navigator.share){ navigator.share({ title:"Tech Drishti", text:text, url:url }).catch(function(){}); return; }
+  }catch(e){}
+  window.open("https://wa.me/?text=" + encodeURIComponent(text + " " + url), "_blank", "noopener");
+}
 function shareFrom(el){
   var t=el.getAttribute("data-t")||"", u=el.getAttribute("data-l")||"";
   var text=t+" — via Tech Drishti";
