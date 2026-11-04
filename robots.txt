@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tech-drishti.vercel.app/sitemap.xml
