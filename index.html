@@ -816,7 +816,7 @@
   <!-- ============ PROFILE ============ -->
   <!-- ============ TD STORE ============ -->
   <section class="screen" id="s-store" aria-label="TD Store">
-    <div class="card">
+    <div class="card" id="storeIntro">
       <div class="h2">TD Store</div>
       <div class="small mut">Apps made by our team. Open one to read about it and download the APK.</div>
       <div class="row" style="margin-top:12px">
@@ -2312,7 +2312,10 @@ function storeToggleDesc(){ STORE_DESC_OPEN = !STORE_DESC_OPEN; renderStore(); }
 
 function renderStore(){
   var box=$("storeList"); if(!box) return;
+  var intro=$("storeIntro");
+  if(intro) intro.hidden = (STORE_VIEW.app !== null);
   if(!STORE.length){
+    var i2=$("storeIntro"); if(i2) i2.hidden = false;
     box.innerHTML='<div class="card"><div class="small mut">No apps published yet. When the first app is published it will appear here.</div></div>';
     return;
   }
