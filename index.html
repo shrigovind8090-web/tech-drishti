@@ -2615,52 +2615,14 @@ function primeNotifVideos(){
 }
 
 /* =================================================================== announcements */
-/* Announcements come from a Google Sheet that sits behind a Google Form.
-   You open the form, type the announcement, press Submit — that is all.
-   The sheet is read with JSONP, so no CORS problems and no key of any kind. */
-var ANN_SHEET_ID = "";          /* the long id from the sheet's address */
-var ANN_SHEET_TAB = "Form Responses 1";
+/* No announcement source is connected. These keep the rest of the code working
+   and simply show nothing until a proper system is chosen. */
 var ANNOUNCEMENTS = [];
-
-function annParse(resp){
-  var out = [];
-  try{
-    var rows = (resp && resp.table && resp.table.rows) || [];
-    for(var i = 1; i < rows.length; i++){   /* row 0 is the header */
-      var c = rows[i].c || [];
-      function cell(k){ return c[k] && c[k].v != null ? String(c[k].v) : ""; }
-      /* columns: timestamp, headline, message, link */
-      var title = cell(1), body = cell(2), link = cell(3);
-      if(!title && !body) continue;
-      out.push({ title: title || body, body: title ? body : "", link: link });
-    }
-  }catch(e){}
-  return out.reverse();   /* newest first */
-}
-function loadAnnouncements(){
-  if(!ANN_SHEET_ID){ renderAnnouncements(); return; }
-  var name = "gvizcb_" + Math.random().toString(36).slice(2);
-  var done = false;
-  window[name] = function(resp){ done = true; ANNOUNCEMENTS = annParse(resp); renderAnnouncements(); };
-  var sc = document.createElement("script");
-  sc.src = "https://docs.google.com/spreadsheets/d/" + ANN_SHEET_ID +
-           "/gviz/tq?tqx=responseHandler:" + name +
-           "&sheet=" + encodeURIComponent(ANN_SHEET_TAB) + "&t=" + Date.now();
-  sc.onerror = function(){ if(!done){ ANNOUNCEMENTS = []; renderAnnouncements(); } };
-  document.head.appendChild(sc);
-  setTimeout(function(){ if(!done){ try{ delete window[name]; }catch(e){} } }, 8000);
-}
-function liveAnnouncements(){ return ANNOUNCEMENTS || []; }
+function liveAnnouncements(){ return []; }
+function loadAnnouncements(){ renderAnnouncements(); }
 function renderAnnouncements(){
-  var bar = $("annBar"); if(!bar) return;
-  var act = liveAnnouncements();
-  if(!act.length){ bar.hidden = true; bar.innerHTML = ""; return; }
-  var a = act[0];
-  bar.hidden = false;
-  bar.className = "annbar";
-  bar.innerHTML = '<b>' + esc(a.title || "") + '</b>' + (a.body ? (' — ' + esc(a.body)) : "") +
-    (a.link ? ' <a href="' + escAttr(a.link) + '" target="_blank" rel="noopener">Open link</a>' : "") +
-    (act.length > 1 ? ' <span class="mut small">(+' + (act.length - 1) + ' more)</span>' : "");
+  var bar = $("annBar");
+  if(bar){ bar.hidden = true; bar.innerHTML = ""; }
 }
 
 /* =================================================================== refresh */
