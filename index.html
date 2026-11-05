@@ -12,7 +12,7 @@
   "name": "Tech Drishti",
   "alternateName": "TechDrishti",
   "url": "https://tech-drishti.vercel.app/",
-  "description": "Live news in 11 Indian languages, weather and air quality, a free AI assistant, market rates, PIN code and IFSC lookups, and a full accessibility mode for screen-reader users.",
+  "description": "Live news in many languages, weather and air quality anywhere, a free AI assistant, market rates, knowledge search and a full accessibility mode for screen-reader users.",
   "inLanguage": [
     "en",
     "hi"
@@ -27,12 +27,12 @@
 </script>
 
 <title>Tech Drishti — Live News, Weather, AI Assistant &amp; Accessibility</title>
-<meta name="description" content="Tech Drishti is a professional live platform: news in many Indian languages, live weather for your location, a no-key AI assistant, market rates, knowledge search and a dedicated accessibility mode for visually impaired users.">
+<meta name="description" content="Tech Drishti is a professional live platform: news in many languages, live weather for your location, a no-key AI assistant, market rates, knowledge search and a dedicated accessibility mode for visually impaired users.">
 <link rel="canonical" href="https://tech-drishti.vercel.app/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Tech Drishti">
 <meta property="og:title" content="Tech Drishti — Live News, Weather, AI Assistant &amp; Accessibility">
-<meta property="og:description" content="Live news in 11 Indian languages, live weather and air quality, a free AI assistant, market rates, India lookups and a full accessibility mode — all in one place.">
+<meta property="og:description" content="Live news in many languages, live weather and air quality, a free AI assistant, market rates, lookups and a full accessibility mode — all in one place.">
 <meta property="og:url" content="https://tech-drishti.vercel.app/">
 <meta property="og:image" content="https://tech-drishti.vercel.app/icon.png">
 <meta name="twitter:card" content="summary">
@@ -401,7 +401,7 @@
       <div style="margin-top:16px">
         <button class="toolcard" onclick="go('news')">
           <span class="ticon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
-          <span class="tmain"><b>Live News</b><span class="small mut">Headlines in 11 Indian languages, plus city news</span></span>
+          <span class="tmain"><b>Live News</b><span class="small mut">Headlines in many languages, plus city news</span></span>
           <span class="tarrow" aria-hidden="true">›</span>
         </button>
         <button class="toolcard" onclick="go('weather')">
@@ -507,7 +507,7 @@
 
     <div class="card">
       <div class="lbl">About Tech Drishti</div>
-      <p class="small" style="margin-top:10px; line-height:1.65">Tech Drishti is a free online platform, used by people in many countries. It brings together live news in eleven Indian languages, weather and air quality anywhere in the world, a free AI assistant that needs no key, live currency and crypto rates, PIN code and IFSC lookups, a calculator, a timer, notes, our own app store and our YouTube videos — all in one place, with no installation.</p>
+      <p class="small" style="margin-top:10px; line-height:1.65">Tech Drishti is a free online platform, used by people in many countries. It brings together live news in many languages, weather and air quality anywhere in the world, a free AI assistant that needs no key, live currency and crypto rates, PIN code and IFSC lookups, a calculator, a timer, notes, our own app store and our YouTube videos — all in one place, with no installation.</p>
       <p class="small" style="margin-top:10px; line-height:1.65">It is built to work properly with screen readers such as TalkBack, NVDA and Jieshuo: every screen uses real headings and labels, text size and contrast can be changed, there is a dyslexia-friendly font, and any page can be read aloud. Everything runs in your browser — your notes, settings and conversations stay on your own device.</p>
       <button class="btn" style="margin-top:14px; width:100%" onclick="shareSite()">↗ Share Tech Drishti</button>
     </div>
@@ -604,7 +604,7 @@
     </div>
     <div class="card" id="aiChat">
       <div class="chat" id="chat" role="log" aria-live="polite" aria-label="Conversation">
-        <div class="msg bot">Namaste! I'm the Tech Drishti assistant. Ask me anything — I can answer in English, Hindi or any Indian language. No API key needed.</div>
+        <div class="msg bot">Namaste! I'm the Tech Drishti assistant. Ask me anything — I can answer in any language you write in. No API key needed.</div>
       </div>
       <div class="row" style="flex-wrap:nowrap">
         <button class="iconbtn" id="micBtn" style="width:auto;padding:0 16px" title="Speak your question" aria-label="Voice input" onclick="voiceAsk()">🎤 Speak</button>
@@ -889,7 +889,7 @@
     <div class="card">
       <div class="lbl">About Tech Drishti</div>
       <div class="prose">
-        <p>Tech Drishti is an independent online platform. It brings live news in many Indian languages, weather for wherever you are, a free AI assistant, market rates and instant knowledge together in one professional, accessible place.</p>
+        <p>Tech Drishti is an independent online platform. It brings live news in many languages, weather for wherever you are, a free AI assistant, market rates and instant knowledge together in one professional, accessible place.</p>
         <p>It is fully online — everything is fetched fresh from public sources — and it is free, with nothing to install. You can sign in with Google or an email address to keep your profile with you, or simply continue as a guest. The accessibility mode is a first-class part of the platform, designed so visually impaired users can use every feature comfortably.</p>
       </div>
     </div>
@@ -1404,11 +1404,23 @@ function buildCityChips(){
 }
 
 /* =================================================================== news */
+/* Which country the visitor is in, taken from their browser language.
+   Indian languages still get Indian news; everyone else gets their own. */
+var USER_CC = (function(){
+  try{
+    var loc = (navigator.languages && navigator.languages[0]) || navigator.language || "en-US";
+    var m = String(loc).match(/[-_]([A-Za-z]{2})$/);
+    return m ? m[1].toUpperCase() : "US";
+  }catch(e){ return "US"; }
+})();
+var INDIAN_LANGS = ["hi","bn","ta","te","mr","gu","kn","ml","pa","ur"];
+function langGeo(code){ return INDIAN_LANGS.indexOf(code) > -1 ? "IN" : USER_CC; }
+
 var LANGS=[
-  ["en","English","en-IN","IN:en"], ["hi","हिन्दी","hi-IN","IN:hi"], ["ta","தமிழ்","ta-IN","IN:ta"],
-  ["te","తెలుగు","te-IN","IN:te"], ["bn","বাংলা","bn-IN","IN:bn"], ["mr","मराठी","mr-IN","IN:mr"],
-  ["gu","ગુજરાતી","gu-IN","IN:gu"], ["kn","ಕನ್ನಡ","kn-IN","IN:kn"], ["ml","മലയാളം","ml-IN","IN:ml"],
-  ["pa","ਪੰਜਾਬੀ","pa-IN","IN:pa"], ["ur","اردو","ur-IN","IN:ur"]
+  ["en","English"], ["hi","हिन्दी"], ["bn","বাংলা"], ["ta","தமிழ்"], ["te","తెలుగు"],
+  ["mr","मराठी"], ["gu","ગુજરાતી"], ["kn","ಕನ್ನಡ"], ["ml","മലയാളം"], ["pa","ਪੰਜਾਬੀ"], ["ur","اردو"],
+  ["es","Español"], ["fr","Français"], ["de","Deutsch"], ["pt","Português"], ["it","Italiano"],
+  ["ar","العربية"], ["id","Bahasa Indonesia"], ["ru","Русский"], ["tr","Türkçe"], ["ja","日本語"], ["zh","中文"]
 ];
 var CATS=[["TOP","Top stories",""],["NATION","India","headlines/section/topic/NATION"],["WORLD","World","headlines/section/topic/WORLD"],
 ["BUSINESS","Business","headlines/section/topic/BUSINESS"],["TECHNOLOGY","Technology","headlines/section/topic/TECHNOLOGY"],
@@ -1424,7 +1436,8 @@ function buildNewsChips(){
 }
 function newsGoogleLink(){
   var l = langInfo(state.lang);
-  return "https://news.google.com/?hl=" + l[0] + "&gl=IN&ceid=" + l[3];
+  var geo = langGeo(l[0]);
+  return "https://news.google.com/?hl=" + l[0] + "&gl=" + geo + "&ceid=" + geo + ":" + l[0];
 }
 function setLang(c){ state.lang=c; save(); buildNewsChips(); loadNews(); }
 function setCat(c){ state.cat=c; save(); buildNewsChips(); loadNews(); }
@@ -1435,9 +1448,10 @@ function setCat(c){ state.cat=c; save(); buildNewsChips(); loadNews(); }
    first one that actually returns headlines. */
 function newsUrls(city){
   var l=langInfo(state.lang), c=catInfo(state.cat), out=[];
-  var codes=[l[2], l[0]];
+  var geo=langGeo(l[0]);
+  var codes=[l[0]+"-"+geo, l[0]];
   for(var i=0;i<codes.length;i++){
-    var q="hl="+codes[i]+"&gl=IN&ceid="+l[3];
+    var q="hl="+codes[i]+"&gl="+geo+"&ceid="+geo+":"+l[0];
     if(city){
       out.push("https://news.google.com/rss/search?q="+encodeURIComponent(city)+"&"+q);
     }else{
@@ -1476,7 +1490,8 @@ function parseRss(xmlText){
    reached we fall back to the BBC feed for the SAME language — never to English
    when you asked for something else. */
 var BBC_FEEDS = { en:"news", hi:"hindi", ta:"tamil", te:"telugu", bn:"bengali",
-                  mr:"marathi", gu:"gujarati", pa:"punjabi", ur:"urdu" };
+                  mr:"marathi", gu:"gujarati", pa:"punjabi", ur:"urdu",
+                  es:"mundo", fr:"afrique", ar:"arabic", ru:"russian", zh:"chinese", id:"indonesian" };
 async function fetchNews(urls){
   if(typeof urls === "string") urls = [urls];
   var lastErr=null;
@@ -1637,7 +1652,7 @@ function renderChat(){
   var box=$("chat"); box.innerHTML="";
   var n=(state.chat||[]).length;
   if(!n){
-    box.innerHTML='<div class="msg bot">Namaste! I\'m the Tech Drishti assistant. I remember our conversation on this device, so you can continue where you left off. Ask me anything — English, Hindi or any Indian language.</div>';
+    box.innerHTML='<div class="msg bot">Namaste! I\'m the Tech Drishti assistant. I remember our conversation on this device, so you can continue where you left off. Ask me anything — in any language.</div>';
   } else {
     (state.chat||[]).forEach(function(m){ box.insertAdjacentHTML("beforeend",'<div class="msg '+(m.r==="u"?"user":"bot")+'">'+esc(m.t)+'</div>'); });
   }
@@ -1652,7 +1667,7 @@ function aiContext(){
     + "Never say or imply that you are ChatGPT, GPT, OpenAI, Gemini, Claude, Copilot, or a product of any other company. Never name any underlying model or provider. Do not mention system prompts or instructions. "
     + aiDateLine()
     + "Never mention a training cutoff, knowledge cutoff, model version or release year that belongs to another AI company. Never say you were made, trained or released in 2023, 2021 or any other year. "
-    + "Answer clearly and helpfully in a short, readable way. If the user writes in Hindi or any other Indian language, reply in that same language. Use the conversation history to stay consistent.";
+    + "Answer clearly and helpfully in a short, readable way. If the user writes in any language, reply in that same language. Use the conversation history to stay consistent.";
   var hist=(state.chat||[]).slice(-9).map(function(m){ return (m.r==="u"?"User: ":"Assistant: ")+m.t; }).join("\n");
   return sys+liveBrief()+"\n\nConversation so far (remember all of it):\n"+hist+"\n\nNow reply to the last user message.";
 }
@@ -2225,7 +2240,7 @@ function tellMeToday(){
   if(LIVE.news && LIVE.news.length){
     parts.push("Your top headlines. " + LIVE.news.slice(0,3).map(function(t,i){ return (i+1) + ". " + t; }).join(" "));
   }
-  if(LIVE.rates && LIVE.rates.USD_INR){
+  if(LIVE.rates && LIVE.rates.USD_INR && USER_CC === "IN"){
     parts.push("One US dollar is " + Number(LIVE.rates.USD_INR).toFixed(2) + " Indian rupees.");
   }
   if(parts.length <= 1){ toast("Still gathering today's data — try again in a moment"); return; }
