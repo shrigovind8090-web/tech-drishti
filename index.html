@@ -1790,6 +1790,7 @@ function paintProfile(){
   renderAuthBox();
   applyGuestLocks();
   paintVoice();
+  openAppFromHash();
 }
 
 /* ============================================================ authentication */
@@ -2324,6 +2325,26 @@ function shareApp(i){
   }catch(e){}
   window.open("https://wa.me/?text=" + encodeURIComponent(text + " " + url), "_blank", "noopener");
 }
+/* A shared app link looks like  /#app=td-screen-recorder
+   Open TD Store and go straight to that app's page. The wish is remembered
+   until the store has finished loading, so a later reload cannot lose it. */
+var PENDING_APP = null;
+function openAppFromHash(){
+  var m = String(location.hash||"").match(/^#app=([^&]+)/);
+  if(!m) return false;
+  PENDING_APP = decodeURIComponent(m[1]).toLowerCase().replace(/\/+$/,"");
+  go("store");
+  applyPendingApp();
+  return true;
+}
+function applyPendingApp(){
+  if(!PENDING_APP || !STORE || !STORE.length) return;
+  if(STORE_VIEW.app !== null) return;        /* already open — nothing to do */
+  for(var i=0;i<STORE.length;i++){
+    if(appSlug(STORE[i].name) === PENDING_APP){ storeOpenApp(i); return; }
+  }
+}
+function storeOpenFromList(i){ PENDING_APP = null; storeOpenApp(i); }
 function shareSite(){
   var url = "https://tech-drishti.vercel.app";
   var text = "Tech Drishti — live news, weather, a free AI assistant and useful tools, built to work with screen readers.";
@@ -2460,7 +2481,7 @@ function loadStoreFiles(){
       $("storeList").innerHTML='<div class="card"><div class="err">TD Store is busy right now. Please try again in a moment.</div></div>';
     });
 }
-function storeBack(){ STORE_VIEW.app = null; STORE_VIEW.ver = null; STORE_DESC_OPEN = false; renderStore(); }
+function storeBack(){ PENDING_APP = null; STORE_VIEW.app = null; STORE_VIEW.ver = null; STORE_DESC_OPEN = false; renderStore(); }
 function storeOpenApp(i){ STORE_VIEW.app = i; STORE_VIEW.ver = 0; STORE_DESC_OPEN = false; STORE_OLD_SHOWN = 3; renderStore(); }
 function storeMoreOld(){ STORE_OLD_SHOWN += 3; renderStore(); }
 function storeOpenVer(i){ STORE_VIEW.ver = i; STORE_DESC_OPEN = false; renderStore(); }
@@ -2477,6 +2498,7 @@ function renderStore(){
   }
   if(STORE_VIEW.app === null || !STORE[STORE_VIEW.app]){ renderStoreApps(box); }
   else { renderStoreVersion(box); }
+  applyPendingApp();
   refreshNotifs();
 }
 function storeIcon(icon, name, size){
@@ -2491,7 +2513,7 @@ function renderStoreApps(box){
     if(a.latest && a.latest.version) meta.push("v"+a.latest.version);
     if(a.latest && a.latest.size) meta.push(fmtSize(a.latest.size));
     meta.push(a.versions.length + (a.versions.length === 1 ? " version" : " versions"));
-    return '<button class="vrow" onclick="storeOpenApp('+i+')" aria-label="'+escAttr(a.name)+', '+escAttr(meta.join(", "))+'">'+
+    return '<button class="vrow" onclick="storeOpenFromList('+i+')" aria-label="'+escAttr(a.name)+', '+escAttr(meta.join(", "))+'">'+
       storeIcon(a.icon, a.name, 52)+
       '<span class="vmain"><b>'+esc(a.name)+'</b><span class="small mut">'+esc(meta.join(" · "))+'</span></span>'+
       '<span class="tarrow" aria-hidden="true">›</span></button>';
