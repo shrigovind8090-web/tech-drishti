@@ -114,9 +114,11 @@ function paint(a){
     (notes? '<div class="desc">'+esc(shown)+'</div>'+
       (notes.length>180 ? '<button class="ghost" onclick="toggleDesc()">'+(DESC_OPEN?"Show less":"Show more")+'</button>' : '')
       : '<div class="mut" style="margin-top:12px">No description was added for this version.</div>')+
-    (url ? '<button class="btn" id="dl" onclick="startDownload()"> Download</button>'+
+    (url ? '<button class="btn" id="dl" onclick="startDownload()">Download</button>'+
            '<div class="bar" id="bar"><i></i></div>'+
-           '<div class="mut" style="margin-top:10px">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>'
+           '<button class="ghost" id="dlAgain" hidden style="margin-top:10px" onclick="startDownload()">Download again</button>'+
+           '<div class="mut" style="margin-top:10px">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>'+
+           '<div class="mut" style="margin-top:6px">If your browser shows a warning about this file, choose Download anyway. Nothing is wrong with the file.</div>'
          : '<div class="mut" style="margin-top:14px">This version is not ready to download yet.</div>')+
     '<a class="ghost" href="'+SITE+'/">Open TD Store</a></div>';
   var older=a.versions.slice(1);
@@ -167,7 +169,7 @@ function startDownload(){
       var a2=document.createElement("a"); a2.href=URL.createObjectURL(blob); a2.download=fname;
       document.body.appendChild(a2); a2.click(); a2.remove();
       setTimeout(function(){ try{ URL.revokeObjectURL(a2.href); }catch(e){} },60000);
-      pct(100); btn.textContent="✓ Downloaded";
+      pct(100); btn.textContent="Downloaded";
     });
   }).catch(function(){
     var a3=document.createElement("a"); a3.href=url; a3.download=fname;
@@ -175,6 +177,7 @@ function startDownload(){
     btn.textContent=" Download";
   }).then(function(){
     delete btn.dataset.busy;
+    var again=document.getElementById("dlAgain"); if(again) again.hidden=false;
     setTimeout(function(){ btn.textContent=" Download"; if(bar){ bar.classList.remove("on"); bar.querySelector("i").style.width="0"; } },4000);
   });
 }
