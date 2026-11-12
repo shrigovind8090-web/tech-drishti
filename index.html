@@ -2422,6 +2422,18 @@ function fmtSize(b){
   if(b >= 1048576) return (b/1048576).toFixed(1)+" MB";
   return Math.round(b/1024)+" KB";
 }
+/* Files listed here are served from our own site, so a tap downloads straight
+   to the phone instead of opening a page somewhere else. */
+var HOSTED = {};
+function loadHosted(){
+  return getJSON("https://tech-drishti.vercel.app/apps/manifest.json?t=" + Date.now())
+    .then(function(m){ HOSTED = (m && typeof m === "object") ? m : {}; })
+    .catch(function(){ HOSTED = {}; });
+}
+function downloadUrl(a, v){
+  var key = appSlug(a.name) + "-" + String(v.version || "");
+  return HOSTED[key] ? ("https://tech-drishti.vercel.app/apps/" + key + ".apk") : (v.url || "");
+}
 var STORE_VIEW = { app: null, ver: null };
 var STORE_DESC_OPEN = false;
 var STORE_OLD_SHOWN = 3;
@@ -2462,7 +2474,7 @@ function loadStore(){
       }).sort(function(x,y){
         return ((y.latest&&y.latest.ts)||0) - ((x.latest&&x.latest.ts)||0);
       });
-      renderStore();
+      loadHosted().then(function(){ renderStore(); });
     })
     .catch(function(){ loadStoreFiles(); });
 }
@@ -2485,6 +2497,9 @@ function storeBack(){ PENDING_APP = null; STORE_VIEW.app = null; STORE_VIEW.ver 
 function storeOpenApp(i){ STORE_VIEW.app = i; STORE_VIEW.ver = 0; STORE_DESC_OPEN = false; STORE_OLD_SHOWN = 3; renderStore(); }
 function storeMoreOld(){ STORE_OLD_SHOWN += 3; renderStore(); }
 function storeOpenVer(i){ STORE_VIEW.ver = i; STORE_DESC_OPEN = false; renderStore(); }
+function afterDownload(){
+  toast("Download started — open it from your notifications to install");
+}
 function storeToggleDesc(){ STORE_DESC_OPEN = !STORE_DESC_OPEN; renderStore(); }
 
 function renderStore(){
@@ -2562,11 +2577,14 @@ function renderStoreVersion(box){
       (notes ? '<div class="descbox">'+esc(shown)+'</div>'+
         (notes.length > 180 ? '<button class="btn ghost sm" style="margin-top:10px" onclick="storeToggleDesc()">'+(STORE_DESC_OPEN ? "Show less" : "Show more")+'</button>' : '')
         : '<div class="small mut" style="margin-top:12px">No description was added for this version.</div>')+
-      (v.url
+      (downloadUrl(a, v)
         ? (isGuest()
             ? '<div class="small mut" style="margin-top:16px"><b>You must sign in to download apps.</b></div>'+
               '<button class="btn" style="margin-top:8px; width:100%" onclick="openGate()">Sign in to download</button>'
-            : '<a class="btn" style="margin-top:16px; width:100%; display:block; text-align:center; text-decoration:none" href="'+escAttr(v.url)+'" rel="noopener">⬇ Download</a>')
+            : '<a class="btn" style="margin-top:16px; width:100%; display:block; text-align:center; text-decoration:none" '+
+              'href="'+escAttr(downloadUrl(a, v))+'" download="'+escAttr(appSlug(a.name)+"-"+String(v.version||"1")+".apk")+'" '+
+              'rel="noopener" onclick="afterDownload()">⬇ Download</a>'+
+              '<div class="small mut" style="margin-top:10px">Downloading starts at once. When it finishes, open it from your notifications to install.</div>')
         : '<div class="err" style="margin-top:14px">This version is not ready to download yet.</div>')+
       '<button class="btn ghost sm" style="margin-top:10px; width:100%" onclick="shareApp('+STORE_VIEW.app+')">↗ Share this app</button>'+
     '</div>';
