@@ -48,7 +48,7 @@
 </style>
 </head>
 <body>
-<div class="top"><a class="back" href="https://tech-drishti.vercel.app/">← TD Store</a></div>
+<div class="top"><a class="back" href="https://tech-drishti.vercel.app/">TD Store</a></div>
 <div id="app"><div class="card"><div class="mut">Loading…</div></div></div>
 
 <script>
@@ -107,7 +107,7 @@ function paint(a){
     (notes? '<div class="desc">'+esc(shown)+'</div>'+
       (notes.length>180 ? '<button class="ghost" onclick="toggleDesc()">'+(DESC_OPEN?"Show less":"Show more")+'</button>' : '')
       : '<div class="mut" style="margin-top:12px">No description was added for this version.</div>')+
-    (url ? '<button class="btn" id="dl" onclick="startDownload()">⬇ Download</button>'+
+    (url ? '<button class="btn" id="dl" onclick="startDownload()"> Download</button>'+
            '<div class="bar" id="bar"><i></i></div>'+
            '<div class="mut" style="margin-top:10px">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>'
          : '<div class="mut" style="margin-top:14px">This version is not ready to download yet.</div>')+
@@ -120,7 +120,7 @@ function paint(a){
         var m=[]; if(ov.size) m.push(fmtSize(ov.size));
         if(ov.date){ try{ m.push(new Date(ov.date).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})); }catch(e){} }
         return '<button class="vrow" onclick="openOld('+(k+1)+')"><span class="m"><b>'+esc(ov.version?"v"+ov.version:"Version")+
-          '</b><span class="mut">'+esc(m.join(" · "))+'</span></span><span aria-hidden="true">›</span></button>';
+          '</b><span class="mut">'+esc(m.join(" · "))+'</span></span><span aria-hidden="true"></span></button>';
       }).join("");
     if(shown2<older.length) html+='<button class="ghost" onclick="moreOld()">Show more</button>';
     html+='</div>';
@@ -165,10 +165,10 @@ function startDownload(){
   }).catch(function(){
     var a3=document.createElement("a"); a3.href=url; a3.download=fname;
     document.body.appendChild(a3); a3.click(); a3.remove();
-    btn.textContent="⬇ Download";
+    btn.textContent=" Download";
   }).then(function(){
     delete btn.dataset.busy;
-    setTimeout(function(){ btn.textContent="⬇ Download"; if(bar){ bar.classList.remove("on"); bar.querySelector("i").style.width="0"; } },4000);
+    setTimeout(function(){ btn.textContent=" Download"; if(bar){ bar.classList.remove("on"); bar.querySelector("i").style.width="0"; } },4000);
   });
 }
 </script>
