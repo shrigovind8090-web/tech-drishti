@@ -2400,6 +2400,7 @@ function fmtSize(b){
 }
 var STORE_VIEW = { app: null, ver: null };
 var STORE_DESC_OPEN = false;
+var STORE_OLD_SHOWN = 3;
 
 function storeReset(){ STORE_VIEW = { app:null, ver:null }; STORE_DESC_OPEN = false; }
 
@@ -2456,8 +2457,14 @@ function loadStoreFiles(){
       $("storeList").innerHTML='<div class="card"><div class="err">TD Store is busy right now. Please try again in a moment.</div></div>';
     });
 }
-function storeBack(){ STORE_VIEW.app = null; STORE_VIEW.ver = null; STORE_DESC_OPEN = false; renderStore(); }
-function storeOpenApp(i){ STORE_VIEW.app = i; STORE_VIEW.ver = 0; STORE_DESC_OPEN = false; renderStore(); }
+function storeBack(){
+  if(STORE_VIEW.ver !== null){ STORE_VIEW.ver = null; }
+  else { STORE_VIEW.app = null; }
+  STORE_DESC_OPEN = false;
+  renderStore();
+}
+function storeOpenApp(i){ STORE_VIEW.app = i; STORE_VIEW.ver = null; STORE_DESC_OPEN = false; STORE_OLD_SHOWN = 3; renderStore(); }
+function storeMoreOld(){ STORE_OLD_SHOWN += 3; renderStore(); }
 function storeOpenVer(i){ STORE_VIEW.ver = i; STORE_DESC_OPEN = false; renderStore(); }
 function storeToggleDesc(){ STORE_DESC_OPEN = !STORE_DESC_OPEN; renderStore(); }
 
@@ -2471,6 +2478,7 @@ function renderStore(){
     return;
   }
   if(STORE_VIEW.app === null || !STORE[STORE_VIEW.app]){ renderStoreApps(box); }
+  else if(STORE_VIEW.ver === null){ renderStoreVersions(box); }
   else { renderStoreVersion(box); }
   refreshNotifs();
 }
@@ -2544,9 +2552,11 @@ function renderStoreVersion(box){
       '<button class="btn ghost sm" style="margin-top:10px; width:100%" onclick="shareApp('+STORE_VIEW.app+')">↗ Share this app</button>'+
     '</div>';
 
-  if(a.versions.length > 1){
-    html += '<div class="card"><div class="lbl">Earlier versions</div>' +
-      a.versions.slice(1).map(function(ov, k){
+  var older = a.versions.slice(1);
+  if(older.length){
+    var shown = Math.min(STORE_OLD_SHOWN, older.length);
+    html += '<div class="card"><div class="lbl">Download old versions</div>' +
+      older.slice(0, shown).map(function(ov, k){
         var idx = k + 1, m = [];
         if(ov.size) m.push(fmtSize(ov.size));
         if(ov.date){ try{ m.push(new Date(ov.date).toLocaleDateString(LOC,{day:"numeric",month:"short",year:"numeric"})); }catch(e){} }
@@ -2554,7 +2564,11 @@ function renderStoreVersion(box){
           '<span class="vmain"><b>'+esc(ov.version ? ("v"+ov.version) : "Version")+'</b>'+
           '<span class="small mut">'+esc(m.join(" · "))+'</span></span>'+
           '<span class="tarrow" aria-hidden="true">›</span></button>';
-      }).join("") + '</div>';
+      }).join("");
+    if(shown < older.length){
+      html += '<button class="btn ghost sm" style="margin-top:12px; width:100%" onclick="storeMoreOld()">Show more</button>';
+    }
+    html += '</div>';
   }
   box.innerHTML = html;
 }
