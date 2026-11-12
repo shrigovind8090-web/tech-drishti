@@ -35,6 +35,9 @@
 <meta property="og:description" content="Live news in many languages, live weather and air quality, a free AI assistant, market rates, lookups and a full accessibility mode — all in one place.">
 <meta property="og:url" content="https://tech-drishti.vercel.app/">
 <meta property="og:image" content="https://tech-drishti.vercel.app/icon.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="Tech Drishti">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Tech Drishti — Live News, Weather, AI Assistant &amp; Accessibility">
 <meta name="twitter:image" content="https://tech-drishti.vercel.app/icon.png">
@@ -2314,7 +2317,7 @@ function appSlug(n){
 }
 function shareApp(i){
   var a = STORE[i]; if(!a) return;
-  var url  = "https://tech-drishti.vercel.app/app/" + appSlug(a.name) + ".html";
+  var url  = "https://tech-drishti.vercel.app/app/" + appSlug(a.name);
   var text = a.name + " — free on TD Store";
   try{
     if(navigator.share){ navigator.share({ title:a.name, text:text, url:url }).catch(function(){}); return; }
@@ -2457,13 +2460,8 @@ function loadStoreFiles(){
       $("storeList").innerHTML='<div class="card"><div class="err">TD Store is busy right now. Please try again in a moment.</div></div>';
     });
 }
-function storeBack(){
-  if(STORE_VIEW.ver !== null){ STORE_VIEW.ver = null; }
-  else { STORE_VIEW.app = null; }
-  STORE_DESC_OPEN = false;
-  renderStore();
-}
-function storeOpenApp(i){ STORE_VIEW.app = i; STORE_VIEW.ver = null; STORE_DESC_OPEN = false; STORE_OLD_SHOWN = 3; renderStore(); }
+function storeBack(){ STORE_VIEW.app = null; STORE_VIEW.ver = null; STORE_DESC_OPEN = false; renderStore(); }
+function storeOpenApp(i){ STORE_VIEW.app = i; STORE_VIEW.ver = 0; STORE_DESC_OPEN = false; STORE_OLD_SHOWN = 3; renderStore(); }
 function storeMoreOld(){ STORE_OLD_SHOWN += 3; renderStore(); }
 function storeOpenVer(i){ STORE_VIEW.ver = i; STORE_DESC_OPEN = false; renderStore(); }
 function storeToggleDesc(){ STORE_DESC_OPEN = !STORE_DESC_OPEN; renderStore(); }
@@ -2478,7 +2476,6 @@ function renderStore(){
     return;
   }
   if(STORE_VIEW.app === null || !STORE[STORE_VIEW.app]){ renderStoreApps(box); }
-  else if(STORE_VIEW.ver === null){ renderStoreVersions(box); }
   else { renderStoreVersion(box); }
   refreshNotifs();
 }
