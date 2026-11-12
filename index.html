@@ -172,6 +172,9 @@
     font-size:10.5px; font-weight:900; padding:3px 9px; border-radius:20px; margin-left:8px;
     vertical-align:middle; letter-spacing:.3px;}
   .descbox{white-space:pre-wrap; line-height:1.7; margin-top:10px;}
+  .dlprog{height:6px;border-radius:6px;background:rgba(125,145,195,.22);margin-top:10px;overflow:hidden;display:none;}
+  .dlprog.on{display:block;}
+  .dlprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pri),var(--pri2));transition:width .18s;}
   .micfab{position:fixed; right:16px; bottom:20px; z-index:80; width:58px; height:58px; border-radius:50%;
     border:none; background:linear-gradient(135deg,var(--pri),var(--pri2)); color:#fff; cursor:pointer;
     box-shadow:0 12px 30px rgba(79,70,229,.45); display:flex; align-items:center; justify-content:center;}
@@ -1790,7 +1793,6 @@ function paintProfile(){
   renderAuthBox();
   applyGuestLocks();
   paintVoice();
-  openAppFromHash();
 }
 
 /* ============================================================ authentication */
@@ -2497,6 +2499,50 @@ function storeBack(){ PENDING_APP = null; STORE_VIEW.app = null; STORE_VIEW.ver 
 function storeOpenApp(i){ STORE_VIEW.app = i; STORE_VIEW.ver = 0; STORE_DESC_OPEN = false; STORE_OLD_SHOWN = 3; renderStore(); }
 function storeMoreOld(){ STORE_OLD_SHOWN += 3; renderStore(); }
 function storeOpenVer(i){ STORE_VIEW.ver = i; STORE_DESC_OPEN = false; renderStore(); }
+async function startDownload(btn){
+  var url  = btn.getAttribute("data-url");
+  var name = btn.getAttribute("data-name") || "app.apk";
+  if(!url || btn.dataset.busy) return;
+  btn.dataset.busy = "1";
+  var prog = $("dlProg"), bar = prog ? prog.querySelector("i") : null;
+  if(prog) prog.classList.add("on");
+  function pct(p){ btn.textContent = "Downloading… " + p + "%"; if(bar) bar.style.width = p + "%"; }
+  try{
+    var resp = await fetch(url, {cache:"no-store"});
+    if(!resp.ok) throw new Error("http " + resp.status);
+    var total = Number(resp.headers.get("content-length")) || 0;
+    var reader = resp.body.getReader(), chunks = [], got = 0;
+    if(total) pct(0);
+    while(true){
+      var r = await reader.read();
+      if(r.done) break;
+      chunks.push(r.value); got += r.value.length;
+      if(total) pct(Math.min(100, Math.round(got * 100 / total)));
+      else btn.textContent = "Downloading… " + fmtSize(got);
+    }
+    var blob = new Blob(chunks, {type:"application/vnd.android.package-archive"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ try{ URL.revokeObjectURL(a.href); }catch(e){} }, 60000);
+    pct(100);
+    btn.textContent = "✓ Downloaded";
+    toast("Downloaded — open it from your notifications to install");
+  }catch(e){
+    /* if the fetch is blocked, fall back to an ordinary download */
+    var a2 = document.createElement("a");
+    a2.href = url; a2.download = name;
+    document.body.appendChild(a2); a2.click(); a2.remove();
+    toast("Download started — check your notifications");
+  }finally{
+    delete btn.dataset.busy;
+    setTimeout(function(){
+      if(btn) btn.textContent = "⬇ Download";
+      if(prog) prog.classList.remove("on");
+      if(bar) bar.style.width = "0";
+    }, 4000);
+  }
+}
 function afterDownload(){
   toast("Download started — open it from your notifications to install");
 }
@@ -2581,10 +2627,12 @@ function renderStoreVersion(box){
         ? (isGuest()
             ? '<div class="small mut" style="margin-top:16px"><b>You must sign in to download apps.</b></div>'+
               '<button class="btn" style="margin-top:8px; width:100%" onclick="openGate()">Sign in to download</button>'
-            : '<a class="btn" style="margin-top:16px; width:100%; display:block; text-align:center; text-decoration:none" '+
-              'href="'+escAttr(downloadUrl(a, v))+'" download="'+escAttr(appSlug(a.name)+"-"+String(v.version||"1")+".apk")+'" '+
-              'rel="noopener" onclick="afterDownload()">⬇ Download</a>'+
-              '<div class="small mut" style="margin-top:10px">Downloading starts at once. When it finishes, open it from your notifications to install.</div>')
+            : '<button class="btn" style="margin-top:16px; width:100%" '+
+              'data-url="'+escAttr(downloadUrl(a, v))+'" '+
+              'data-name="'+escAttr(appSlug(a.name)+"-"+String(v.version||"1")+".apk")+'" '+
+              'onclick="startDownload(this)">⬇ Download</button>'+
+              '<div class="dlprog" id="dlProg" aria-hidden="true"><i></i></div>'+
+              '<div class="small mut" style="margin-top:10px">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>')
         : '<div class="err" style="margin-top:14px">This version is not ready to download yet.</div>')+
       '<button class="btn ghost sm" style="margin-top:10px; width:100%" onclick="shareApp('+STORE_VIEW.app+')">↗ Share this app</button>'+
     '</div>';
@@ -3027,6 +3075,10 @@ if(state.city.lat==null){ useMyLocation(true); } else { loadWeather(); }
 setTimeout(function(){ loadNews(); }, 600);
 setInterval(function(){ loadCrypto(); }, 120000);
 setInterval(function(){ loadWeather(); }, 600000);
+/* A shared app link: wait for the first store load, then open that app. */
+if(String(location.hash||"").indexOf("#app=") === 0){
+  setTimeout(function(){ openAppFromHash(); }, 1500);
+}
 </script>
 </body>
 </html>
