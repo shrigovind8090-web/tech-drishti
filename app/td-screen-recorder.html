@@ -55,14 +55,21 @@
 var SLUG = "td-screen-recorder";
 var REPO = "shrigovind8090-web/td-store";
 var SITE = "https://tech-drishti.vercel.app";
-var STORE = null, DESC_OPEN = false, OLD_SHOWN = 3, HOSTED = {};
+var STORE = null, DESC_OPEN = false, OLD_SHOWN = 3;
+/* files we host ourselves — built in, so a failed fetch can never send
+   anyone to GitHub instead */
+var HOSTED = { "td-screen-recorder-1.0.0": 1 };
 
 function fmtSize(b){ b=Number(b)||0; if(!b) return ""; var u=["B","KB","MB","GB"], i=0;
   while(b>=1024 && i<u.length-1){ b/=1024; i++; } return (b>=10?Math.round(b):b.toFixed(1))+" "+u[i]; }
 function esc(t){ return String(t==null?"":t).replace(/[&<>"']/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
 
-fetch("https://api.github.com/repos/"+REPO+"/releases?per_page=60")
+fetch(SITE+"/apps/manifest.json?t="+Date.now())
+  .then(function(r){ return r.json(); })
+  .then(function(m){ if(m && typeof m==="object"){ for(var k in m) HOSTED[k]=1; } })
+  .catch(function(){})
+  .then(function(){ return fetch("https://api.github.com/repos/"+REPO+"/releases?per_page=60"); })
   .then(function(r){ return r.json(); })
   .then(function(rel){
     var groups={}, order=[];
