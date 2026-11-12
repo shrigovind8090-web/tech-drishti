@@ -835,10 +835,9 @@
   <section class="screen" id="s-store" aria-label="TD Store">
     <div class="card" id="storeIntro">
       <div class="h2">TD Store</div>
-      <div class="small mut">Apps made by our team. Open one to read about it and download the APK.</div>
+      <div class="small mut">Apps made by our team. Tap one to read about it and download it — free.</div>
       <div class="row" style="margin-top:12px">
         <button class="btn ghost sm" onclick="loadStore()">↻ Refresh</button>
-        <a class="btn ghost sm" id="storeRepoLink" href="https://github.com/shrigovind8090-web/td-store" target="_blank" rel="noopener">The repository</a>
       </div>
     </div>
     <div id="storeList"></div>
@@ -2310,6 +2309,18 @@ function runVoiceCommand(said){
   }
   toast("I did not understand: " + said);
 }
+function appSlug(n){
+  return String(n||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+}
+function shareApp(i){
+  var a = STORE[i]; if(!a) return;
+  var url  = "https://tech-drishti.vercel.app/app/" + appSlug(a.name) + ".html";
+  var text = a.name + " — free on TD Store";
+  try{
+    if(navigator.share){ navigator.share({ title:a.name, text:text, url:url }).catch(function(){}); return; }
+  }catch(e){}
+  window.open("https://wa.me/?text=" + encodeURIComponent(text + " " + url), "_blank", "noopener");
+}
 function shareSite(){
   var url = "https://tech-drishti.vercel.app";
   var text = "Tech Drishti — live news, weather, a free AI assistant and useful tools, built to work with screen readers.";
@@ -2395,7 +2406,7 @@ function storeReset(){ STORE_VIEW = { app:null, ver:null }; STORE_DESC_OPEN = fa
 function loadStore(){
   var box=$("storeList"); if(!box) return;
   storeReset();
-  box.innerHTML='<div class="card"><div class="small mut">Loading apps…</div></div>';
+  box.innerHTML='<div class="card"><div class="small mut">Loading…</div></div>';
   getJSON("https://api.github.com/repos/"+STORE_REPO+"/releases?per_page=60")
     .then(function(rel){
       var groups = {}, order = [];
@@ -2442,15 +2453,11 @@ function loadStoreFiles(){
       renderStore();
     })
     .catch(function(){
-      $("storeList").innerHTML='<div class="card"><div class="err">Could not reach TD Store right now. Please try again in a moment.</div></div>';
+      $("storeList").innerHTML='<div class="card"><div class="err">TD Store is busy right now. Please try again in a moment.</div></div>';
     });
 }
-function storeBack(){
-  if(STORE_VIEW.ver !== null){ STORE_VIEW.ver = null; STORE_DESC_OPEN = false; }
-  else { STORE_VIEW.app = null; }
-  renderStore();
-}
-function storeOpenApp(i){ STORE_VIEW.app = i; STORE_VIEW.ver = null; STORE_DESC_OPEN = false; renderStore(); }
+function storeBack(){ STORE_VIEW.app = null; STORE_VIEW.ver = null; STORE_DESC_OPEN = false; renderStore(); }
+function storeOpenApp(i){ STORE_VIEW.app = i; STORE_VIEW.ver = 0; STORE_DESC_OPEN = false; renderStore(); }
 function storeOpenVer(i){ STORE_VIEW.ver = i; STORE_DESC_OPEN = false; renderStore(); }
 function storeToggleDesc(){ STORE_DESC_OPEN = !STORE_DESC_OPEN; renderStore(); }
 
@@ -2460,11 +2467,10 @@ function renderStore(){
   if(intro) intro.hidden = (STORE_VIEW.app !== null);
   if(!STORE.length){
     var i2=$("storeIntro"); if(i2) i2.hidden = false;
-    box.innerHTML='<div class="card"><div class="small mut">No apps published yet. When the first app is published it will appear here.</div></div>';
+    box.innerHTML='<div class="card"><div class="small mut">No apps here yet. Check back soon.</div></div>';
     return;
   }
   if(STORE_VIEW.app === null || !STORE[STORE_VIEW.app]){ renderStoreApps(box); }
-  else if(STORE_VIEW.ver === null){ renderStoreVersions(box); }
   else { renderStoreVersion(box); }
   refreshNotifs();
 }
@@ -2533,9 +2539,23 @@ function renderStoreVersion(box){
         ? (isGuest()
             ? '<div class="small mut" style="margin-top:16px"><b>You must sign in to download apps.</b></div>'+
               '<button class="btn" style="margin-top:8px; width:100%" onclick="openGate()">Sign in to download</button>'
-            : '<a class="btn" style="margin-top:16px; width:100%; display:block; text-align:center; text-decoration:none" href="'+escAttr(v.url)+'" rel="noopener">⬇ Download APK</a>')
-        : '<div class="err" style="margin-top:14px">No APK is attached to this version yet.</div>')+
+            : '<a class="btn" style="margin-top:16px; width:100%; display:block; text-align:center; text-decoration:none" href="'+escAttr(v.url)+'" rel="noopener">⬇ Download</a>')
+        : '<div class="err" style="margin-top:14px">This version is not ready to download yet.</div>')+
+      '<button class="btn ghost sm" style="margin-top:10px; width:100%" onclick="shareApp('+STORE_VIEW.app+')">↗ Share this app</button>'+
     '</div>';
+
+  if(a.versions.length > 1){
+    html += '<div class="card"><div class="lbl">Earlier versions</div>' +
+      a.versions.slice(1).map(function(ov, k){
+        var idx = k + 1, m = [];
+        if(ov.size) m.push(fmtSize(ov.size));
+        if(ov.date){ try{ m.push(new Date(ov.date).toLocaleDateString(LOC,{day:"numeric",month:"short",year:"numeric"})); }catch(e){} }
+        return '<button class="vrow" style="margin-top:10px" onclick="storeOpenVer('+idx+')" aria-label="Version '+escAttr(ov.version||"")+'">'+
+          '<span class="vmain"><b>'+esc(ov.version ? ("v"+ov.version) : "Version")+'</b>'+
+          '<span class="small mut">'+esc(m.join(" · "))+'</span></span>'+
+          '<span class="tarrow" aria-hidden="true">›</span></button>';
+      }).join("") + '</div>';
+  }
   box.innerHTML = html;
 }
 
