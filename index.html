@@ -2426,11 +2426,11 @@ function fmtSize(b){
 }
 /* Files listed here are served from our own site, so a tap downloads straight
    to the phone instead of opening a page somewhere else. */
-var HOSTED = {};
+var HOSTED = { "td-screen-recorder-1.0.0": 1 };   /* built in, so a failed fetch cannot break downloads */
 function loadHosted(){
   return getJSON("https://tech-drishti.vercel.app/apps/manifest.json?t=" + Date.now())
-    .then(function(m){ HOSTED = (m && typeof m === "object") ? m : {}; })
-    .catch(function(){ HOSTED = {}; });
+    .then(function(m){ if(m && typeof m === "object"){ for(var k in m) HOSTED[k] = 1; } })
+    .catch(function(){});
 }
 function downloadUrl(a, v){
   var key = appSlug(a.name) + "-" + String(v.version || "");
