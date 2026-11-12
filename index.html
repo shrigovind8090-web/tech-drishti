@@ -2536,6 +2536,7 @@ async function startDownload(btn){
     toast("Download started — check your notifications");
   }finally{
     delete btn.dataset.busy;
+    var again = $("dlAgain"); if(again) again.hidden = false;
     setTimeout(function(){
       if(btn) btn.textContent = "Download";
       if(prog) prog.classList.remove("on");
@@ -2630,9 +2631,12 @@ function renderStoreVersion(box){
             : '<button class="btn" style="margin-top:16px; width:100%" '+
               'data-url="'+escAttr(downloadUrl(a, v))+'" '+
               'data-name="'+escAttr(appSlug(a.name)+"-"+String(v.version||"1")+".apk")+'" '+
-              'onclick="startDownload(this)">Download</button>'+
+              'id="dlBtn" onclick="startDownload(this)">Download</button>'+
               '<div class="dlprog" id="dlProg" aria-hidden="true"><i></i></div>'+
-              '<div class="small mut" style="margin-top:10px">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>')
+              '<button class="btn ghost" id="dlAgain" hidden style="margin-top:10px; width:100%" '+
+                'onclick="startDownload(document.getElementById(\'dlBtn\'))">Download again</button>'+
+              '<div class="small mut" style="margin-top:10px">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>'+
+              '<div class="small mut" style="margin-top:6px">If your browser shows a warning about this file, choose Download anyway. Nothing is wrong with the file.</div>')
         : '<div class="err" style="margin-top:14px">This version is not ready to download yet.</div>')+
       '<button class="btn ghost sm" style="margin-top:10px; width:100%" onclick="shareApp('+STORE_VIEW.app+')">Share this app</button>'+
     '</div>';
