@@ -517,6 +517,11 @@
       <p class="small" style="margin-top:10px; line-height:1.65">It is built to work properly with screen readers such as TalkBack, NVDA and Jieshuo: every screen uses real headings and labels, text size and contrast can be changed, there is a dyslexia-friendly font, and any page can be read aloud. Everything runs in your browser — your notes, settings and conversations stay on your own device.</p>
       <button class="btn" style="margin-top:14px; width:100%" onclick="shareSite()">Share Tech Drishti</button>
     </div>
+
+    <footer style="margin-top:22px; text-align:center; color:var(--mut); font-size:13px; line-height:1.6">
+      <div><b>Tech Drishti</b> — an online platform for news, weather, AI and accessibility</div>
+      <div style="margin-top:6px">Live data is fetched fresh every visit. News, weather and rates belong to their respective sources.</div>
+    </footer>
   </section>
 
   <!-- ============ NEWS ============ -->
@@ -963,10 +968,6 @@
 
   </main>
 
-  <footer>
-    <div><b>Tech Drishti</b> — an online platform for news, weather, AI and accessibility</div>
-    <div style="margin-top:6px">Live data is fetched fresh every visit. News, weather and rates belong to their respective sources.</div>
-  </footer>
 
 
 </div>
@@ -1325,12 +1326,12 @@ var CITIES=[["Delhi",28.6139,77.2090],["Mumbai",19.0760,72.8777],["Bengaluru",12
 ["Jaipur",26.9124,75.7873],["Lucknow",26.8467,80.9462],["Patna",25.5941,85.1376],["Bhopal",23.2599,77.4126],
 ["New York",40.7128,-74.0060],["London",51.5074,-0.1278],["Dubai",25.2048,55.2708],["Singapore",1.3521,103.8198],
 ["Tokyo",35.6762,139.6503],["Sydney",-33.8688,151.2093]];
-var WMO={0:["️","Clear sky"],1:["️","Mainly clear"],2:["","Partly cloudy"],3:["️","Overcast"],45:["️","Fog"],48:["️","Rime fog"],
-51:["️","Light drizzle"],53:["️","Drizzle"],55:["️","Dense drizzle"],61:["️","Light rain"],63:["️","Rain"],65:["️","Heavy rain"],
-66:["️","Freezing rain"],67:["️","Freezing rain"],71:["️","Light snow"],73:["️","Snow"],75:["️","Heavy snow"],77:["️","Snow grains"],
-80:["️","Rain showers"],81:["️","Rain showers"],82:["️","Violent showers"],85:["️","Snow showers"],86:["️","Snow showers"],
-95:["️","Thunderstorm"],96:["️","Thunderstorm + hail"],99:["️","Thunderstorm + hail"]};
-function wmo(c){ return WMO[c]||["️","—"]; }
+var WMO={0:["☀️","Clear sky"],1:["🌤️","Mainly clear"],2:["⛅","Partly cloudy"],3:["☁️","Overcast"],45:["🌫️","Fog"],48:["🌫️","Rime fog"],
+51:["🌦️","Light drizzle"],53:["🌦️","Drizzle"],55:["🌧️","Dense drizzle"],61:["🌦️","Light rain"],63:["🌧️","Rain"],65:["🌧️","Heavy rain"],
+66:["🌧️","Freezing rain"],67:["🌧️","Freezing rain"],71:["🌨️","Light snow"],73:["🌨️","Snow"],75:["❄️","Heavy snow"],77:["🌨️","Snow grains"],
+80:["🌦️","Rain showers"],81:["🌧️","Rain showers"],82:["⛈️","Violent showers"],85:["🌨️","Snow showers"],86:["🌨️","Snow showers"],
+95:["⛈️","Thunderstorm"],96:["⛈️","Thunderstorm + hail"],99:["⛈️","Thunderstorm + hail"]};
+function wmo(c){ return WMO[c]||["🌡️","—"]; }
 function dayName(iso,i){ if(i===0) return "Today"; return new Date(iso+"T12:00:00").toLocaleDateString(LOC,{weekday:"short"}); }
 
 /* Latest live values, kept so the AI assistant can answer about today. */
@@ -3082,6 +3083,8 @@ setInterval(function(){ loadWeather(); }, 600000);
 /* A shared app link: wait for the first store load, then open that app. */
 if(String(location.hash||"").indexOf("#app=") === 0){
   setTimeout(function(){ openAppFromHash(); }, 1500);
+} else if(String(location.hash||"") === "#store"){
+  setTimeout(function(){ go("store"); }, 800);
 }
 </script>
 </body>
