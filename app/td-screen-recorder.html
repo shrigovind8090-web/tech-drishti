@@ -22,6 +22,7 @@
 <style>
  :root{--bg:#0a0f1e;--card:rgba(22,31,54,.74);--line:rgba(125,145,195,.2);--txt:#eef2ff;--mut:#93a0c0;--pri:#4f46e5;--pri2:#06b6d4;}
  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+ [hidden]{display:none !important;}
  body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif;
    padding:18px;min-height:100vh;}
  .top{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
@@ -99,28 +100,44 @@ function dlUrl(v){
 function paint(a){
   var box=document.getElementById("app");
   if(!a){ box.innerHTML='<div class="card"><div class="mut">This app is not available right now. '+
-    '<a href="'+SITE+'/" style="color:#7dd3fc">Open TD Store</a></div></div>'; return; }
+    '<a href="'+SITE+'/#store" style="color:#7dd3fc">Open TD Store</a></div></div>'; return; }
   var v=a.latest, notes=(v.notes||"").trim();
-  var short=notes.length>180 ? notes.slice(0,180).replace(/\s+\S*$/,"")+"…" : notes;
-  var shown=DESC_OPEN?notes:short;
+
+  /* first line is the short description, the rest is the long one */
+  var parts=notes.split(/\n+/);
+  var shortDesc=(parts[0]||"").trim();
+  var longDesc=parts.slice(1).join("\n\n").trim();
+
   var meta=[]; if(v.version) meta.push("Version "+v.version);
   if(v.size) meta.push(fmtSize(v.size));
   if(v.date){ try{ meta.push(new Date(v.date).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})); }catch(e){} }
-  var url=dlUrl(v), fname=SLUG+"-"+String(v.version||"1")+".apk";
+  var url=dlUrl(v);
+
   var html='<div class="card"><div class="row">'+
     '<img class="icon" src="/app/'+SLUG+'.png" alt="">'+
     '<div style="flex:1;min-width:0"><h1>'+esc(a.name)+'</h1>'+
-    '<div class="mut">'+esc(meta.join(" · "))+'<span class="badge">LATEST</span></div></div></div>'+
-    (notes? '<div class="desc">'+esc(shown)+'</div>'+
-      (notes.length>180 ? '<button class="ghost" onclick="toggleDesc()">'+(DESC_OPEN?"Show less":"Show more")+'</button>' : '')
-      : '<div class="mut" style="margin-top:12px">No description was added for this version.</div>')+
-    (url ? '<button class="btn" id="dl" onclick="startDownload()">Download</button>'+
+    '<div class="mut">'+esc(meta.join(", "))+'<span class="badge">LATEST</span></div></div></div>'+
+    (url ? '<button class="btn" id="dl" style="padding:17px;font-size:17px;border-radius:16px" onclick="startDownload()">Install</button>'+
            '<div class="bar" id="bar"><i></i></div>'+
-           '<button class="ghost" id="dlAgain" hidden style="margin-top:10px" onclick="startDownload()">Download again</button>'+
-           '<div class="mut" style="margin-top:10px">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>'+
-           '<div class="mut" style="margin-top:6px">If your browser shows a warning about this file, choose Download anyway. Nothing is wrong with the file.</div>'
+           '<button class="ghost" id="dlAgain" hidden style="margin-top:10px" onclick="startDownload()">Download again</button>'
          : '<div class="mut" style="margin-top:14px">This version is not ready to download yet.</div>')+
     '</div>';
+
+  if(shortDesc||longDesc){
+    html+='<div class="card">'+
+      (shortDesc ? '<div style="font-size:16px;font-weight:700;line-height:1.5">'+esc(shortDesc)+'</div>' : '')+
+      (longDesc ? (DESC_OPEN
+          ? '<div class="desc">'+esc(longDesc)+'</div><button class="ghost" onclick="toggleDesc()">Show less</button>'
+          : '<button class="ghost" onclick="toggleDesc()">Show more</button>')
+        : '')+
+      '</div>';
+  }
+
+  html+='<div class="card">'+
+    '<div class="mut">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>'+
+    '<div class="mut" style="margin-top:6px">If your browser shows a warning about this file, choose Download anyway. Nothing is wrong with the file.</div>'+
+    '</div>';
+
   var older=a.versions.slice(1);
   if(older.length){
     var shown2=Math.min(OLD_SHOWN,older.length);
@@ -129,7 +146,7 @@ function paint(a){
         var m=[]; if(ov.size) m.push(fmtSize(ov.size));
         if(ov.date){ try{ m.push(new Date(ov.date).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})); }catch(e){} }
         return '<button class="vrow" onclick="openOld('+(k+1)+')"><span class="m"><b>'+esc(ov.version?"v"+ov.version:"Version")+
-          '</b><span class="mut">'+esc(m.join(" · "))+'</span></span><span aria-hidden="true"></span></button>';
+          '</b><span class="mut">'+esc(m.join(", "))+'</span></span><span aria-hidden="true"></span></button>';
       }).join("");
     if(shown2<older.length) html+='<button class="ghost" onclick="moreOld()">Show more</button>';
     html+='</div>';
@@ -137,6 +154,7 @@ function paint(a){
   box.innerHTML=html;
   window.__APP=a;
 }
+
 function toggleDesc(){ DESC_OPEN=!DESC_OPEN; paint(window.__APP); }
 function moreOld(){ OLD_SHOWN+=3; paint(window.__APP); }
 function openOld(i){ var a=window.__APP, v=a.versions[i]; DESC_OPEN=false; window.__APP=null;
