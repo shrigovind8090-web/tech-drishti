@@ -2604,49 +2604,73 @@ function renderStoreVersion(box){
   var a = STORE[STORE_VIEW.app];
   var v = a.versions[STORE_VIEW.ver];
   var isLatest = (STORE_VIEW.ver === 0);
+
+  /* first line of the release notes is the short description, the rest is the long one */
   var notes = (v.notes || "").trim();
-  var short = notes.length > 180 ? notes.slice(0,180).replace(/\s+\S*$/,"") + "…" : notes;
-  var shown = STORE_DESC_OPEN ? notes : short;
+  var parts = notes.split(/\n+/);
+  var shortDesc = (parts[0] || "").trim();
+  var longDesc  = parts.slice(1).join("\n\n").trim();
+
   var meta = [];
-  if(v.version) meta.push("Version "+v.version);
+  if(v.version) meta.push("Version " + v.version);
   if(v.size) meta.push(fmtSize(v.size));
   if(v.date){ try{ meta.push(new Date(v.date).toLocaleDateString(LOC,{day:"numeric",month:"short",year:"numeric"})); }catch(e){} }
 
+  var dl = downloadUrl(a, v);
+
+  /* ---- 1. icon and name, then the big install button straight underneath ---- */
   var html = '<div class="storehead">'+
-    '<button class="btn ghost sm" onclick="storeBack()">'+esc(a.name)+'</button></div>'+
+      '<button class="btn ghost sm" onclick="storeBack()">Back to apps</button></div>'+
     '<div class="card">'+
-      '<div class="row" style="gap:14px; flex-wrap:nowrap; align-items:flex-start">'+
-        storeIcon(a.icon, a.name, 60)+
+      '<div class="row" style="gap:16px; flex-wrap:nowrap; align-items:flex-start">'+
+        storeIcon(a.icon, a.name, 72)+
         '<div style="flex:1; min-width:0">'+
-          '<div class="h2">'+esc(a.name)+'</div>'+
-          '<div class="small mut">'+esc(meta.join(", "))+(isLatest?' <span class="latbadge">LATEST</span>':'')+'</div>'+
+          '<div class="h2" style="font-size:21px">'+esc(a.name)+'</div>'+
+          '<div class="small mut" style="margin-top:4px">'+esc(meta.join(", "))+
+            (isLatest ? ' <span class="latbadge">LATEST</span>' : '')+'</div>'+
         '</div>'+
       '</div>'+
-      (notes ? '<div class="descbox">'+esc(shown)+'</div>'+
-        (notes.length > 180 ? '<button class="btn ghost sm" style="margin-top:10px" onclick="storeToggleDesc()">'+(STORE_DESC_OPEN ? "Show less" : "Show more")+'</button>' : '')
-        : '<div class="small mut" style="margin-top:12px">No description was added for this version.</div>')+
-      (downloadUrl(a, v)
+      (dl
         ? (isGuest()
-            ? '<div class="small mut" style="margin-top:16px"><b>You must sign in to download apps.</b></div>'+
-              '<button class="btn" style="margin-top:8px; width:100%" onclick="openGate()">Sign in to download</button>'
-            : '<button class="btn" style="margin-top:16px; width:100%" '+
-              'data-url="'+escAttr(downloadUrl(a, v))+'" '+
-              'data-name="'+escAttr(appSlug(a.name)+"-"+String(v.version||"1")+".apk")+'" '+
-              'id="dlBtn" onclick="startDownload(this)">Download</button>'+
+            ? '<div class="small mut" style="margin-top:18px"><b>You must sign in to download apps.</b></div>'+
+              '<button class="btn" style="margin-top:10px; width:100%; padding:17px; font-size:17px" onclick="openGate()">Sign in to install</button>'
+            : '<button class="btn" style="margin-top:18px; width:100%; padding:17px; font-size:17px; border-radius:16px" '+
+              'data-url="'+escAttr(dl)+'" data-name="'+escAttr(appSlug(a.name)+"-"+String(v.version||"1")+".apk")+'" '+
+              'id="dlBtn" onclick="startDownload(this)">Install</button>'+
               '<div class="dlprog" id="dlProg" aria-hidden="true"><i></i></div>'+
               '<button class="btn ghost" id="dlAgain" hidden style="margin-top:10px; width:100%" '+
-                'onclick="startDownload(document.getElementById(\'dlBtn\'))">Download again</button>'+
-              '<div class="small mut" style="margin-top:10px">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>'+
-              '<div class="small mut" style="margin-top:6px">If your browser shows a warning about this file, choose Download anyway. Nothing is wrong with the file.</div>')
-        : '<div class="err" style="margin-top:14px">This version is not ready to download yet.</div>')+
-      '<button class="btn ghost sm" style="margin-top:10px; width:100%" onclick="shareApp('+STORE_VIEW.app+')">Share this app</button>'+
+                'onclick="startDownload(document.getElementById(\'dlBtn\'))">Download again</button>')
+        : '<div class="err" style="margin-top:16px">This version is not ready to download yet.</div>')+
     '</div>';
 
+  /* ---- 2. short description, then the long one behind Show more ---- */
+  if(shortDesc || longDesc){
+    html += '<div class="card">'+
+      (shortDesc ? '<div style="font-size:16px; font-weight:700; line-height:1.5">'+esc(shortDesc)+'</div>' : '')+
+      (longDesc
+        ? (STORE_DESC_OPEN
+            ? '<div class="descbox">'+esc(longDesc)+'</div>'+
+              '<button class="btn ghost sm" style="margin-top:12px; width:100%" onclick="storeToggleDesc()">Show less</button>'
+            : '<button class="btn ghost sm" style="margin-top:14px; width:100%" onclick="storeToggleDesc()">Show more</button>')
+        : '')+
+    '</div>';
+  } else {
+    html += '<div class="card"><div class="small mut">No description was added for this version.</div></div>';
+  }
+
+  /* ---- 3. the small print and sharing ---- */
+  html += '<div class="card">'+
+    '<div class="small mut">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>'+
+    '<div class="small mut" style="margin-top:6px">If your browser shows a warning about this file, choose Download anyway. Nothing is wrong with the file.</div>'+
+    '<button class="btn ghost sm" style="margin-top:14px; width:100%" onclick="shareApp('+STORE_VIEW.app+')">Share this app</button>'+
+  '</div>';
+
+  /* ---- 4. older versions ---- */
   var older = a.versions.slice(1);
   if(older.length){
-    var shown = Math.min(STORE_OLD_SHOWN, older.length);
+    var shownN = Math.min(STORE_OLD_SHOWN, older.length);
     html += '<div class="card"><div class="lbl">Download old versions</div>' +
-      older.slice(0, shown).map(function(ov, k){
+      older.slice(0, shownN).map(function(ov, k){
         var idx = k + 1, m = [];
         if(ov.size) m.push(fmtSize(ov.size));
         if(ov.date){ try{ m.push(new Date(ov.date).toLocaleDateString(LOC,{day:"numeric",month:"short",year:"numeric"})); }catch(e){} }
@@ -2655,13 +2679,14 @@ function renderStoreVersion(box){
           '<span class="small mut">'+esc(m.join(", "))+'</span></span>'+
           '<span class="tarrow" aria-hidden="true"></span></button>';
       }).join("");
-    if(shown < older.length){
+    if(shownN < older.length){
       html += '<button class="btn ghost sm" style="margin-top:12px; width:100%" onclick="storeMoreOld()">Show more</button>';
     }
     html += '</div>';
   }
   box.innerHTML = html;
 }
+
 
 
 /* =================================================================== videos (YouTube) */
