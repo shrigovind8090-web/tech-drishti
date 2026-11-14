@@ -172,6 +172,10 @@
     font-size:10.5px; font-weight:900; padding:3px 9px; border-radius:20px; margin-left:8px;
     vertical-align:middle; letter-spacing:.3px;}
   .descbox{white-space:pre-wrap; line-height:1.7; margin-top:10px;}
+  .shotstrip{display:flex; gap:10px; overflow-x:auto; margin-top:10px; padding-bottom:6px; -webkit-overflow-scrolling:touch;}
+  .shot{height:300px; width:auto; border-radius:12px; border:1px solid var(--line); flex-shrink:0; display:block;}
+  .playbadge{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,.72);
+    color:#fff; padding:12px 20px; border-radius:30px; font-weight:800; font-size:15px;}
   .dlprog{height:6px;border-radius:6px;background:rgba(125,145,195,.22);margin-top:10px;overflow:hidden;display:none;}
   .dlprog.on{display:block;}
   .dlprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pri),var(--pri2));transition:width .18s;}
@@ -2427,7 +2431,14 @@ function fmtSize(b){
 }
 /* Files listed here are served from our own site, so a tap downloads straight
    to the phone instead of opening a page somewhere else. */
-var HOSTED = { "td-screen-recorder-1.0.0": 1 };   /* built in, so a failed fetch cannot break downloads */
+var HOSTED = { "td-screen-recorder-1.0.0": 1 };
+var TRAILERS = {};          /* { slug: { en: "videoId", hi: "videoId" } } */
+var TRAILER_LANG = "en";   /* built in, so a failed fetch cannot break downloads */
+function loadTrailers(){
+  return getJSON("https://tech-drishti.vercel.app/apps/trailers.json?t=" + Date.now())
+    .then(function(m){ TRAILERS = (m && typeof m === "object") ? m : {}; })
+    .catch(function(){ TRAILERS = {}; });
+}
 function loadHosted(){
   return getJSON("https://tech-drishti.vercel.app/apps/manifest.json?t=" + Date.now())
     .then(function(m){ if(m && typeof m === "object"){ for(var k in m) HOSTED[k] = 1; } })
@@ -2455,6 +2466,9 @@ function loadStore(){
         var key = nm.toLowerCase();
         var assets = r.assets || [];
         var apk  = assets.filter(function(a){ return /\.apk$/i.test(a.name); })[0];
+        var shots = assets.filter(function(a){ return /^screen[0-9]+\.(png|jpe?g|webp)$/i.test(a.name); })
+          .sort(function(x,y){ return parseInt(x.name.match(/\d+/)[0],10) - parseInt(y.name.match(/\d+/)[0],10); })
+          .map(function(a){ return a.browser_download_url; });
         var icon = assets.filter(function(a){ return /^icon\.(png|jpe?g|webp)$/i.test(a.name); })[0];
         if(!groups[key]){ groups[key] = { name:nm, versions:[] }; order.push(key); }
         groups[key].versions.push({
@@ -2464,7 +2478,8 @@ function loadStore(){
           date: r.published_at || "",
           size: apk ? apk.size : 0,
           url: apk ? apk.browser_download_url : "",
-          icon: icon ? icon.browser_download_url : ""
+          icon: icon ? icon.browser_download_url : "",
+          shots: shots
         });
       });
       STORE = order.map(function(k){
@@ -2477,7 +2492,7 @@ function loadStore(){
       }).sort(function(x,y){
         return ((y.latest&&y.latest.ts)||0) - ((x.latest&&x.latest.ts)||0);
       });
-      loadHosted().then(function(){ renderStore(); });
+      loadHosted().then(loadTrailers).then(function(){ renderStore(); });
     })
     .catch(function(){ loadStoreFiles(); });
 }
@@ -2549,6 +2564,45 @@ function afterDownload(){
   toast("Download started — open it from your notifications to install");
 }
 function storeToggleDesc(){ STORE_DESC_OPEN = !STORE_DESC_OPEN; renderStore(); }
+function setTrailerLang(l){ TRAILER_LANG = l; renderStore(); }
+function trailerFor(a){
+  var t = TRAILERS[appSlug(a.name)];
+  if(!t) return null;
+  var id = t[TRAILER_LANG] || t.en || t.hi;
+  return id ? { id:id, lang: t[TRAILER_LANG] ? TRAILER_LANG : (t.en ? "en" : "hi") } : null;
+}
+function screenshotStrip(v){
+  if(!v.shots || !v.shots.length) return "";
+  return '<div class="card"><div class="lbl">Screenshots</div>'+
+    '<div class="shotstrip" role="list">'+
+      v.shots.map(function(u){
+        return '<img class="shot" role="listitem" src="'+escAttr(u)+'" alt="Screenshot of the app" loading="lazy">';
+      }).join("")+
+    '</div></div>';
+}
+function trailerCard(a){
+  var t = TRAILERS[appSlug(a.name)];
+  if(!t) return "";
+  var langs = [];
+  if(t.en) langs.push(["en","English"]);
+  if(t.hi) langs.push(["hi","हिन्दी"]);
+  if(!langs.length) return "";
+  var cur = trailerFor(a);
+  if(!cur) return "";
+  var picker = langs.length > 1
+    ? '<div class="row" style="gap:8px; margin-bottom:12px">'+
+        langs.map(function(l){
+          return '<button class="chip '+(TRAILER_LANG===l[0]?"on":"")+'" onclick="setTrailerLang(\''+l[0]+'\')">'+l[1]+'</button>';
+        }).join("")+'</div>'
+    : "";
+  return '<div class="card"><div class="lbl">Trailer</div>'+picker+
+    '<a href="https://www.youtube.com/watch?v='+escAttr(cur.id)+'" target="_blank" rel="noopener" '+
+      'style="display:block; position:relative; border-radius:14px; overflow:hidden; text-decoration:none">'+
+      '<img src="https://i.ytimg.com/vi/'+escAttr(cur.id)+'/hqdefault.jpg" alt="Watch the trailer" '+
+        'style="width:100%; display:block">'+
+      '<span class="playbadge">Watch trailer</span>'+
+    '</a></div>';
+}
 
 function renderStore(){
   var box=$("storeList"); if(!box) return;
@@ -2642,6 +2696,10 @@ function renderStoreVersion(box){
                 'onclick="startDownload(document.getElementById(\'dlBtn\'))">Download again</button>')
         : '<div class="err" style="margin-top:16px">This version is not ready to download yet.</div>')+
     '</div>';
+
+  /* ---- 1b. screenshots and trailer ---- */
+  html += screenshotStrip(v);
+  html += trailerCard(a);
 
   /* ---- 2. short description, then the long one behind Show more ---- */
   if(shortDesc || longDesc){
