@@ -40,6 +40,12 @@
    color:#fff;border:none;border-radius:14px;padding:16px;font-weight:800;font-size:16px;font-family:inherit;margin-top:16px;cursor:pointer;}
  .ghost{display:block;width:100%;text-align:center;text-decoration:none;background:transparent;color:var(--txt);
    border:1px solid var(--line);border-radius:14px;padding:14px;font-weight:700;font-size:15px;font-family:inherit;margin-top:10px;cursor:pointer;}
+ .trailerbox{position:relative;border-radius:14px;overflow:hidden;background:#000;margin-top:4px;}
+ .trailerbox img{width:100%;display:block;}
+ .trailerbox iframe{width:100%;aspect-ratio:16/9;border:0;display:block;}
+ .playbtn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:62px;height:62px;
+   border-radius:50%;border:none;cursor:pointer;background:rgba(0,0,0,.66);color:#fff;
+   display:flex;align-items:center;justify-content:center;padding:0 0 0 4px;}
  .shotstrip{display:flex;gap:10px;overflow-x:auto;margin-top:10px;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
  .shot{height:300px;width:auto;border-radius:12px;border:1px solid var(--line);flex-shrink:0;display:block;}
  .playbadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.72);
@@ -146,17 +152,22 @@ function paint(a){
   }
   var tr = TRAILERS[SLUG];
   if(tr){
-    var langs=[]; if(tr.en) langs.push(["en","English"]); if(tr.hi) langs.push(["hi","हिन्दी"]);
+    var langs=[]; if(tr.en) langs.push(["en","English"]); if(tr.hi) langs.push(["hi","Hindi"]);
     var curId = tr[TRAILER_LANG] || tr.en || tr.hi;
+    var curLang = tr[TRAILER_LANG] ? TRAILER_LANG : (tr.en ? "en" : "hi");
     if(curId){
       html+='<div class="card"><div class="lbl">Trailer</div>'+
         (langs.length>1 ? '<div class="row" style="gap:8px;margin-bottom:12px">'+langs.map(function(l){
             return '<button class="chip '+(TRAILER_LANG===l[0]?"on":"")+'" onclick="setTrailerLang(\''+l[0]+'\')">'+l[1]+'</button>';
           }).join("")+'</div>' : "")+
-        '<a href="https://www.youtube.com/watch?v='+esc(curId)+'" target="_blank" rel="noopener" '+
-          'style="display:block;position:relative;border-radius:14px;overflow:hidden;text-decoration:none">'+
-          '<img src="https://i.ytimg.com/vi/'+esc(curId)+'/hqdefault.jpg" alt="Watch the trailer" style="width:100%;display:block">'+
-          '<span class="playbadge">Watch trailer</span></a></div>';
+        '<div class="trailerbox" id="trailerBox" data-id="'+esc(curId)+'">'+
+          '<img src="https://i.ytimg.com/vi/'+esc(curId)+'/hqdefault.jpg" alt="">'+
+          '<button class="playbtn" onclick="playTrailer()" aria-label="Play the trailer">'+
+            '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>'+
+          '</button>'+
+        '</div>'+
+        '<div class="mut" style="margin-top:10px">'+esc(a.name)+' trailer, in '+(curLang==="hi"?"Hindi":"English")+'.</div>'+
+      '</div>';
     }
   }
 
@@ -192,6 +203,13 @@ function paint(a){
   window.__APP=a;
 }
 
+function playTrailer(){
+  var box=document.getElementById("trailerBox"); if(!box) return;
+  var id=box.getAttribute("data-id"); if(!id) return;
+  box.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+esc(id)+'?autoplay=1&rel=0" '+
+    'title="Trailer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '+
+    'allowfullscreen></iframe>';
+}
 function setTrailerLang(l){ TRAILER_LANG=l; paint(window.__APP); }
 function toggleDesc(){ DESC_OPEN=!DESC_OPEN; paint(window.__APP); }
 function moreOld(){ OLD_SHOWN+=3; paint(window.__APP); }
