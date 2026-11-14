@@ -41,6 +41,12 @@
    color:#fff;border:none;border-radius:14px;padding:16px;font-weight:800;font-size:16px;font-family:inherit;margin-top:16px;cursor:pointer;}
  .ghost{display:block;width:100%;text-align:center;text-decoration:none;background:transparent;color:var(--txt);
    border:1px solid var(--line);border-radius:14px;padding:14px;font-weight:700;font-size:15px;font-family:inherit;margin-top:10px;cursor:pointer;}
+ .spinner{width:20px;height:20px;border-radius:50%;border:2.5px solid rgba(125,145,195,.3);
+   border-top-color:#06b6d4;animation:tdspin .8s linear infinite;display:inline-block;flex-shrink:0;}
+ @keyframes tdspin{to{transform:rotate(360deg)}}
+ .skel{background:linear-gradient(90deg,rgba(33,44,74,.62) 25%,rgba(125,145,195,.16) 37%,rgba(33,44,74,.62) 63%);
+   background-size:400% 100%;animation:tdshimmer 1.4s ease infinite;border-radius:14px;}
+ @keyframes tdshimmer{0%{background-position:100% 0}100%{background-position:0 0}}
  .trailerbox{position:relative;border-radius:14px;overflow:hidden;background:#000;margin-top:4px;}
  .trailerbox img{width:100%;display:block;}
  .trailerbox iframe{width:100%;aspect-ratio:16/9;border:0;display:block;}
@@ -64,7 +70,14 @@
 </head>
 <body>
 <div class="top"><a class="back" href="https://tech-drishti.vercel.app/#store">TD Store</a></div>
-<div id="app"><div class="card"><div class="mut">Loading…</div></div></div>
+<div id="app"><div class="card">
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="spinner" aria-hidden="true"></span>
+    <div class="mut">Loading the app…</div>
+  </div>
+  <div class="skel" style="height:66px;margin-top:14px"></div>
+  <div class="skel" style="height:66px;margin-top:10px"></div>
+</div></div>
 
 <script>
 var ICON_EXT = ".jpg";
