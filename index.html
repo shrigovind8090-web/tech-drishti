@@ -2431,7 +2431,7 @@ function fmtSize(b){
 }
 /* Files listed here are served from our own site, so a tap downloads straight
    to the phone instead of opening a page somewhere else. */
-var HOSTED = { "td-screen-recorder-1.0.0": 1 };
+var HOSTED = { "td-screen-recorder-1.0.0": 1, "novanote-1.0.0": 1 };
 var TRAILERS = {};          /* { slug: { en: "videoId", hi: "videoId" } } */
 var TRAILER_LANG = "en";   /* built in, so a failed fetch cannot break downloads */
 function loadTrailers(){
@@ -2471,8 +2471,11 @@ function loadStore(){
           .map(function(a){ return a.browser_download_url; });
         var icon = assets.filter(function(a){ return /^icon\.(png|jpe?g|webp)$/i.test(a.name); })[0];
         if(!groups[key]){ groups[key] = { name:nm, versions:[] }; order.push(key); }
+        var _slug = nm.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+        var _ver = String(r.tag_name || "");
+        if(_ver.toLowerCase().indexOf(_slug + "-") === 0) _ver = _ver.slice(_slug.length + 1);
         groups[key].versions.push({
-          version: r.tag_name || "",
+          version: _ver,
           notes: r.body || "",
           ts: r.published_at ? new Date(r.published_at).getTime() : 0,
           date: r.published_at || "",
