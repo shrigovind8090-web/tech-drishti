@@ -1,5 +1,7 @@
 # Tech Drishti
 
+**Live site: [https://tech-drishti.vercel.app](https://tech-drishti.vercel.app)**
+
 A professional, fully online platform — live news, weather,
 a free AI assistant, market rates, knowledge search and a first-class
 accessibility mode, all in one place.
