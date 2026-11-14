@@ -172,6 +172,12 @@
     font-size:10.5px; font-weight:900; padding:3px 9px; border-radius:20px; margin-left:8px;
     vertical-align:middle; letter-spacing:.3px;}
   .descbox{white-space:pre-wrap; line-height:1.7; margin-top:10px;}
+  .trailerbox{position:relative; border-radius:14px; overflow:hidden; background:#000; margin-top:4px;}
+  .trailerbox img{width:100%; display:block;}
+  .trailerbox iframe{width:100%; aspect-ratio:16/9; border:0; display:block;}
+  .playbtn{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:62px; height:62px;
+    border-radius:50%; border:none; cursor:pointer; background:rgba(0,0,0,.66); color:#fff;
+    display:flex; align-items:center; justify-content:center; padding:0 0 0 4px;}
   .shotstrip{display:flex; gap:10px; overflow-x:auto; margin-top:10px; padding-bottom:6px; -webkit-overflow-scrolling:touch;}
   .shot{height:300px; width:auto; border-radius:12px; border:1px solid var(--line); flex-shrink:0; display:block;}
   .playbadge{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,.72);
@@ -2588,10 +2594,11 @@ function trailerCard(a){
   if(!t) return "";
   var langs = [];
   if(t.en) langs.push(["en","English"]);
-  if(t.hi) langs.push(["hi","हिन्दी"]);
+  if(t.hi) langs.push(["hi","Hindi"]);
   if(!langs.length) return "";
   var cur = trailerFor(a);
   if(!cur) return "";
+  var langName = (cur.lang === "hi") ? "Hindi" : "English";
   var picker = langs.length > 1
     ? '<div class="row" style="gap:8px; margin-bottom:12px">'+
         langs.map(function(l){
@@ -2599,14 +2606,23 @@ function trailerCard(a){
         }).join("")+'</div>'
     : "";
   return '<div class="card"><div class="lbl">Trailer</div>'+picker+
-    '<a href="https://www.youtube.com/watch?v='+escAttr(cur.id)+'" target="_blank" rel="noopener" '+
-      'style="display:block; position:relative; border-radius:14px; overflow:hidden; text-decoration:none">'+
-      '<img src="https://i.ytimg.com/vi/'+escAttr(cur.id)+'/hqdefault.jpg" alt="Watch the trailer" '+
-        'style="width:100%; display:block">'+
-      '<span class="playbadge">Watch trailer</span>'+
-    '</a></div>';
+    '<div class="trailerbox" id="trailerBox" data-id="'+escAttr(cur.id)+'">'+
+      '<img src="https://i.ytimg.com/vi/'+escAttr(cur.id)+'/hqdefault.jpg" alt="">'+
+      '<button class="playbtn" onclick="playTrailer()" aria-label="Play the trailer">'+
+        '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>'+
+      '</button>'+
+    '</div>'+
+    '<div class="small mut" style="margin-top:10px">'+esc(a.name)+' trailer, in '+langName+'.</div>'+
+  '</div>';
 }
-
+function playTrailer(){
+  var box = $("trailerBox"); if(!box) return;
+  var id = box.getAttribute("data-id"); if(!id) return;
+  box.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/'+escAttr(id)+'?autoplay=1&rel=0" '+
+    'title="Trailer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '+
+    'allowfullscreen></iframe>';
+  box.classList.add("playing");
+}
 function renderStore(){
   var box=$("storeList"); if(!box) return;
   var intro=$("storeIntro");
