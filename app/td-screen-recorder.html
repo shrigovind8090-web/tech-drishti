@@ -10,14 +10,14 @@
 <meta property="og:site_name" content="TD Store">
 <meta property="og:title" content="TD Screen Recorder">
 <meta property="og:description" content="Free screen recorder for Android — no ads, no watermark, no time limit. Built with full TalkBack support.">
-<meta property="og:image" content="https://tech-drishti.vercel.app/app/td-screen-recorder.png">
+<meta property="og:image" content="https://tech-drishti.vercel.app/preview/td-screen-recorder.png">
 <meta property="og:image:width" content="512">
 <meta property="og:image:height" content="512">
 <meta property="og:url" content="https://tech-drishti.vercel.app/app/td-screen-recorder">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TD Screen Recorder">
 <meta name="twitter:description" content="Free screen recorder for Android — no ads, no watermark, no time limit.">
-<meta name="twitter:image" content="https://tech-drishti.vercel.app/app/td-screen-recorder.png">
+<meta name="twitter:image" content="https://tech-drishti.vercel.app/preview/td-screen-recorder.png">
 <meta name="theme-color" content="#0a0f1e">
 <style>
  :root{--bg:#0a0f1e;--card:rgba(22,31,54,.74);--line:rgba(125,145,195,.2);--txt:#eef2ff;--mut:#93a0c0;--pri:#4f46e5;--pri2:#06b6d4;}
@@ -66,6 +66,7 @@
 <div id="app"><div class="card"><div class="mut">Loading…</div></div></div>
 
 <script>
+var ICON_EXT = ".png";
 var SLUG = "td-screen-recorder";
 var REPO = "shrigovind8090-web/td-store";
 var SITE = "https://tech-drishti.vercel.app";
@@ -136,7 +137,7 @@ function paint(a){
   var url=dlUrl(v);
 
   var html='<div class="card"><div class="row">'+
-    '<img class="icon" src="/app/'+SLUG+'.png" alt="">'+
+    '<img class="icon" src="/preview/'+SLUG+ICON_EXT+'" alt="">'+
     '<div style="flex:1;min-width:0"><h1>'+esc(a.name)+'</h1>'+
     '<div class="mut">'+esc(meta.join(", "))+'<span class="badge">LATEST</span></div></div></div>'+
     (url ? '<button class="btn" id="dl" style="padding:17px;font-size:17px;border-radius:16px" onclick="startDownload()">Install</button>'+
