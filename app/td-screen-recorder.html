@@ -74,7 +74,7 @@ var STORE = null, DESC_OPEN = false, OLD_SHOWN = 3;
 var TRAILERS = {}, TRAILER_LANG = "en";
 /* files we host ourselves — built in, so a failed fetch can never send
    anyone to GitHub instead */
-var HOSTED = { "td-screen-recorder-1.0.0": 1, "novanote-1.0.0": 1 };
+var HOSTED = {};
 
 function fmtSize(b){ b=Number(b)||0; if(!b) return ""; var u=["B","KB","MB","GB"], i=0;
   while(b>=1024 && i<u.length-1){ b/=1024; i++; } return (b>=10?Math.round(b):b.toFixed(1))+" "+u[i]; }
@@ -140,9 +140,10 @@ function paint(a){
     '<img class="icon" src="/preview/'+SLUG+ICON_EXT+'" alt="">'+
     '<div style="flex:1;min-width:0"><h1>'+esc(a.name)+'</h1>'+
     '<div class="mut">'+esc(meta.join(", "))+'<span class="badge">LATEST</span></div></div></div>'+
-    (url ? '<button class="btn" id="dl" style="padding:17px;font-size:17px;border-radius:16px" onclick="startDownload()">Install</button>'+
-           '<div class="bar" id="bar"><i></i></div>'+
-           '<button class="ghost" id="dlAgain" hidden style="margin-top:10px" onclick="startDownload()">Download again</button>'
+    (url ? '<a class="btn" id="dl" style="display:block;text-align:center;text-decoration:none;padding:17px;font-size:17px;border-radius:16px" '+
+             'href="'+esc(url)+'" download="'+esc(fname)+'" rel="noopener">Install</a>'+
+           '<a class="ghost" id="dlAgain" style="display:block;text-align:center;text-decoration:none;margin-top:10px" '+
+             'href="'+esc(url)+'" download="'+esc(fname)+'" rel="noopener">Download again</a>'
          : '<div class="mut" style="margin-top:14px">This version is not ready to download yet.</div>')+
     '</div>';
 
@@ -218,61 +219,7 @@ function moreOld(){ OLD_SHOWN+=3; paint(window.__APP); }
 function openOld(i){ var a=window.__APP, v=a.versions[i]; DESC_OPEN=false; window.__APP=null;
   paint({ name:a.name, versions:[v], latest:v }); }
 
-function startDownload(){
-  var a=window.__APP; if(!a) return; var v=a.latest;
-  var url=dlUrl(v), fname=SLUG+"-"+String(v.version||"1")+".apk";
-  var btn=document.getElementById("dl"), bar=document.getElementById("bar");
-  var live=document.getElementById("dlLive");
-  function say(t){ if(live) live.textContent=t; }
-  if(!url) return;
 
-  /* files we host ourselves get a real percentage; anything else is handed
-     straight to the browser, which always downloads it */
-  var ours = url.indexOf(SITE+"/") === 0;
-  if(!ours){
-    var a1=document.createElement("a"); a1.href=url; a1.download=fname;
-    document.body.appendChild(a1); a1.click(); a1.remove();
-    say("Download started. When it finishes, open it from your notifications to install.");
-    var ag=document.getElementById("dlAgain"); if(ag) ag.hidden=false;
-    return;
-  }
-
-  if(btn.dataset.busy) return; btn.dataset.busy="1";
-  if(bar) bar.classList.add("on");
-  function pct(p){ btn.textContent="Downloading… "+p+"%"; if(bar) bar.querySelector("i").style.width=p+"%"; }
-  say("Download started.");
-  fetch(url,{cache:"no-store"}).then(function(resp){
-    if(!resp.ok) throw new Error("http");
-    var total=Number(resp.headers.get("content-length"))||0;
-    var reader=resp.body.getReader(), chunks=[], got=0;
-    if(total) pct(0);
-    function step(){
-      return reader.read().then(function(r){
-        if(r.done) return;
-        chunks.push(r.value); got+=r.value.length;
-        if(total) pct(Math.min(100,Math.round(got*100/total)));
-        else btn.textContent="Downloading… "+fmtSize(got);
-        return step();
-      });
-    }
-    return step().then(function(){
-      var blob=new Blob(chunks,{type:"application/vnd.android.package-archive"});
-      var a2=document.createElement("a"); a2.href=URL.createObjectURL(blob); a2.download=fname;
-      document.body.appendChild(a2); a2.click(); a2.remove();
-      setTimeout(function(){ try{ URL.revokeObjectURL(a2.href); }catch(e){} },60000);
-      pct(100); btn.textContent="Downloaded";
-      say("Download finished. Open it from your notifications to install.");
-    });
-  }).catch(function(){
-    var a3=document.createElement("a"); a3.href=url; a3.download=fname;
-    document.body.appendChild(a3); a3.click(); a3.remove();
-    say("Download started. Check your notifications to install.");
-  }).then(function(){
-    delete btn.dataset.busy;
-    var again=document.getElementById("dlAgain"); if(again) again.hidden=false;
-    setTimeout(function(){ btn.textContent="Install"; if(bar){ bar.classList.remove("on"); bar.querySelector("i").style.width="0"; } },4000);
-  });
-}
 
 </script>
 </body>
