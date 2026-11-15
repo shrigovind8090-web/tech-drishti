@@ -40,12 +40,6 @@
    color:#fff;border:none;border-radius:14px;padding:16px;font-weight:800;font-size:16px;font-family:inherit;margin-top:16px;cursor:pointer;}
  .ghost{display:block;width:100%;text-align:center;text-decoration:none;background:transparent;color:var(--txt);
    border:1px solid var(--line);border-radius:14px;padding:14px;font-weight:700;font-size:15px;font-family:inherit;margin-top:10px;cursor:pointer;}
- .spinner{width:20px;height:20px;border-radius:50%;border:2.5px solid rgba(125,145,195,.3);
-   border-top-color:#06b6d4;animation:tdspin .8s linear infinite;display:inline-block;flex-shrink:0;}
- @keyframes tdspin{to{transform:rotate(360deg)}}
- .skel{background:linear-gradient(90deg,rgba(33,44,74,.62) 25%,rgba(125,145,195,.16) 37%,rgba(33,44,74,.62) 63%);
-   background-size:400% 100%;animation:tdshimmer 1.4s ease infinite;border-radius:14px;}
- @keyframes tdshimmer{0%{background-position:100% 0}100%{background-position:0 0}}
  .trailerbox{position:relative;border-radius:14px;overflow:hidden;background:#000;margin-top:4px;}
  .trailerbox img{width:100%;display:block;}
  .trailerbox iframe{width:100%;aspect-ratio:16/9;border:0;display:block;}
@@ -69,14 +63,7 @@
 </head>
 <body>
 <div class="top"><a class="back" href="https://tech-drishti.vercel.app/#store">TD Store</a></div>
-<div id="app"><div class="card">
-  <div style="display:flex;align-items:center;gap:12px">
-    <span class="spinner" aria-hidden="true"></span>
-    <div class="mut">Loading the app…</div>
-  </div>
-  <div class="skel" style="height:66px;margin-top:14px"></div>
-  <div class="skel" style="height:66px;margin-top:10px"></div>
-</div></div>
+<div id="app"><div class="card"><div class="mut">Loading…</div></div></div>
 
 <script>
 var ICON_EXT = ".png";
@@ -196,6 +183,7 @@ function paint(a){
   }
 
   html+='<div class="card">'+
+    '<div class="mut" id="dlLive" role="status" aria-live="polite"></div>'+
     '<div class="mut">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>'+
     '<div class="mut" style="margin-top:6px">If your browser shows a warning about this file, choose Download anyway. Nothing is wrong with the file.</div>'+
     '</div>';
@@ -234,10 +222,25 @@ function startDownload(){
   var a=window.__APP; if(!a) return; var v=a.latest;
   var url=dlUrl(v), fname=SLUG+"-"+String(v.version||"1")+".apk";
   var btn=document.getElementById("dl"), bar=document.getElementById("bar");
+  var live=document.getElementById("dlLive");
+  function say(t){ if(live) live.textContent=t; }
   if(!url) return;
+
+  /* files we host ourselves get a real percentage; anything else is handed
+     straight to the browser, which always downloads it */
+  var ours = url.indexOf(SITE+"/") === 0;
+  if(!ours){
+    var a1=document.createElement("a"); a1.href=url; a1.download=fname;
+    document.body.appendChild(a1); a1.click(); a1.remove();
+    say("Download started. When it finishes, open it from your notifications to install.");
+    var ag=document.getElementById("dlAgain"); if(ag) ag.hidden=false;
+    return;
+  }
+
   if(btn.dataset.busy) return; btn.dataset.busy="1";
   if(bar) bar.classList.add("on");
   function pct(p){ btn.textContent="Downloading… "+p+"%"; if(bar) bar.querySelector("i").style.width=p+"%"; }
+  say("Download started.");
   fetch(url,{cache:"no-store"}).then(function(resp){
     if(!resp.ok) throw new Error("http");
     var total=Number(resp.headers.get("content-length"))||0;
@@ -258,17 +261,19 @@ function startDownload(){
       document.body.appendChild(a2); a2.click(); a2.remove();
       setTimeout(function(){ try{ URL.revokeObjectURL(a2.href); }catch(e){} },60000);
       pct(100); btn.textContent="Downloaded";
+      say("Download finished. Open it from your notifications to install.");
     });
   }).catch(function(){
     var a3=document.createElement("a"); a3.href=url; a3.download=fname;
     document.body.appendChild(a3); a3.click(); a3.remove();
-    btn.textContent=" Download";
+    say("Download started. Check your notifications to install.");
   }).then(function(){
     delete btn.dataset.busy;
     var again=document.getElementById("dlAgain"); if(again) again.hidden=false;
-    setTimeout(function(){ btn.textContent=" Download"; if(bar){ bar.classList.remove("on"); bar.querySelector("i").style.width="0"; } },4000);
+    setTimeout(function(){ btn.textContent="Install"; if(bar){ bar.classList.remove("on"); bar.querySelector("i").style.width="0"; } },4000);
   });
 }
+
 </script>
 </body>
 </html>
