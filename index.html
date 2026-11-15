@@ -2538,10 +2538,27 @@ async function startDownload(btn){
   var url  = btn.getAttribute("data-url");
   var name = btn.getAttribute("data-name") || "app.apk";
   if(!url || btn.dataset.busy) return;
+  var live = $("dlLive");
+  function say(t){ if(live) live.textContent = t; }
+
+  /* Files we host ourselves can show a real percentage. Anything else —
+     a release file somewhere else — is handed straight to the browser,
+     which always downloads it. No fetch, so nothing can be blocked. */
+  var ours = url.indexOf("https://tech-drishti.vercel.app/") === 0;
+  if(!ours){
+    var a1 = document.createElement("a");
+    a1.href = url; a1.download = name; a1.rel = "noopener";
+    document.body.appendChild(a1); a1.click(); a1.remove();
+    say("Download started. When it finishes, open it from your notifications to install.");
+    var ag = $("dlAgain"); if(ag) ag.hidden = false;
+    return;
+  }
+
   btn.dataset.busy = "1";
   var prog = $("dlProg"), bar = prog ? prog.querySelector("i") : null;
   if(prog) prog.classList.add("on");
   function pct(p){ btn.textContent = "Downloading… " + p + "%"; if(bar) bar.style.width = p + "%"; }
+  say("Download started.");
   try{
     var resp = await fetch(url, {cache:"no-store"});
     if(!resp.ok) throw new Error("http " + resp.status);
@@ -2562,23 +2579,24 @@ async function startDownload(btn){
     setTimeout(function(){ try{ URL.revokeObjectURL(a.href); }catch(e){} }, 60000);
     pct(100);
     btn.textContent = "Downloaded";
-    toast("Downloaded — open it from your notifications to install");
+    say("Download finished. Open it from your notifications to install.");
   }catch(e){
-    /* if the fetch is blocked, fall back to an ordinary download */
+    /* if the fetch is blocked, hand it to the browser as an ordinary download */
     var a2 = document.createElement("a");
     a2.href = url; a2.download = name;
     document.body.appendChild(a2); a2.click(); a2.remove();
-    toast("Download started — check your notifications");
+    say("Download started. Check your notifications to install.");
   }finally{
     delete btn.dataset.busy;
     var again = $("dlAgain"); if(again) again.hidden = false;
     setTimeout(function(){
-      if(btn) btn.textContent = "Download";
+      if(btn) btn.textContent = "Install";
       if(prog) prog.classList.remove("on");
       if(bar) bar.style.width = "0";
     }, 4000);
   }
 }
+
 function afterDownload(){
   toast("Download started — open it from your notifications to install");
 }
@@ -2747,6 +2765,7 @@ function renderStoreVersion(box){
 
   /* ---- 3. the small print and sharing ---- */
   html += '<div class="card">'+
+    '<div class="small mut" id="dlLive" role="status" aria-live="polite"></div>'+
     '<div class="small mut">The download starts at once and saves to your phone. When it finishes, open it from your notifications to install.</div>'+
     '<div class="small mut" style="margin-top:6px">If your browser shows a warning about this file, choose Download anyway. Nothing is wrong with the file.</div>'+
     '<button class="btn ghost sm" style="margin-top:14px; width:100%" onclick="shareApp('+STORE_VIEW.app+')">Share this app</button>'+
