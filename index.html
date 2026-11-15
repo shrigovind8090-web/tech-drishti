@@ -2361,6 +2361,65 @@ function applyPendingApp(){
   }
 }
 function storeOpenFromList(i){ PENDING_APP = null; storeOpenApp(i); }
+async function startDownload(btn){
+  var url  = btn.getAttribute("data-url");
+  var name = btn.getAttribute("data-name") || "app.apk";
+  if(!url || btn.dataset.busy) return;
+  var live = $("dlLive");
+  function say(t){ if(live) live.textContent = t; }
+
+  var ours = url.indexOf("https://tech-drishti.vercel.app/") === 0;
+  if(!ours){
+    /* not hosted here — hand it straight to the browser so nothing can block it */
+    var a1 = document.createElement("a");
+    a1.href = url; a1.download = name; a1.rel = "noopener";
+    document.body.appendChild(a1); a1.click(); a1.remove();
+    say("Download started. When it finishes, open it from your notifications to install.");
+    var ag = $("dlAgain"); if(ag) ag.hidden = false;
+    return;
+  }
+
+  btn.dataset.busy = "1";
+  var prog = $("dlProg"), bar = prog ? prog.querySelector("i") : null;
+  if(prog) prog.classList.add("on");
+  function pct(p){ btn.textContent = "Downloading… " + p + "%"; if(bar) bar.style.width = p + "%"; }
+  say("Download started.");
+  try{
+    var resp = await fetch(url, {cache:"no-store"});
+    if(!resp.ok) throw new Error("http " + resp.status);
+    var total = Number(resp.headers.get("content-length")) || 0;
+    var reader = resp.body.getReader(), chunks = [], got = 0;
+    if(total) pct(0);
+    while(true){
+      var r = await reader.read();
+      if(r.done) break;
+      chunks.push(r.value); got += r.value.length;
+      if(total) pct(Math.min(100, Math.round(got * 100 / total)));
+      else btn.textContent = "Downloading… " + fmtSize(got);
+    }
+    var blob = new Blob(chunks, {type:"application/vnd.android.package-archive"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ try{ URL.revokeObjectURL(a.href); }catch(e){} }, 60000);
+    pct(100);
+    btn.textContent = "Downloaded";
+    say("Download finished. Open it from your notifications to install.");
+  }catch(e){
+    var a2 = document.createElement("a");
+    a2.href = url; a2.download = name;
+    document.body.appendChild(a2); a2.click(); a2.remove();
+    say("Download started. Check your notifications to install.");
+  }finally{
+    delete btn.dataset.busy;
+    var again = $("dlAgain"); if(again) again.hidden = false;
+    setTimeout(function(){
+      if(btn) btn.textContent = "Install";
+      if(prog) prog.classList.remove("on");
+      if(bar) bar.style.width = "0";
+    }, 4000);
+  }
+}
 function shareSite(){
   var url = "https://tech-drishti.vercel.app";
   var text = "Tech Drishti — live news, weather, a free AI assistant and useful tools, built to work with screen readers.";
@@ -2674,10 +2733,12 @@ function renderStoreVersion(box){
         ? (isGuest()
             ? '<div class="small mut" style="margin-top:18px"><b>You must sign in to download apps.</b></div>'+
               '<button class="btn" style="margin-top:10px; width:100%; padding:17px; font-size:17px" onclick="openGate()">Sign in to install</button>'
-            : '<a class="btn" id="dlBtn" style="margin-top:18px; width:100%; padding:17px; font-size:17px; border-radius:16px; display:block; text-align:center; text-decoration:none" '+
-              'href="'+escAttr(dl)+'" download="'+escAttr(appSlug(a.name)+"-"+String(v.version||"1")+".apk")+'" rel="noopener">Install</a>'+
-              '<a class="btn ghost" id="dlAgain" style="margin-top:10px; width:100%; display:block; text-align:center; text-decoration:none" '+
-              'href="'+escAttr(dl)+'" download="'+escAttr(appSlug(a.name)+"-"+String(v.version||"1")+".apk")+'" rel="noopener">Download again</a>')
+            : '<button class="btn" style="margin-top:18px; width:100%; padding:17px; font-size:17px; border-radius:16px" '+
+              'data-url="'+escAttr(dl)+'" data-name="'+escAttr(appSlug(a.name)+"-"+String(v.version||"1")+".apk")+'" '+
+              'id="dlBtn" onclick="startDownload(this)">Install</button>'+
+              '<div class="dlprog" id="dlProg" aria-hidden="true"><i></i></div>'+
+              '<button class="btn ghost" id="dlAgain" hidden style="margin-top:10px; width:100%" '+
+                'onclick="startDownload(document.getElementById(\'dlBtn\'))">Download again</button>')
         : '<div class="err" style="margin-top:16px">This version is not ready to download yet.</div>')+
     '</div>';
 
