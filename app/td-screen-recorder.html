@@ -107,6 +107,8 @@ fetch(SITE+"/apps/manifest.json?t="+Date.now())
     });
     STORE = order.map(function(k){ var g=groups[k];
       g.versions.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+      var ws=g.versions.filter(function(v){ return v.shots && v.shots.length; })[0];
+      g.shots = ws ? ws.shots : [];
       g.latest=g.versions[0]||null; return g; });
     var found=null;
     for(var i=0;i<STORE.length;i++){
@@ -119,6 +121,7 @@ fetch(SITE+"/apps/manifest.json?t="+Date.now())
 var ARCHIVE_BASE = "https://archive.org/download/techdrishti-apps/";
 var ARCHIVE = {
   "td-screen-recorder-1.0.0": "TD_Screen_Recorder_v1.0.0.apk",
+  "td-screen-recorder-1.1": "TD_Screen_Recorder_v1.1.apk",
   "novanote-1.0.0": "NovaNote-1.0.0.apk",
   "omnicalc-ultimate-1.01": "OmniCalc_Ultimate_1.01.apk"
 };
@@ -134,7 +137,14 @@ function paint(a){
   var v=a.latest, notes=(v.notes||"").trim();
 
   /* first line is the short description, the rest is the long one */
-  var parts=notes.split(/\n+/);
+  var whatsNew="", descBlocks=[];
+  String(notes).split(/\n\s*\n/).forEach(function(b){
+    var t=b.trim(); if(!t) return;
+    if(/^what'?s new\b/i.test(t)) whatsNew=t.replace(/^what'?s new[^\n]*\n?/i,"").trim();
+    else descBlocks.push(t);
+  });
+  var desc=descBlocks.join("\n\n");
+  var parts=desc.split(/\n+/);
   var shortDesc=(parts[0]||"").trim();
   var longDesc=parts.slice(1).join("\n\n").trim();
 
@@ -153,9 +163,10 @@ function paint(a){
          : '<div class="mut" style="margin-top:14px">This version is not ready to download yet.</div>')+
     '</div>';
 
-  if(v.shots && v.shots.length){
+  var _shots = (v.shots && v.shots.length) ? v.shots : (a.shots||[]);
+  if(_shots.length){
     html+='<div class="card"><div class="lbl">Screenshots</div><div class="shotstrip">'+
-      v.shots.map(function(u){ return '<img class="shot" src="'+esc(u)+'" alt="Screenshot of the app" loading="lazy">'; }).join("")+
+      _shots.map(function(u){ return '<img class="shot" src="'+esc(u)+'" alt="Screenshot of the app" loading="lazy">'; }).join("")+
       '</div></div>';
   }
   var tr = TRAILERS[SLUG];
@@ -177,6 +188,10 @@ function paint(a){
         '<div class="mut" style="margin-top:10px">'+esc(a.name)+' trailer, in '+(curLang==="hi"?"Hindi":"English")+'.</div>'+
       '</div>';
     }
+  }
+
+  if(whatsNew){
+    html+='<div class="card"><div class="lbl">What\'s new</div><div class="desc">'+esc(whatsNew)+'</div></div>';
   }
 
   if(shortDesc||longDesc){
