@@ -2512,9 +2512,18 @@ function loadHosted(){
     .then(function(m){ if(m && typeof m === "object"){ for(var k in m) HOSTED[k] = 1; } })
     .catch(function(){});
 }
+/* Every app file lives on Internet Archive, so the download is a plain,
+   direct file — no GitHub page, no redirect screen. */
+var ARCHIVE_BASE = "https://archive.org/download/techdrishti-apps/";
+var ARCHIVE = {
+  "td-screen-recorder-1.0.0": "TD_Screen_Recorder_v1.0.0.apk",
+  "novanote-1.0.0": "NovaNote-1.0.0.apk",
+  "omnicalc-ultimate-1.01": "OmniCalc_Ultimate_1.01.apk"
+};
 function downloadUrl(a, v){
   var key = appSlug(a.name) + "-" + String(v.version || "");
-  return HOSTED[key] ? ("https://tech-drishti.vercel.app/apps/" + key + ".apk") : (v.url || "");
+  if(ARCHIVE[key]) return ARCHIVE_BASE + ARCHIVE[key];
+  return v.url || "";
 }
 var STORE_VIEW = { app: null, ver: null };
 var STORE_DESC_OPEN = false;
