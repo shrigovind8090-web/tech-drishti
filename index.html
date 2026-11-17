@@ -2517,6 +2517,7 @@ function loadHosted(){
 var ARCHIVE_BASE = "https://archive.org/download/techdrishti-apps/";
 var ARCHIVE = {
   "td-screen-recorder-1.0.0": "TD_Screen_Recorder_v1.0.0.apk",
+  "td-screen-recorder-1.1": "TD_Screen_Recorder_v1.1.apk",
   "novanote-1.0.0": "NovaNote-1.0.0.apk",
   "omnicalc-ultimate-1.01": "OmniCalc_Ultimate_1.01.apk"
 };
@@ -2574,6 +2575,8 @@ function loadStore(){
         g.versions.sort(function(x,y){ return (y.ts||0)-(x.ts||0); });
         var withIcon = g.versions.filter(function(v){ return v.icon; })[0];
         g.icon = withIcon ? withIcon.icon : "";
+        var withShots = g.versions.filter(function(v){ return v.shots && v.shots.length; })[0];
+        g.shots = withShots ? withShots.shots : [];
         g.latest = g.versions[0] || null;
         return g;
       }).sort(function(x,y){
@@ -2615,11 +2618,11 @@ function trailerFor(a){
   var id = t[TRAILER_LANG] || t.en || t.hi;
   return id ? { id:id, lang: t[TRAILER_LANG] ? TRAILER_LANG : (t.en ? "en" : "hi") } : null;
 }
-function screenshotStrip(v){
-  if(!v.shots || !v.shots.length) return "";
+function screenshotStrip(shots){
+  if(!shots || !shots.length) return "";
   return '<div class="card"><div class="lbl">Screenshots</div>'+
     '<div class="shotstrip" role="list">'+
-      v.shots.map(function(u){
+      shots.map(function(u){
         return '<img class="shot" role="listitem" src="'+escAttr(u)+'" alt="Screenshot of the app" loading="lazy">';
       }).join("")+
     '</div></div>';
@@ -2715,7 +2718,16 @@ function renderStoreVersion(box){
 
   /* first line of the release notes is the short description, the rest is the long one */
   var notes = (v.notes || "").trim();
-  var parts = notes.split(/\n+/);
+  /* a block starting with "What's new" is pulled out and shown on its own,
+     after the screenshots and the trailer, before the description */
+  var whatsNew = "", descBlocks = [];
+  String(notes).split(/\n\s*\n/).forEach(function(b){
+    var t = b.trim(); if(!t) return;
+    if(/^what'?s new\b/i.test(t)) whatsNew = t.replace(/^what'?s new[^\n]*\n?/i, "").trim();
+    else descBlocks.push(t);
+  });
+  var desc = descBlocks.join("\n\n");
+  var parts = desc.split(/\n+/);
   var shortDesc = (parts[0] || "").trim();
   var longDesc  = parts.slice(1).join("\n\n").trim();
 
@@ -2752,8 +2764,14 @@ function renderStoreVersion(box){
     '</div>';
 
   /* ---- 1b. screenshots and trailer ---- */
-  html += screenshotStrip(v);
+  html += screenshotStrip((v.shots && v.shots.length) ? v.shots : a.shots);
   html += trailerCard(a);
+
+  /* ---- 1c. what's new, like a store ---- */
+  if(whatsNew){
+    html += '<div class="card"><div class="lbl">What\'s new</div>'+
+      '<div class="descbox">'+esc(whatsNew)+'</div></div>';
+  }
 
   /* ---- 2. short description, then the long one behind Show more ---- */
   if(shortDesc || longDesc){
