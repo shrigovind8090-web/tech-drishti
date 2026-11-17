@@ -116,9 +116,16 @@ fetch(SITE+"/apps/manifest.json?t="+Date.now())
   })
   .catch(function(){ paint(null); });
 
+var ARCHIVE_BASE = "https://archive.org/download/techdrishti-apps/";
+var ARCHIVE = {
+  "td-screen-recorder-1.0.0": "TD_Screen_Recorder_v1.0.0.apk",
+  "novanote-1.0.0": "NovaNote-1.0.0.apk",
+  "omnicalc-ultimate-1.01": "OmniCalc_Ultimate_1.01.apk"
+};
 function dlUrl(v){
   var key = SLUG + "-" + String(v.version||"");
-  return HOSTED[key] ? (SITE+"/apps/"+key+".apk") : (v.url||"");
+  if(ARCHIVE[key]) return ARCHIVE_BASE + ARCHIVE[key];
+  return v.url || "";
 }
 function paint(a){
   var box=document.getElementById("app");
